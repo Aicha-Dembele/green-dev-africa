@@ -30,10 +30,29 @@ Fichiers à connaître :
   cloisonnement des données entre utilisateurs.
 - `config/settings.py` — réglages du projet (SQLite, français, `AUTH_USER_MODEL`).
 
-## Installer et lancer
+## Installer le projet sur une nouvelle machine
 
 ```bash
+git clone https://github.com/Aicha-Dembele/green-dev-africa-.git
+cd green-dev-africa-
+python -m venv venv
 venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Puis crée ta clé secrète.** Elle n'est volontairement pas dans le dépôt :
+une clé secrète publiée permettrait de fabriquer de fausses sessions.
+Recopie le modèle, génère une clé, et colle-la dedans à la place de
+`colle-ici-ta-cle-secrete` :
+
+```bash
+copy config\local_settings.example.py config\local_settings.py
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+**Enfin, prépare la base et lance le serveur :**
+
+```bash
 python manage.py migrate
 python manage.py charger_referentiel
 python manage.py createsuperuser
@@ -43,8 +62,17 @@ python manage.py runserver
 Puis <http://127.0.0.1:8000/> pour l'application, et
 <http://127.0.0.1:8000/admin/> pour l'administration.
 
-Pour remplir la base avec un projet de démonstration et deux analyses déjà
-exécutées : `python manage.py creer_jeu_de_demo`.
+La base de données n'est pas partagée non plus — elle contient des comptes
+et des mots de passe, chacun a la sienne. Pour la remplir avec un projet de
+démonstration et deux analyses déjà exécutées :
+`python manage.py creer_jeu_de_demo`.
+
+## Relancer le projet les jours suivants
+
+```bash
+venv\Scripts\activate
+python manage.py runserver
+```
 
 ## Les pages du site
 
