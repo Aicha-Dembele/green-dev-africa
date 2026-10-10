@@ -33,8 +33,8 @@ Fichiers à connaître :
 ## Installer le projet sur une nouvelle machine
 
 ```bash
-git clone https://github.com/Aicha-Dembele/green-dev-africa-.git
-cd green-dev-africa-
+git clone https://github.com/Aicha-Dembele/green-dev-africa.git
+cd green-dev-africa
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
