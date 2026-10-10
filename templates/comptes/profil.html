@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block titre %}Mon profil — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <h1>Mon profil</h1>
+  <p class="chapeau">
+    Identifiant de connexion : <strong>{{ user.username }}</strong> —
+    rôle : <span class="etiquette">{{ user.get_role_display }}</span>
+  </p>
+
+  <div class="carte formulaire-court">
+    <form method="post">
+      {% csrf_token %}
+      {% include "partiels/champs.html" with formulaire=formulaire %}
+      <div class="actions">
+        <button type="submit">Enregistrer</button>
+        <a class="bouton bouton-secondaire" href="{% url 'tableau_de_bord' %}">Retour</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

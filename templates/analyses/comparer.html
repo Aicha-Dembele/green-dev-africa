@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block titre %}Comparer — {{ projet.nom }}{% endblock %}
+
+{% block contenu %}
+  <p class="fil">
+    <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
+    <a href="{% url 'projet_detail' projet.pk %}">{{ projet.nom }}</a> › Comparer
+  </p>
+
+  <h1>Comparer deux analyses</h1>
+  <p class="chapeau">
+    Mesure l'effet d'une optimisation : on prend l'analyse d'avant, celle
+    d'après, et on regarde ce qui a bougé.
+  </p>
+
+  <div class="carte formulaire-court">
+    <form method="post">
+      {% csrf_token %}
+      {% include "partiels/champs.html" with formulaire=formulaire %}
+      <button type="submit">Comparer</button>
+    </form>
+  </div>
+
+  {% if comparaisons %}
+    <h2>Comparaisons déjà faites</h2>
+    <div class="carte">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th class="nombre">Avant</th>
+            <th class="nombre">Après</th>
+            <th class="nombre">Évolution</th>
+            <th class="nombre">Poids</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for comparaison in comparaisons %}
+            <tr>
+              <td><a href="{% url 'comparaison_detail' comparaison.pk %}">{{ comparaison.date_comparaison|date:"d/m/Y H:i" }}</a></td>
+              <td class="nombre">{{ comparaison.score_avant|floatformat:0|default:"—" }}</td>
+              <td class="nombre">{{ comparaison.score_apres|floatformat:0|default:"—" }}</td>
+              <td class="nombre">
+                {% if comparaison.evolution is not None %}
+                  <span class="etiquette {% if comparaison.evolution > 0 %}etiquette-ok{% elif comparaison.evolution < 0 %}etiquette-critique{% endif %}">
+                    {{ comparaison.evolution|floatformat:"-1" }} pts
+                  </span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="nombre">{{ comparaison.ecart_poids|floatformat:"-1"|default:"—" }} Ko</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endblock %}

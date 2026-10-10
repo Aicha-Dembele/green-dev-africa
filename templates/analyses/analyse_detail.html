@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load greendev %}
+
+{% block titre %}Analyse du {{ analyse.date_analyse|date:"d/m/Y" }} — {{ analyse.projet.nom }}{% endblock %}
+
+{% block contenu %}
+  <p class="fil">
+    <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
+    <a href="{% url 'projet_detail' analyse.projet.pk %}">{{ analyse.projet.nom }}</a> ›
+    Analyse du {{ analyse.date_analyse|date:"d/m/Y H:i" }}
+  </p>
+
+  <div class="entre-deux">
+    <div>
+      <h1>{{ analyse.projet.nom }}</h1>
+      <p class="chapeau">
+        Analysée le {{ analyse.date_analyse|date:"d/m/Y à H:i" }}
+        <span class="etiquette {% if analyse.statut == 'terminee' %}etiquette-ok{% elif analyse.statut == 'echouee' %}etiquette-critique{% endif %}">
+          {{ analyse.get_statut_display }}
+        </span>
+      </p>
+    </div>
+    <div class="actions">
+      {% if rapport %}
+        <a class="bouton" href="{% url 'rapport_detail' analyse.pk %}">Voir le rapport</a>
+      {% endif %}
+      <a class="bouton bouton-secondaire" href="{% url 'lancer_analyse' analyse.projet.pk %}">Nouvelle analyse</a>
+    </div>
+  </div>
+
+  <div class="grille grille-2">
+    <div class="carte">
+      <h3>Green Score</h3>
+      {% include "partiels/score.html" with score=analyse.score_global %}
+      <p class="discret">
+        100 au départ, moins des points selon la gravité de chaque problème.
+      </p>
+    </div>
+
+    <div class="carte">
+      <h3>Dans le contexte choisi</h3>
+      {% if contexte %}
+        <p>
+          <strong>{{ contexte.get_type_appareil_display }}</strong>,
+          connexion <strong>{{ contexte.get_qualite_connexion_display }}</strong>,
+          {{ contexte.get_forfait_data_display|lower }}.
+        </p>
+        <p class="{% if compatible %}etiquette etiquette-ok{% elif compatible is not None %}etiquette etiquette-critique{% endif %}">
+          {{ verdict_contexte }}
+        </p>
+      {% else %}
+        <p class="discret">Aucun contexte enregistré pour cette analyse.</p>
+      {% endif %}
+      {% if configuration %}
+        <p class="discret">
+          Audit : {{ configuration.get_type_audit_display|lower }},
+          mode {{ configuration.get_mode_analyse_display|lower }}.
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if rapport %}
+    <h2>Chiffres clés</h2>
+    <div class="grille grille-4">
+      <div class="chiffre">
+        <span class="valeur">{{ rapport.poids_total|floatformat:"-1"|default:"—" }}</span>
+        <span class="intitule">Ko de page</span>
+      </div>
+      <div class="chiffre">
+        <span class="valeur">{{ rapport.nombre_requetes|default:"—" }}</span>
+        <span class="intitule">Requêtes</span>
+      </div>
+      <div class="chiffre">
+        <span class="valeur">{{ rapport.temps_chargement|floatformat:"-1"|default:"—" }}</span>
+        <span class="intitule">Secondes</span>
+      </div>
+      <div class="chiffre">
+        <span class="valeur">{{ rapport.donnees_transferees|floatformat:"-2"|default:"—" }}</span>
+        <span class="intitule">Mo transférés</span>
+      </div>
+    </div>
+  {% endif %}
+
+  <h2>Problèmes détectés ({{ problemes|length }})</h2>
+
+  <div class="carte">
+    {% for probleme in problemes %}
+      <article class="probleme probleme-{{ probleme.gravite }}">
+        <h3>{{ probleme.titre }}</h3>
+        <p class="meta">
+          <span class="etiquette etiquette-{{ probleme.gravite }}">{{ probleme.get_gravite_display }}</span>
+          <span class="etiquette">{{ probleme.regle.get_categorie_display }}</span>
+          <span class="etiquette {% if probleme.statut == 'corrige' %}etiquette-ok{% endif %}">{{ probleme.get_statut_display }}</span>
+          {% if probleme.ressource %}
+            — fichier concerné : <span class="rupture">{{ probleme.ressource.url }}</span>
+          {% endif %}
+        </p>
+        <p>{{ probleme.description }}</p>
+
+        {% for reco in probleme.recommandations.all %}
+          <div class="reco">
+            <strong>{{ reco.titre }}</strong>
+            <span class="etiquette etiquette-{{ probleme.gravite }}">Priorité {{ reco.get_priorite_display|lower }}</span>
+            {% if reco.statut == 'faite' %}<span class="etiquette etiquette-ok">Faite</span>{% endif %}
+            <p class="solution">{{ reco.description }}</p>
+            <p class="gain">Gain attendu : {{ reco.conseil.gain_attendu }}</p>
+            {% if reco.statut != 'faite' %}
+              <form method="post" action="{% url 'recommandation_faite' reco.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="bouton-discret">Je l'ai appliquée</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <form method="post" action="{% url 'probleme_statut' probleme.pk %}" class="actions" style="margin-top:.7rem">
+          {% csrf_token %}
+          <select name="statut" aria-label="Statut du problème">
+            {% for valeur, intitule in statuts_probleme %}
+              <option value="{{ valeur }}" {% if valeur == probleme.statut %}selected{% endif %}>{{ intitule }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="bouton-discret">Changer le statut</button>
+        </form>
+      </article>
+    {% empty %}
+      <p class="vide">
+        {% if analyse.statut == 'terminee' %}
+          Aucun problème détecté : ce site respecte toutes les règles actives.
+        {% else %}
+          L'analyse n'a pas encore été exécutée.
+        {% endif %}
+      </p>
+    {% endfor %}
+  </div>
+
+  <section>
+    <h2>Indicateurs mesurés ({{ indicateurs|length }})</h2>
+    <div class="carte">
+      {% if indicateurs %}
+        <div class="grille grille-4">
+          {% for indicateur in indicateurs %}
+            <div class="mesure">
+              <span class="mesure-nom">{{ indicateur.nom|libelle }}</span>
+              <span class="mesure-valeur">
+                {{ indicateur.valeur|floatformat:"-2" }}<small> {{ indicateur.unite }}</small>
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="discret">Aucune mesure enregistrée.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section>
+    <h2>Fichiers téléchargés par la page ({{ ressources|length }})</h2>
+    <div class="carte">
+      {% if ressources %}
+        <div class="tableau-defilant">
+          <table>
+            <thead>
+              <tr>
+                <th>Fichier</th>
+                <th>Type</th>
+                <th class="nombre">Taille</th>
+                <th class="nombre">Part du poids</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ressource in ressources %}
+                <tr>
+                  <td class="rupture">{{ ressource.url|cut:"https://" }}</td>
+                  <td class="discret">{{ ressource.get_type_display }}</td>
+                  <td class="nombre">{{ ressource.taille|floatformat:"-1" }} Ko</td>
+                  <td class="nombre">
+                    {{ ressource.part|floatformat:"-1" }} %
+                    {% if ressource.optimisable %}<span class="etiquette etiquette-moyenne">à alléger</span>{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="discret">
+          Les plus lourds d'abord. Le tableau défile : les
+          {{ ressources|length }} fichiers y sont tous.
+        </p>
+      {% else %}
+        <p class="discret">Aucun fichier relevé pour cette analyse.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

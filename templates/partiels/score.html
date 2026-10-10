@@ -1,0 +1,20 @@
+{% comment %}
+  La note sur 100 et sa jauge. À inclure avec :
+      {% include "partiels/score.html" with score=analyse.score_global %}
+
+  La largeur de la jauge est écrite en style « en ligne » : c'est une valeur
+  calculée, elle ne peut pas vivre dans la feuille de style.
+  Le suffixe « u » de floatformat évite la virgule française dans le CSS.
+{% endcomment %}
+
+{% if score is not None %}
+  <div class="score {% if score >= 70 %}score-bon{% elif score >= 40 %}score-moyen{% else %}score-mauvais{% endif %}">
+    <span class="note">{{ score|floatformat:0 }}</span>
+    <span class="sur">/ 100</span>
+  </div>
+  <div class="jauge {% if score >= 70 %}jauge-bon{% elif score >= 40 %}jauge-moyen{% else %}jauge-mauvais{% endif %}">
+    <span style="width: {{ score|floatformat:'0u' }}%"></span>
+  </div>
+{% else %}
+  <p class="discret">Pas encore de score.</p>
+{% endif %}

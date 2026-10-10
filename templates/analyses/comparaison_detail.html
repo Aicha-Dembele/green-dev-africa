@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block titre %}Avant / après — {{ projet.nom }}{% endblock %}
+
+{% block contenu %}
+  <p class="fil">
+    <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
+    <a href="{% url 'projet_detail' projet.pk %}">{{ projet.nom }}</a> ›
+    <a href="{% url 'comparer' projet.pk %}">Comparer</a> › Résultat
+  </p>
+
+  <h1>Avant / après</h1>
+  <p class="chapeau">
+    Comparaison du {{ comparaison.date_comparaison|date:"d/m/Y à H:i" }}
+  </p>
+
+  <div class="grille grille-3">
+    <div class="carte">
+      <h3>Avant</h3>
+      {% include "partiels/score.html" with score=comparaison.score_avant %}
+      <p class="discret">
+        <a href="{% url 'analyse_detail' comparaison.analyse_avant.pk %}">
+          Analyse du {{ comparaison.analyse_avant.date_analyse|date:"d/m/Y H:i" }}
+        </a>
+      </p>
+    </div>
+
+    <div class="carte">
+      <h3>Après</h3>
+      {% include "partiels/score.html" with score=comparaison.score_apres %}
+      <p class="discret">
+        <a href="{% url 'analyse_detail' comparaison.analyse_apres.pk %}">
+          Analyse du {{ comparaison.analyse_apres.date_analyse|date:"d/m/Y H:i" }}
+        </a>
+      </p>
+    </div>
+
+    <div class="carte">
+      <h3>Ce qui a changé</h3>
+      <table>
+        <tbody>
+          <tr>
+            <td>Évolution du score</td>
+            <td class="nombre">
+              {% if comparaison.evolution is not None %}
+                <strong class="{% if comparaison.evolution > 0 %}etiquette etiquette-ok{% elif comparaison.evolution < 0 %}etiquette etiquette-critique{% endif %}">
+                  {{ comparaison.evolution|floatformat:"-1" }} points
+                </strong>
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Taux d'amélioration</td>
+            <td class="nombre">
+              {% if comparaison.taux_amelioration is not None %}
+                {{ comparaison.taux_amelioration|floatformat:"-1" }} %
+              {% else %}
+                <span class="discret">incalculable (score de départ nul)</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Écart de poids</td>
+            <td class="nombre">
+              {% if comparaison.ecart_poids is not None %}
+                {{ comparaison.ecart_poids|floatformat:"-1" }} Ko
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if comparaison.ecart_poids is not None and comparaison.ecart_poids < 0 %}
+    <div class="carte">
+      <p>
+        <strong>{{ comparaison.ecart_poids|floatformat:"-1"|cut:"-" }} Ko économisés à chaque visite.</strong>
+        Sur un forfait mobile limité, c'est autant de données que le visiteur
+        ne paie plus.
+      </p>
+    </div>
+  {% endif %}
+{% endblock %}

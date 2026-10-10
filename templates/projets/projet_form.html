@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block titre %}{{ titre }} — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <p class="fil">
+    <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a>
+    {% if projet %} › <a href="{% url 'projet_detail' projet.pk %}">{{ projet.nom }}</a>{% endif %}
+    › {{ titre }}
+  </p>
+
+  <h1>{{ titre }}</h1>
+  <p class="chapeau">Un projet, c'est un site à surveiller dans le temps.</p>
+
+  <div class="carte formulaire-court">
+    <form method="post">
+      {% csrf_token %}
+      {% include "partiels/champs.html" with formulaire=formulaire %}
+      <div class="actions">
+        <button type="submit">Enregistrer</button>
+        <a class="bouton bouton-secondaire"
+           href="{% if projet %}{% url 'projet_detail' projet.pk %}{% else %}{% url 'tableau_de_bord' %}{% endif %}">
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

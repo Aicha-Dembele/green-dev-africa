@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block titre %}Tableau de bord — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <div class="entre-deux">
+    <div>
+      <h1>Tableau de bord</h1>
+      <p class="chapeau">Bonjour {{ user }}, voici l'état de sobriété de tes projets.</p>
+    </div>
+    <a class="bouton" href="{% url 'projet_creer' %}">Nouveau projet</a>
+  </div>
+
+  <div class="grille grille-4">
+    <div class="chiffre">
+      <span class="valeur">{{ nb_projets }}</span>
+      <span class="intitule">Projet{{ nb_projets|pluralize }}</span>
+    </div>
+    <div class="chiffre">
+      <span class="valeur">
+        {% if score_moyen is not None %}{{ score_moyen|floatformat:0 }}{% else %}—{% endif %}
+      </span>
+      <span class="intitule">Green Score moyen</span>
+    </div>
+    <div class="chiffre">
+      <span class="valeur">{{ problemes_ouverts }}</span>
+      <span class="intitule">Problème{{ problemes_ouverts|pluralize }} ouvert{{ problemes_ouverts|pluralize }}</span>
+    </div>
+    <div class="chiffre">
+      <span class="valeur">{{ problemes_critiques }}</span>
+      <span class="intitule">Dont critique{{ problemes_critiques|pluralize }}</span>
+    </div>
+  </div>
+
+  <h2>Mes projets</h2>
+
+  {% if projets %}
+    <div class="carte">
+      <table>
+        <thead>
+          <tr>
+            <th>Projet</th>
+            <th>Adresse analysée</th>
+            <th class="nombre">Analyses</th>
+            <th class="nombre">Dernier score</th>
+            <th>Dernière analyse</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for projet in projets %}
+            <tr>
+              <td>
+                <a href="{% url 'projet_detail' projet.pk %}"><strong>{{ projet.nom }}</strong></a>
+                {% if projet.statut != 'actif' %}
+                  <span class="etiquette">{{ projet.get_statut_display }}</span>
+                {% endif %}
+              </td>
+              <td class="rupture discret">{{ projet.url }}</td>
+              <td class="nombre">{{ projet.nb_analyses }}</td>
+              <td class="nombre">
+                {% if projet.dernier_score is not None %}
+                  <strong>{{ projet.dernier_score|floatformat:0 }}</strong>
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                {% if projet.derniere_date %}
+                  <a href="{% url 'analyse_detail' projet.derniere_analyse_id %}">
+                    {{ projet.derniere_date|date:"d/m/Y H:i" }}
+                  </a>
+                {% else %}
+                  <span class="discret">jamais analysé</span>
+                {% endif %}
+              </td>
+              <td>
+                <a class="bouton bouton-discret" href="{% url 'lancer_analyse' projet.pk %}">Analyser</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="carte">
+      <p class="vide">
+        Aucun projet pour l'instant.<br>
+        <a class="bouton" href="{% url 'projet_creer' %}">Créer mon premier projet</a>
+      </p>
+    </div>
+  {% endif %}
+{% endblock %}

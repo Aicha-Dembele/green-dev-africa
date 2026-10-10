@@ -1,0 +1,18 @@
+# Environnement Python
+venv/
+__pycache__/
+*.py[cod]
+
+# Base de donnees locale et secrets
+db.sqlite3
+local_settings.py
+.env
+
+# Fichiers statiques collectes
+staticfiles/
+
+# Editeurs / systeme
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

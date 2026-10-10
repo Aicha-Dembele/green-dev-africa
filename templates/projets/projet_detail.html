@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block titre %}{{ projet.nom }} — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <p class="fil"><a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> › {{ projet.nom }}</p>
+
+  <div class="entre-deux">
+    <div>
+      <h1>{{ projet.nom }}</h1>
+      <p class="chapeau">
+        <a href="{{ projet.url }}" rel="noopener noreferrer" target="_blank">{{ projet.url }}</a>
+        — créé le {{ projet.date_creation|date:"d/m/Y" }}
+        <span class="etiquette">{{ projet.get_statut_display }}</span>
+      </p>
+    </div>
+    <div class="actions">
+      <a class="bouton" href="{% url 'lancer_analyse' projet.pk %}">Lancer une analyse</a>
+      <a class="bouton bouton-secondaire" href="{% url 'comparer' projet.pk %}">Comparer deux analyses</a>
+      <a class="bouton bouton-discret" href="{% url 'projet_modifier' projet.pk %}">Modifier</a>
+    </div>
+  </div>
+
+  {% if projet.description %}
+    <div class="carte"><p>{{ projet.description|linebreaksbr }}</p></div>
+  {% endif %}
+
+  <div class="grille grille-2">
+
+    {# --- Historique des analyses --- #}
+    <section>
+      <h2>Historique des analyses</h2>
+      <div class="carte">
+        {% if analyses %}
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th class="nombre">Score</th>
+                <th class="nombre">Problèmes</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for analyse in analyses %}
+                <tr>
+                  <td><a href="{% url 'analyse_detail' analyse.pk %}">{{ analyse.date_analyse|date:"d/m/Y H:i" }}</a></td>
+                  <td class="nombre">
+                    {% if analyse.score_global is not None %}
+                      <strong>{{ analyse.score_global|floatformat:0 }}</strong>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td class="nombre">{{ analyse.nb_problemes|default:0 }}</td>
+                  <td><span class="etiquette">{{ analyse.get_statut_display }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="vide">
+            Aucune analyse.<br>
+            <a class="bouton" href="{% url 'lancer_analyse' projet.pk %}">Lancer la première</a>
+          </p>
+        {% endif %}
+      </div>
+    </section>
+
+    {# --- Objectifs d'optimisation --- #}
+    <section>
+      <h2>Objectifs d'optimisation</h2>
+      <div class="carte">
+        {% if objectifs %}
+          <table>
+            <thead>
+              <tr>
+                <th>Objectif</th>
+                <th class="nombre">Cible</th>
+                <th>Échéance</th>
+                <th>État</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for objectif in objectifs %}
+                <tr>
+                  <td>{{ objectif.nom }}</td>
+                  <td class="nombre">{{ objectif.valeur_cible|floatformat:"-2" }} {{ objectif.unite }}</td>
+                  <td>{{ objectif.date_limite|date:"d/m/Y"|default:"—" }}</td>
+                  <td>
+                    <span class="etiquette {% if objectif.statut == 'atteint' %}etiquette-ok{% elif objectif.statut == 'non_atteint' %}etiquette-critique{% endif %}">
+                      {{ objectif.get_statut_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <form method="post" action="{% url 'objectif_supprimer' projet.pk objectif.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="bouton-discret">Retirer</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="discret">Aucun objectif. Fixe une cible chiffrée, elle sera
+          vérifiée à chaque analyse.</p>
+        {% endif %}
+
+        <h3>Ajouter un objectif</h3>
+        <form method="post" action="{% url 'objectif_creer' projet.pk %}">
+          {% csrf_token %}
+          {% include "partiels/champs.html" with formulaire=formulaire_objectif %}
+          <button type="submit" class="bouton-secondaire">Ajouter</button>
+        </form>
+      </div>
+    </section>
+
+  </div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block titre %}Connexion — Green Dev Africa{% endblock %}
+{% block classe_page %}page-auth{% endblock %}
+
+{% block contenu %}
+  <h1>Se connecter</h1>
+  <p class="chapeau">Reprends l'analyse de tes projets.</p>
+
+  <div class="carte">
+    <form method="post">
+      {% csrf_token %}
+      {% include "partiels/champs.html" with formulaire=form %}
+      <div class="actions">
+        <button type="submit">Se connecter</button>
+        <a class="discret" href="{% url 'inscription' %}">Pas encore de compte ?</a>
+      </div>
+    </form>
+
+    <p class="rassurance">
+      Connexion protégée : chaque formulaire est signé contre la falsification
+      de requête, et ton mot de passe n'est jamais stocké en clair.
+    </p>
+  </div>
+{% endblock %}

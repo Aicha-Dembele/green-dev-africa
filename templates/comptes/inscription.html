@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block titre %}Créer un compte — Green Dev Africa{% endblock %}
+{% block classe_page %}page-auth{% endblock %}
+
+{% block contenu %}
+  <h1>Créer un compte</h1>
+  <p class="chapeau">
+    Mesure la sobriété de tes sites : poids des pages, requêtes, temps de
+    chargement — et ce que ça donne sur un téléphone modeste en 3G.
+  </p>
+
+  <div class="carte">
+    <form method="post">
+      {% csrf_token %}
+      {% include "partiels/champs.html" with formulaire=formulaire %}
+      <div class="actions">
+        <button type="submit">Créer mon compte</button>
+        <a class="discret" href="{% url 'connexion' %}">J'ai déjà un compte</a>
+      </div>
+    </form>
+
+    <p class="rassurance">
+      Ton mot de passe est chiffré avant d'être enregistré : personne, pas
+      même l'administrateur, ne peut le relire.
+    </p>
+  </div>
+{% endblock %}

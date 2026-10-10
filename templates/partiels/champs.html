@@ -1,0 +1,20 @@
+{% comment %}
+  Affiche les champs d'un formulaire, toujours de la même façon.
+  À utiliser avec :  {% include "partiels/champs.html" with formulaire=formulaire %}
+  Ou pour une partie seulement :  ... with champs=formulaire.champs_mesures
+{% endcomment %}
+
+{% if formulaire.non_field_errors %}
+  <ul class="erreurs">
+    {% for erreur in formulaire.non_field_errors %}<li>{{ erreur }}</li>{% endfor %}
+  </ul>
+{% endif %}
+
+{% for champ in champs|default:formulaire %}
+  <div class="champ">
+    {{ champ.label_tag }}
+    {{ champ }}
+    {% if champ.help_text %}<span class="aide">{{ champ.help_text }}</span>{% endif %}
+    {% for erreur in champ.errors %}<span class="erreur">{{ erreur }}</span>{% endfor %}
+  </div>
+{% endfor %}

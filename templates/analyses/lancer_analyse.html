@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block titre %}Analyser {{ projet.nom }} — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <p class="fil">
+    <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
+    <a href="{% url 'projet_detail' projet.pk %}">{{ projet.nom }}</a> › Nouvelle analyse
+  </p>
+
+  <h1>Analyser {{ projet.nom }}</h1>
+  <p class="chapeau">{{ projet.url }}</p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% if formulaire.non_field_errors %}
+      <ul class="erreurs">
+        {% for erreur in formulaire.non_field_errors %}<li>{{ erreur }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="grille grille-2">
+      <fieldset>
+        <legend>Réglages de l'audit</legend>
+        <div class="champ">{{ formulaire.type_audit.label_tag }}{{ formulaire.type_audit }}</div>
+        <div class="champ">{{ formulaire.mode_analyse.label_tag }}{{ formulaire.mode_analyse }}</div>
+        <div class="champ">
+          <label>{{ formulaire.inclure_medias }} Inclure les images et vidéos</label>
+          <label>{{ formulaire.inclure_javascript }} Inclure le JavaScript</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Contexte du visiteur simulé</legend>
+        <p class="discret">
+          C'est ici que se joue l'ancrage africain du projet : un site léger en
+          fibre peut rester inutilisable sur un téléphone d'entrée de gamme en 3G.
+        </p>
+        <div class="champ">{{ formulaire.type_appareil.label_tag }}{{ formulaire.type_appareil }}</div>
+        <div class="champ">{{ formulaire.qualite_connexion.label_tag }}{{ formulaire.qualite_connexion }}</div>
+        <div class="champ">{{ formulaire.forfait_data.label_tag }}{{ formulaire.forfait_data }}</div>
+      </fieldset>
+    </div>
+
+    <fieldset>
+      <legend>Mesures (facultatif)</legend>
+      <p class="discret">
+        <strong>Laisse tout vide et clique sur « Lancer l'analyse » :
+        l'application ira chercher la page et la pèsera elle-même.</strong>
+        Ces cases ne servent qu'à forcer une valeur, ou à rejouer un audit
+        fait avec un autre outil. Dès qu'une seule case est remplie, la mesure
+        automatique est désactivée.
+      </p>
+      <div class="grille grille-3">
+        {% for champ in formulaire.champs_mesures %}
+          <div class="champ">
+            {{ champ.label_tag }}
+            {{ champ }}
+            {% if champ.help_text %}<span class="aide">{{ champ.help_text }}</span>{% endif %}
+            {% for erreur in champ.errors %}<span class="erreur">{{ erreur }}</span>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit">Lancer l'analyse</button>
+      <a class="bouton bouton-secondaire" href="{% url 'projet_detail' projet.pk %}">Annuler</a>
+    </div>
+  </form>
+{% endblock %}

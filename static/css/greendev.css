@@ -1,0 +1,566 @@
+/* Green Dev Africa — feuille de style unique.
+ *
+ * Charte : bleu nuit et turquoise, l'aspect d'un outil d'audit technique.
+ *
+ * Choix assumé pour le concours : pas de Bootstrap, pas de police distante,
+ * et un seul petit fichier JavaScript (le bouton « afficher le mot de passe »).
+ * Une application qui mesure la sobriété numérique ne peut pas charger
+ * 300 Ko de cadre CSS pour afficher un tableau. Tout tient ici, et les
+ * polices sont celles du système.
+ */
+
+:root {
+  /* fonds */
+  --nuit: #0b1e2d;
+  --nuit-barre: #081722;
+  --carte: #112b3c;
+  --carte-haute: #16374a;
+  --bord: #1f465c;
+  --bord-vif: #2b6280;
+
+  /* texte */
+  --texte: #e8f3f7;
+  --texte-doux: #9db6c4;
+  --texte-faible: #6d8a9a;
+
+  /* accent */
+  --turquoise: #2dd4a7;
+  --turquoise-sombre: #1aa983;
+  --turquoise-voile: rgba(45, 212, 167, 0.14);
+
+  /* gravités */
+  --critique: #ff6b81;
+  --elevee: #ff9f5a;
+  --moyenne: #f2c14e;
+  --faible: #6fb6d8;
+  --ok: var(--turquoise);
+
+  --rayon: 12px;
+  --ombre: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --ombre-haute: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(900px 500px at 15% -10%, #15364a 0%, transparent 60%),
+    radial-gradient(700px 400px at 100% 0%, #12304a 0%, transparent 55%),
+    var(--nuit);
+  background-attachment: fixed;
+  color: var(--texte);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--turquoise); text-decoration-color: rgba(45, 212, 167, 0.4); }
+a:hover { color: #6ae8c4; }
+
+::selection { background: var(--turquoise); color: var(--nuit); }
+
+/* --- barre du haut --- */
+
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.75rem;
+  background: rgba(8, 23, 34, 0.9);
+  border-bottom: 1px solid var(--bord);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.marque {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--texte);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.marque::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--turquoise);
+  box-shadow: 0 0 0 4px rgba(45, 212, 167, 0.18);
+}
+.marque span { color: var(--turquoise); }
+
+.barre nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.35rem;
+  margin-left: auto;
+}
+.barre nav a {
+  color: var(--texte-doux);
+  text-decoration: none;
+  font-size: 0.93rem;
+  padding: 0.2rem 0;
+  border-bottom: 2px solid transparent;
+}
+.barre nav a:hover { color: var(--texte); border-bottom-color: var(--turquoise); }
+.barre nav form { margin: 0; }
+
+.pastille {
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0.1em 0.45em;
+  border-radius: 999px;
+  background: var(--turquoise);
+  color: var(--nuit);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* --- structure --- */
+
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2.25rem 1.25rem 4rem;
+}
+
+h1 { font-size: 1.85rem; margin: 0 0 0.35rem; letter-spacing: -0.03em; font-weight: 700; }
+h2 {
+  font-size: 0.95rem;
+  margin: 2.25rem 0 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--texte-doux);
+  font-weight: 700;
+}
+h3 { font-size: 1.05rem; margin: 1.4rem 0 0.5rem; }
+h3:first-child { margin-top: 0; }
+
+.chapeau { color: var(--texte-doux); margin: 0 0 1.75rem; }
+.chapeau a { color: var(--texte-doux); }
+
+.fil { font-size: 0.86rem; color: var(--texte-faible); margin-bottom: 1.1rem; }
+.fil a { color: var(--texte-faible); text-decoration: none; }
+.fil a:hover { color: var(--turquoise); }
+
+.carte {
+  background: var(--carte);
+  border: 1px solid var(--bord);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 1.4rem;
+  margin-bottom: 1.25rem;
+}
+
+/* align-items: start — sans cela, une carte courte s'étire à la hauteur de
+ * sa voisine et se retrouve à moitié vide. */
+.grille { display: grid; gap: 1.25rem; align-items: start; }
+.grille-3 { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.grille-4 { grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); }
+.grille-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+
+.entre-deux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* --- chiffres clés --- */
+
+.chiffre {
+  background: linear-gradient(160deg, var(--carte-haute), var(--carte));
+  border: 1px solid var(--bord);
+  border-radius: var(--rayon);
+  padding: 1.1rem 1.2rem;
+}
+.chiffre .valeur {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: var(--turquoise);
+  font-variant-numeric: tabular-nums;
+}
+.chiffre .intitule {
+  display: block;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--texte-faible);
+  margin-top: 0.3rem;
+}
+
+/* --- jauge de score --- */
+
+.score { display: flex; align-items: baseline; gap: 0.45rem; }
+.score .note {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.score .sur { color: var(--texte-faible); font-size: 0.95rem; }
+
+.jauge {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  margin-top: 0.8rem;
+}
+.jauge > span { display: block; height: 100%; border-radius: 999px; }
+
+/* La couleur du chiffre et celle de la jauge sont séparées : groupées, le
+ * chiffre héritait d'un fond de sa propre couleur et devenait illisible. */
+.score-bon .note { color: var(--ok); }
+.score-moyen .note { color: var(--moyenne); }
+.score-mauvais .note { color: var(--critique); }
+
+.jauge-bon > span { background: linear-gradient(90deg, var(--turquoise-sombre), var(--turquoise)); }
+.jauge-moyen > span { background: linear-gradient(90deg, #c99a2e, var(--moyenne)); }
+.jauge-mauvais > span { background: linear-gradient(90deg, #c9465c, var(--critique)); }
+
+/* --- étiquettes --- */
+
+.etiquette {
+  display: inline-block;
+  padding: 0.16em 0.62em;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--texte-doux);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.etiquette-critique { background: rgba(255, 107, 129, 0.16); color: var(--critique); border-color: rgba(255, 107, 129, 0.3); }
+.etiquette-elevee   { background: rgba(255, 159, 90, 0.16);  color: var(--elevee);   border-color: rgba(255, 159, 90, 0.3); }
+.etiquette-moyenne  { background: rgba(242, 193, 78, 0.16);  color: var(--moyenne);  border-color: rgba(242, 193, 78, 0.3); }
+.etiquette-faible   { background: rgba(111, 182, 216, 0.16); color: var(--faible);   border-color: rgba(111, 182, 216, 0.3); }
+.etiquette-ok       { background: var(--turquoise-voile);    color: var(--turquoise); border-color: rgba(45, 212, 167, 0.3); }
+
+/* --- mesures en petites tuiles ---
+ *
+ * Les indicateurs sont une dizaine de couples « nom = valeur ». En tableau
+ * ils formaient une colonne étroite et haute, à côté d'une liste de
+ * ressources trois fois plus longue. En tuiles, ils tiennent sur trois
+ * lignes et laissent toute la largeur au tableau des fichiers.
+ */
+
+.mesure {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--bord);
+  border-radius: 9px;
+  padding: 0.8rem 0.9rem;
+}
+.mesure-nom {
+  display: block;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--texte-faible);
+  line-height: 1.35;
+  min-height: 2.7em; /* garde les valeurs alignées d'une tuile à l'autre */
+}
+.mesure-valeur {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--texte);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.25rem;
+}
+.mesure-valeur small { font-size: 0.78rem; font-weight: 500; color: var(--texte-doux); }
+
+/* --- tableaux --- */
+
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+th, td { text-align: left; padding: 0.7rem 0.55rem; border-bottom: 1px solid var(--bord); }
+th {
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--texte-faible);
+  font-weight: 700;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
+td.nombre, th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Un tableau long ne doit pas étirer la page sur deux écrans : on le plafonne
+ * et on le fait défiler, en gardant sa ligne d'en-tête visible. */
+.tableau-defilant {
+  max-height: 30rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bord-vif) transparent;
+}
+.tableau-defilant thead th {
+  position: sticky;
+  top: 0;
+  background: var(--carte);
+  box-shadow: inset 0 -1px 0 var(--bord);
+  z-index: 1;
+}
+.tableau-defilant::-webkit-scrollbar { width: 10px; }
+.tableau-defilant::-webkit-scrollbar-thumb {
+  background: var(--bord-vif);
+  border-radius: 999px;
+  border: 3px solid var(--carte);
+}
+
+/* --- boutons --- */
+
+.bouton,
+button {
+  display: inline-block;
+  padding: 0.58rem 1.15rem;
+  border: 1px solid var(--turquoise);
+  border-radius: 9px;
+  background: var(--turquoise);
+  color: var(--nuit);
+  font-size: 0.93rem;
+  font-family: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.15s, background 0.15s, border-color 0.15s;
+}
+.bouton:hover, button:hover { filter: brightness(1.1); color: var(--nuit); }
+
+.bouton-secondaire {
+  background: transparent;
+  color: var(--turquoise);
+  border-color: var(--bord-vif);
+}
+.bouton-secondaire:hover { background: var(--turquoise-voile); color: var(--turquoise); filter: none; }
+
+.bouton-discret {
+  background: transparent;
+  border-color: var(--bord);
+  color: var(--texte-doux);
+  font-weight: 600;
+  padding: 0.34rem 0.72rem;
+  font-size: 0.84rem;
+}
+.bouton-discret:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--bord-vif); color: var(--texte); filter: none; }
+
+.lien {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--texte-doux);
+  font-weight: 400;
+  font-size: 0.93rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.lien:hover { background: none; color: var(--turquoise); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+
+/* --- formulaires --- */
+
+.champ { margin-bottom: 1.15rem; }
+.champ label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; color: var(--texte); }
+
+input[type="text"], input[type="email"], input[type="password"], input[type="url"],
+input[type="number"], input[type="date"], select, textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--bord);
+  border-radius: 9px;
+  background: #0d2434;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--texte);
+}
+input::placeholder, textarea::placeholder { color: var(--texte-faible); }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--turquoise);
+  box-shadow: 0 0 0 3px rgba(45, 212, 167, 0.18);
+}
+input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.45rem;
+  accent-color: var(--turquoise);
+}
+select option { background: var(--carte); color: var(--texte); }
+
+.champ .aide { display: block; font-size: 0.83rem; color: var(--texte-faible); margin-top: 0.3rem; }
+.champ .erreur, .erreurs { color: var(--critique); font-size: 0.87rem; }
+.erreurs {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem 0.7rem 2rem;
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.3);
+  border-radius: 9px;
+}
+
+fieldset {
+  border: 1px solid var(--bord);
+  border-radius: var(--rayon);
+  padding: 1.1rem 1.35rem 0.35rem;
+  margin: 0 0 1.25rem;
+  background: var(--carte);
+}
+legend {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  padding: 0 0.5rem;
+  color: var(--turquoise);
+}
+
+.formulaire-court { max-width: 440px; }
+
+/* --- le petit œil du mot de passe (ajouté par greendev.js) --- */
+
+.champ-mot-de-passe { position: relative; display: block; }
+.champ-mot-de-passe input { padding-right: 2.9rem; }
+
+.oeil {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--texte-faible);
+  cursor: pointer;
+}
+.oeil:hover { background: rgba(255, 255, 255, 0.07); color: var(--turquoise); filter: none; }
+.oeil:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 1px; }
+
+/* --- pages de connexion et d'inscription --- */
+
+.page-auth main {
+  max-width: 460px;
+  padding-top: 4rem;
+}
+.page-auth .carte {
+  background: linear-gradient(170deg, var(--carte-haute), var(--carte));
+  box-shadow: var(--ombre-haute);
+  padding: 1.9rem;
+}
+.page-auth .formulaire-court { max-width: none; }
+.page-auth h1 { text-align: center; }
+.page-auth .chapeau { text-align: center; }
+
+.rassurance {
+  margin-top: 1.5rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--bord);
+  font-size: 0.82rem;
+  color: var(--texte-faible);
+  text-align: center;
+}
+
+/* --- messages --- */
+
+.messages { list-style: none; margin: 0 0 1.75rem; padding: 0; }
+.messages li {
+  padding: 0.8rem 1.1rem;
+  border-radius: 9px;
+  border: 1px solid rgba(45, 212, 167, 0.3);
+  border-left: 3px solid var(--turquoise);
+  background: var(--turquoise-voile);
+  color: var(--texte);
+  margin-bottom: 0.55rem;
+  word-break: break-word;
+}
+.messages li.error {
+  border-color: rgba(255, 107, 129, 0.35);
+  border-left-color: var(--critique);
+  background: rgba(255, 107, 129, 0.12);
+}
+.messages li.warning {
+  border-color: rgba(242, 193, 78, 0.35);
+  border-left-color: var(--moyenne);
+  background: rgba(242, 193, 78, 0.12);
+}
+
+/* --- problèmes et recommandations --- */
+
+.probleme {
+  border-left: 3px solid var(--bord);
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  margin-bottom: 1.9rem;
+}
+.probleme:last-child { margin-bottom: 0; }
+.probleme-critique { border-left-color: var(--critique); }
+.probleme-elevee { border-left-color: var(--elevee); }
+.probleme-moyenne { border-left-color: var(--moyenne); }
+.probleme-faible { border-left-color: var(--faible); }
+
+.probleme h3 { margin: 0 0 0.4rem; font-size: 1.02rem; }
+.probleme .meta { font-size: 0.85rem; color: var(--texte-faible); margin-bottom: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+
+.reco {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--bord);
+  border-radius: 9px;
+  padding: 0.9rem 1.05rem;
+  margin-top: 0.8rem;
+}
+.reco .solution { white-space: pre-line; font-size: 0.92rem; color: var(--texte-doux); }
+.reco .gain { font-size: 0.85rem; color: var(--turquoise); font-weight: 600; margin-bottom: 0.6rem; }
+
+.vide {
+  text-align: center;
+  padding: 2.75rem 1rem;
+  color: var(--texte-faible);
+}
+
+.en-ligne { display: inline; }
+.discret { color: var(--texte-faible); font-size: 0.87rem; }
+/* « anywhere » plutôt que « break-all » : l'adresse ne se coupe que si elle
+ * déborde vraiment, et de préférence après un / ou un -, pas en plein mot. */
+.rupture { overflow-wrap: anywhere; word-break: normal; }
+
+/* --- téléphone --- */
+
+@media (max-width: 640px) {
+  main { padding: 1.4rem 1rem 3rem; }
+  .barre { padding: 0.7rem 1rem; position: static; }
+  .barre nav { gap: 0.85rem; }
+  h1 { font-size: 1.45rem; }
+  .score .note { font-size: 2.3rem; }
+  .chiffre .valeur { font-size: 1.6rem; }
+  .page-auth main { padding-top: 1.75rem; }
+}
+
+/* --- impression du rapport : sur papier, on repasse en clair --- */
+
+@media print {
+  .barre, .actions, .messages, .fil, .oeil { display: none; }
+  body { background: #fff; color: #11212b; }
+  .carte, .chiffre, fieldset { background: #fff; border-color: #ccd6db; box-shadow: none; break-inside: avoid; }
+  h2, .intitule, .discret, .chapeau { color: #4a5f6b; }
+  .chiffre .valeur, .reco .gain { color: #0f6f52; }
+  table th { color: #4a5f6b; }
+  th, td { border-color: #ccd6db; }
+}

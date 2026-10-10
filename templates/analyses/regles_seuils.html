@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block titre %}Règles d'analyse — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <h1>Règles d'analyse</h1>
+  <p class="chapeau">
+    Les seuils vivent en base, pas dans le code : c'est ce qui permet de
+    répondre au reproche de « score arbitraire ». Un seuil à 0 désigne une
+    règle de comptage, où toute occurrence est déjà un défaut.
+  </p>
+
+  <div class="carte">
+    <form method="post">
+      {% csrf_token %}
+      {{ formset.management_form }}
+
+      <table>
+        <thead>
+          <tr>
+            <th>Règle</th>
+            <th>Catégorie</th>
+            <th class="nombre">Seuil</th>
+            <th>Active</th>
+            <th>Ce qu'elle signale</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for form in formset %}
+            <tr>
+              {# Le champ caché porte l'identifiant de la ligne modifiée. #}
+              {{ form.id }}
+              <td><strong>{{ form.instance.code }}</strong></td>
+              <td class="discret">{{ form.instance.get_categorie_display }}</td>
+              <td class="nombre">
+                {{ form.seuil }}
+                {% for erreur in form.seuil.errors %}<span class="erreur">{{ erreur }}</span>{% endfor %}
+              </td>
+              <td>{{ form.active }}</td>
+              <td class="discret">{{ form.instance.description }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="actions" style="margin-top:1rem">
+        <button type="submit">Enregistrer les seuils</button>
+        <a class="bouton bouton-secondaire" href="{% url 'tableau_de_bord' %}">Retour</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
