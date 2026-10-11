@@ -78,7 +78,7 @@ python manage.py runserver
 
 | Adresse | Page | Cas d'utilisation |
 |---|---|---|
-| `/` | Tableau de bord | Consulter le tableau de bord |
+| `/` | Présentation (visiteurs) / tableau de bord (membres connectés) | Découvrir Green Dev Africa / Consulter le tableau de bord |
 | `/comptes/inscription/` | Créer un compte | Créer un compte |
 | `/comptes/connexion/` | Se connecter | Se connecter |
 | `/projets/nouveau/` | Nouveau projet | Créer un projet |

@@ -45,7 +45,6 @@ class AccesSansCompteTest(BaseProjetTest):
 
     def test_pages_protegees_renvoient_vers_la_connexion(self):
         adresses = [
-            reverse("tableau_de_bord"),
             reverse("projet_creer"),
             reverse("projet_detail", args=[self.projet_aicha.pk]),
             reverse("projet_modifier", args=[self.projet_aicha.pk]),
@@ -61,6 +60,15 @@ class AccesSansCompteTest(BaseProjetTest):
                 self.assertRedirects(
                     reponse, f"{reverse('connexion')}?next={adresse}"
                 )
+
+    def test_accueil_public_presente_le_service_et_linscription(self):
+        reponse = self.client.get(reverse("tableau_de_bord"))
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Un web plus léger.")
+        self.assertContains(reponse, "Créer mon compte")
+        self.assertContains(reponse, reverse("inscription"))
+        self.assertContains(reponse, "empreinte carbone totale")
 
 
 class TableauDeBordTest(BaseProjetTest):

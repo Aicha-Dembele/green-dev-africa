@@ -17,7 +17,6 @@ from .forms import ObjectifForm, ProjetForm
 from .models import Projet
 
 
-@login_required
 def tableau_de_bord(request):
     """Cas d'utilisation « Consulter le tableau de bord ».
 
@@ -25,6 +24,9 @@ def tableau_de_bord(request):
     chercher la dernière analyse de chaque projet sans refaire un appel à la
     base par ligne affichée.
     """
+    if not request.user.is_authenticated:
+        return render(request, "accueil.html")
+
     derniere = Analyse.objects.filter(projet=OuterRef("pk")).order_by("-date_analyse")
 
     projets = request.user.projets.annotate(
