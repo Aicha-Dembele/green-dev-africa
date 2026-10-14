@@ -36,3 +36,9 @@ class ProfilForm(ModelForm):
     class Meta:
         model = Utilisateur
         fields = ("nom", "email")
+
+    def __init__(self, *args, verrouille=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if verrouille:
+            for champ in self.fields.values():
+                champ.disabled = True

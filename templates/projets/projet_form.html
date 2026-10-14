@@ -3,26 +3,59 @@
 {% block titre %}{{ titre }} — Green Dev Africa{% endblock %}
 
 {% block contenu %}
-  <p class="fil">
-    <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a>
-    {% if projet %} › <a href="{% url 'projet_detail' projet.pk %}">{{ projet.nom }}</a>{% endif %}
-    › {{ titre }}
-  </p>
+  <div class="page-projet-form">
+    <p class="fil">
+      <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a>
+      {% if projet %} › <a href="{% url 'projet_detail' projet.pk %}">{{ projet.nom }}</a>{% endif %}
+      › {{ titre }}
+    </p>
 
-  <h1>{{ titre }}</h1>
-  <p class="chapeau">Un projet, c'est un site à surveiller dans le temps.</p>
+    <header class="projet-form-entete">
+      <span class="surtitre"><span class="point-actif" aria-hidden="true"></span>ESPACE PROJET</span>
+      <h1>{{ titre }}</h1>
+      <p class="chapeau">
+        {% if projet %}
+          Modifiez les informations de votre site et gardez son suivi à jour.
+        {% else %}
+          Ajoutez un site à surveiller et suivez son évolution dans le temps.
+        {% endif %}
+      </p>
+    </header>
 
-  <div class="carte formulaire-court">
-    <form method="post">
-      {% csrf_token %}
-      {% include "partiels/champs.html" with formulaire=formulaire %}
-      <div class="actions">
-        <button type="submit">Enregistrer</button>
-        <a class="bouton bouton-secondaire"
-           href="{% if projet %}{% url 'projet_detail' projet.pk %}{% else %}{% url 'tableau_de_bord' %}{% endif %}">
-          Annuler
-        </a>
-      </div>
-    </form>
+    <div class="projet-form-grille">
+      <section class="carte projet-form-carte" aria-labelledby="projet-form-titre">
+        <div class="projet-form-carte-entete">
+          <div class="projet-form-icone" aria-hidden="true">↗</div>
+          <div>
+            <h2 id="projet-form-titre">Informations du site</h2>
+            <p>Renseignez les détails de votre projet.</p>
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          {% include "partiels/champs.html" with formulaire=formulaire %}
+          <div class="actions projet-form-actions">
+            <button type="submit">{% if projet %}Enregistrer les modifications{% else %}Créer le projet{% endif %}</button>
+            <a class="bouton bouton-secondaire"
+               href="{% if projet %}{% url 'projet_detail' projet.pk %}{% else %}{% url 'tableau_de_bord' %}{% endif %}">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </section>
+
+      <aside class="projet-form-aside" aria-label="À propos du suivi">
+        <div class="projet-form-aside-marque" aria-hidden="true">✓</div>
+        <h2>Un suivi utile commence ici</h2>
+        <p>Une fois votre projet créé, vous pourrez lancer des analyses et comparer les résultats au fil du temps.</p>
+        <ol>
+          <li><span>01</span><div><strong>Ajoutez votre site</strong><small>Indiquez son nom et son adresse.</small></div></li>
+          <li><span>02</span><div><strong>Lancez une analyse</strong><small>Obtenez un premier état des lieux.</small></div></li>
+          <li><span>03</span><div><strong>Suivez vos progrès</strong><small>Comparez les résultats dans le temps.</small></div></li>
+        </ol>
+        <p class="projet-form-note">Vous pourrez modifier ces informations à tout moment.</p>
+      </aside>
+    </div>
   </div>
 {% endblock %}

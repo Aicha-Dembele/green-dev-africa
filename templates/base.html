@@ -14,7 +14,7 @@
 <header class="barre">
   <a class="marque" href="{% url 'tableau_de_bord' %}">Green<span>Dev</span> Africa</a>
 
-  <nav class="{% if not user.is_authenticated %}nav-visiteur{% endif %}">
+  <nav class="{% if not user.is_authenticated %}nav-visiteur{% endif %}" aria-label="Navigation principale">
     {% if user.is_authenticated %}
       <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a>
       <a href="{% url 'projet_creer' %}">Nouveau projet</a>
@@ -24,11 +24,18 @@
       <a href="{% url 'notifications' %}">
         Notifications{% if notifications_non_lues %} <span class="pastille">{{ notifications_non_lues }}</span>{% endif %}
       </a>
-      <a href="{% url 'profil' %}">{{ user }}</a>
+      <a class="nav-compte" href="{% url 'profil' %}"
+         aria-label="Mon compte — {{ user.username }}" title="Mon compte — {{ user.username }}">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="8" r="3.5"></circle>
+          <path d="M5 20a7 7 0 0 1 14 0"></path>
+        </svg>
+        <span class="sr-only">Mon compte</span>
+      </a>
       {# Depuis Django 5, la déconnexion passe obligatoirement par un POST. #}
       <form method="post" action="{% url 'deconnexion' %}">
         {% csrf_token %}
-        <button type="submit" class="lien">Se déconnecter</button>
+        <button type="submit" class="lien nav-deconnexion">Se déconnecter</button>
       </form>
     {% else %}
       <a class="nav-connexion" href="{% url 'connexion' %}">Se connecter</a>

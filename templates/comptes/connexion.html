@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 
 {% block titre %}Connexion — Green Dev Africa{% endblock %}
-{% block classe_page %}page-auth{% endblock %}
+{% block classe_page %}page-auth page-connexion{% endblock %}
 
 {% block contenu %}
-  <h1>Se connecter</h1>
-  <p class="chapeau">Reprends l'analyse de tes projets.</p>
+  <header class="auth-entete">
+    <span class="auth-icone" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" focusable="false">
+        <rect x="4.5" y="10" width="15" height="11" rx="2"></rect>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+        <circle cx="12" cy="15" r="1"></circle>
+      </svg>
+    </span>
+    <h1>Se connecter</h1>
+    <p class="chapeau">Reprends l'analyse de tes projets.</p>
+  </header>
 
-  <div class="carte">
+  <div class="carte connexion-carte">
     <form method="post">
       {% csrf_token %}
       {% include "partiels/champs.html" with formulaire=form %}

@@ -23,6 +23,9 @@ class Utilisateur(AbstractUser):
 
     nom = models.CharField("nom complet", max_length=150)
     email = models.EmailField("adresse e-mail", unique=True)
+    profil_modifie_le = models.DateTimeField(
+        "dernière modification du profil", blank=True, null=True
+    )
     role = models.CharField(
         "rôle", max_length=20, choices=Role.choices, default=Role.DEVELOPPEUR
     )

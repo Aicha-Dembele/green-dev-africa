@@ -4,13 +4,18 @@ La connexion et la déconnexion ne sont pas ici : Django les fournit
 (`LoginView` et `LogoutView`), on les branche directement dans urls.py.
 """
 
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from .forms import InscriptionForm, ProfilForm
 from .models import Notification
+
+DELAI_MODIFICATION_PROFIL = timedelta(days=30)
 
 
 def inscription(request):
@@ -33,16 +38,44 @@ def inscription(request):
 @login_required
 def profil(request):
     """Cas d'utilisation « Modifier son profil »."""
+    maintenant = timezone.now()
+    modifiable_le = (
+        request.user.profil_modifie_le + DELAI_MODIFICATION_PROFIL
+        if request.user.profil_modifie_le
+        else None
+    )
+    verrouille = modifiable_le is not None and maintenant < modifiable_le
+
     if request.method == "POST":
-        formulaire = ProfilForm(request.POST, instance=request.user)
-        if formulaire.is_valid():
-            formulaire.save()
+        formulaire = ProfilForm(
+            request.POST, instance=request.user, verrouille=verrouille
+        )
+        if verrouille:
+            messages.error(
+                request,
+                "Votre profil est temporairement verrouillé. "
+                f"Vous pourrez le modifier à nouveau le {modifiable_le:%d/%m/%Y à %H:%M}.",
+            )
+        elif formulaire.is_valid():
+            if formulaire.has_changed():
+                utilisateur = formulaire.save(commit=False)
+                utilisateur.profil_modifie_le = maintenant
+                utilisateur.save()
+                request.user.refresh_from_db()
             messages.success(request, "Profil mis à jour.")
             return redirect("profil")
     else:
-        formulaire = ProfilForm(instance=request.user)
+        formulaire = ProfilForm(instance=request.user, verrouille=verrouille)
 
-    return render(request, "comptes/profil.html", {"formulaire": formulaire})
+    return render(
+        request,
+        "comptes/profil.html",
+        {
+            "formulaire": formulaire,
+            "profil_verrouille": verrouille,
+            "profil_modifiable_le": modifiable_le,
+        },
+    )
 
 
 @login_required

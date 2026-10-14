@@ -1,90 +1,310 @@
+
 {% extends "base.html" %}
 
-{% block titre %}Green Dev Africa — Des sites plus légers, pour le web africain{% endblock %}
+{% block titre %}Green Dev Africa — Un web plus léger, un web pour tous{% endblock %}
 {% block classe_page %}page-accueil{% endblock %}
 
 {% block contenu %}
-  <section class="accueil-hero" aria-labelledby="titre-accueil">
-    <div class="accueil-hero-texte">
-      <p class="surtitre"><span class="point-actif"></span> Le numérique responsable, mesuré concrètement</p>
-      <h1 id="titre-accueil">Un web plus léger.<br><span>Un web pour tous.</span></h1>
-      <p class="accueil-intro">
-        Green Dev Africa t’aide à comprendre le poids réel de ton site et à
-        trouver des pistes concrètes pour le rendre plus rapide, plus sobre et
-        plus accessible, même avec une connexion limitée.
+
+<section class="accueil-hero" aria-labelledby="titre-accueil">
+  <div class="accueil-hero-texte">
+    <p class="surtitre">
+      <span class="point-actif"></span>
+      Le numérique responsable, mesuré concrètement
+    </p>
+
+    <h1 id="titre-accueil">
+      Un web plus léger.<br>
+      <span>Un web pour tous.</span>
+    </h1>
+
+    <p class="accueil-intro">
+      Green Dev Africa analyse ton site, détecte ce qui consomme
+      trop de ressources et te guide vers des corrections concrètes
+      pour créer un web plus léger, plus rapide et plus accessible,
+      même avec une connexion limitée.
+    </p>
+
+    <div class="accueil-actions">
+      <a class="bouton bouton-grand" href="{% url 'inscription' %}">
+        Analyser mon site <span aria-hidden="true">→</span>
+      </a>
+
+      <a class="lien-decouvrir" href="#comment-ca-marche">
+        Découvrir la démarche <span aria-hidden="true">↓</span>
+      </a>
+    </div>
+
+    <p class="accueil-reassurance">
+      Gratuit pour démarrer
+      <span aria-hidden="true">·</span>
+      Tes projets restent privés par défaut
+      <span aria-hidden="true">·</span>
+      Pensé pour les réalités du continent
+    </p>
+  </div>
+
+  <div class="aperçu-audit"
+       aria-label="Exemple illustratif d'un rapport Green Dev Africa">
+
+    <div class="aperçu-entete">
+      <div>
+        <span class="mini-point"></span>
+        <span class="mini-point"></span>
+        <span class="mini-point"></span>
+      </div>
+      <span>APERÇU D'UNE ANALYSE</span>
+      <span class="etiquette etiquette-ok">Exemple</span>
+    </div>
+
+    <div class="aperçu-site">
+      <span class="icone-site" aria-hidden="true">↗</span>
+      <div>
+        <strong>Mon site web</strong>
+        <small>Analyse de sobriété numérique</small>
+      </div>
+    </div>
+
+    <div class="aperçu-score">
+      <div class="score-cercle">
+        <span>82</span>
+        <small>/ 100</small>
+      </div>
+
+      <div>
+        <strong>Green Score</strong>
+        <p>
+          Un indicateur pour comprendre<br>
+          et prioriser les améliorations.
+        </p>
+      </div>
+    </div>
+
+    <div class="aperçu-separateur"></div>
+
+    <div class="aperçu-indicateurs">
+      <div>
+        <span class="indicateur-icone" aria-hidden="true">↘</span>
+        <span>
+          <strong>Poids de la page</strong>
+          <small>Volume des ressources transférées</small>
+        </span>
+        <b>À mesurer</b>
+      </div>
+
+      <div>
+        <span class="indicateur-icone" aria-hidden="true">◷</span>
+        <span>
+          <strong>Temps de chargement</strong>
+          <small>Performance de la page</small>
+        </span>
+        <b class="alerte">À analyser</b>
+      </div>
+
+      <div>
+        <span class="indicateur-icone" aria-hidden="true">✳</span>
+        <span>
+          <strong>Recommandations</strong>
+          <small>Des actions concrètes pour progresser</small>
+        </span>
+        <b>À découvrir</b>
+      </div>
+    </div>
+
+    <div class="aperçu-note">
+      <span aria-hidden="true">✦</span>
+      Comprends ce qui alourdit ton site. Sache quoi améliorer.
+    </div>
+
+    <p class="note-exemple">
+      Illustration : les données présentées ici sont fictives.
+    </p>
+  </div>
+
+  <a class="hero-defilement" href="#pourquoi">
+    FAIRE DÉFILER <span aria-hidden="true">↓</span>
+  </a>
+</section>
+
+
+<section class="section-accueil section-pourquoi"
+         id="pourquoi"
+         aria-labelledby="titre-pourquoi">
+
+  <div class="section-entete">
+    <p class="surtitre">NOTRE CONVICTION</p>
+
+    <h2 id="titre-pourquoi">
+      Un site performant ne devrait pas dépendre d'une connexion parfaite.
+    </h2>
+
+    <p>
+      Quand chaque mégaoctet compte, alléger le web,
+      c'est aussi faciliter l'accès au numérique.
+    </p>
+  </div>
+
+  <div class="grille grille-3 cartes-valeur">
+
+    <article class="carte-valeur">
+      <span class="valeur-icone" aria-hidden="true">◉</span>
+      <h3>Comprendre</h3>
+      <p>
+        Découvre le poids des pages, les images, les scripts
+        et les requêtes qui composent ton site.
       </p>
-      <div class="accueil-actions">
-        <a class="bouton bouton-grand" href="{% url 'inscription' %}">Créer mon compte <span aria-hidden="true">→</span></a>
-        <a class="lien-decouvrir" href="#comment-ca-marche">Découvrir la démarche <span aria-hidden="true">↓</span></a>
+    </article>
+
+    <article class="carte-valeur">
+      <span class="valeur-icone" aria-hidden="true">⌁</span>
+      <h3>Améliorer</h3>
+      <p>
+        Identifie les problèmes prioritaires et découvre
+        des pistes concrètes pour optimiser tes ressources.
+      </p>
+    </article>
+
+    <article class="carte-valeur">
+      <span class="valeur-icone" aria-hidden="true">↗</span>
+      <h3>Mesurer tes progrès</h3>
+      <p>
+        Relance tes analyses, conserve leur historique
+        et compare les résultats après tes corrections.
+      </p>
+    </article>
+
+  </div>
+</section>
+
+
+<section class="section-accueil section-demarche"
+         id="comment-ca-marche"
+         aria-labelledby="titre-demarche">
+
+  <div class="demarche-entete">
+    <p class="surtitre">SIMPLE, DE BOUT EN BOUT</p>
+
+    <h2 id="titre-demarche">
+      De l'URL au plan d'action.
+    </h2>
+
+    <p>
+      Commence avec ton site et avance étape par étape.
+    </p>
+  </div>
+
+  <ol class="etapes">
+
+    <li>
+      <span class="numero-etape">01</span>
+      <div>
+        <h3>Ajoute ton site</h3>
+        <p>
+          Crée un projet avec l'adresse du site que tu souhaites analyser.
+        </p>
       </div>
-      <p class="accueil-reassurance">Gratuit pour démarrer <span aria-hidden="true">·</span> Tes projets restent privés par défaut <span aria-hidden="true">·</span> Pensé pour les réalités du continent</p>
-    </div>
+    </li>
 
-    <div class="aperçu-audit" aria-label="Illustration d’un rapport d’analyse Green Dev Africa">
-      <div class="aperçu-entete">
-        <div><span class="mini-point"></span><span class="mini-point"></span><span class="mini-point"></span></div>
-        <span>APERÇU D’UNE ANALYSE</span>
-        <span class="etiquette etiquette-ok">Exemple</span>
+    <li>
+      <span class="numero-etape">02</span>
+      <div>
+        <h3>Lance un audit</h3>
+        <p>
+          Récupère les indicateurs techniques disponibles
+          et identifie les ressources qui méritent ton attention.
+        </p>
       </div>
-      <div class="aperçu-site"><span class="icone-site" aria-hidden="true">↗</span><div><strong>Mon site web</strong><small>Analyse de sobriété numérique</small></div></div>
-      <div class="aperçu-score">
-        <div class="score-cercle"><span>82</span><small>/ 100</small></div>
-        <div><strong>Green Score</strong><p>Une vue d’ensemble pour<br>prioriser les améliorations.</p></div>
+    </li>
+
+    <li>
+      <span class="numero-etape">03</span>
+      <div>
+        <h3>Corrige et compare</h3>
+        <p>
+          Suis les recommandations, améliore ton site
+          et compare les résultats de tes analyses.
+        </p>
       </div>
-      <div class="aperçu-separateur"></div>
-      <div class="aperçu-indicateurs">
-        <div><span class="indicateur-icone">↘</span><span><strong>Poids de la page</strong><small>Ressources téléchargées</small></span><b>Mesuré</b></div>
-        <div><span class="indicateur-icone">◷</span><span><strong>Temps de chargement</strong><small>Réactivité à améliorer</small></span><b class="alerte">À suivre</b></div>
-        <div><span class="indicateur-icone">✳</span><span><strong>Recommandations</strong><small>Des actions, pas seulement un score</small></span><b>Prêtes</b></div>
-      </div>
-      <div class="aperçu-note"><span aria-hidden="true">✦</span> Chaque analyse révèle des pistes adaptées à ton site.</div>
+    </li>
+
+  </ol>
+
+  <div class="demarche-cta">
+    <div>
+      <strong>Ton prochain site peut être plus léger.</strong>
+      <span>Commence par comprendre ce que tu peux améliorer.</span>
     </div>
-    <a class="hero-defilement" href="#pourquoi">FAIRE DÉFILER <span aria-hidden="true">↓</span></a>
-  </section>
 
-  <section class="section-accueil section-pourquoi" id="pourquoi" aria-labelledby="titre-pourquoi">
-    <div class="section-entete">
-      <p class="surtitre">NOTRE CONVICTION</p>
-      <h2 id="titre-pourquoi">Un site performant ne devrait pas dépendre d’une connexion parfaite.</h2>
-      <p>Quand chaque méga octet compte, alléger le web, c’est aussi élargir l’accès au numérique.</p>
-    </div>
-    <div class="grille grille-3 cartes-valeur">
-      <article class="carte-valeur"><span class="valeur-icone" aria-hidden="true">◉</span><h3>Comprendre</h3><p>Visualise le poids des pages, les requêtes, les images et les scripts qui composent ton site.</p></article>
-      <article class="carte-valeur"><span class="valeur-icone" aria-hidden="true">⌁</span><h3>Améliorer</h3><p>Reçois des recommandations claires pour savoir quoi optimiser en premier et pourquoi.</p></article>
-      <article class="carte-valeur"><span class="valeur-icone" aria-hidden="true">↗</span><h3>Progresser</h3><p>Garde l’historique de tes audits et compare tes résultats au fil des améliorations.</p></article>
-    </div>
-  </section>
+    <a class="bouton bouton-grand" href="{% url 'inscription' %}">
+      Je me lance <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>
 
-  <section class="section-accueil section-demarche" id="comment-ca-marche" aria-labelledby="titre-demarche">
-    <div class="demarche-entete">
-      <p class="surtitre">SIMPLE, DE BOUT EN BOUT</p>
-      <h2 id="titre-demarche">De l’URL au plan d’action.</h2>
-      <p>Pas besoin d’être spécialiste pour commencer.</p>
-    </div>
-    <ol class="etapes">
-      <li><span class="numero-etape">01</span><div><h3>Ajoute ton site</h3><p>Crée un projet avec l’adresse du site que tu souhaites évaluer.</p></div></li>
-      <li><span class="numero-etape">02</span><div><h3>Lance un audit</h3><p>Analyse une page ou, selon la configuration, un ensemble de pages.</p></div></li>
-      <li><span class="numero-etape">03</span><div><h3>Passe à l’action</h3><p>Lis ton score, repère les problèmes et suis les pistes de correction dans le temps.</p></div></li>
-    </ol>
-    <div class="demarche-cta"><div><strong>Ton prochain site peut être plus léger.</strong><span>Commence par une première analyse, à ton rythme.</span></div><a class="bouton bouton-grand" href="{% url 'inscription' %}">Je me lance <span aria-hidden="true">→</span></a></div>
-  </section>
 
-  <section class="section-accueil section-transparence" aria-labelledby="titre-transparence">
-    <div class="transparence-symbole" aria-hidden="true">i</div>
-    <div><p class="surtitre">MESURER AVEC TRANSPARENCE</p><h2 id="titre-transparence">Des indicateurs utiles, sans promesse floue.</h2><p>Green Dev Africa examine les ressources qu’une page transmet et les indicateurs techniques associés. L’outil aide à repérer des pistes de sobriété ; il ne prétend pas calculer directement l’empreinte carbone totale d’un site.</p><a href="{% url 'inscription' %}">Découvrir l’analyse avec ton site <span aria-hidden="true">→</span></a></div>
-  </section>
+<section class="section-accueil section-transparence"
+         aria-labelledby="titre-transparence">
 
-  <section class="accueil-final" aria-labelledby="titre-final">
-    <p class="surtitre">LE WEB DE DEMAIN SE CONSTRUIT AUJOURD’HUI</p>
-    <h2 id="titre-final">Fais le premier pas vers un site plus sobre.</h2>
-    <p>Crée ton compte et transforme un constat en actions concrètes.</p>
-    <a class="bouton bouton-grand" href="{% url 'inscription' %}">Créer mon compte gratuitement <span aria-hidden="true">→</span></a>
-    <p class="deja-compte">Tu as déjà un compte ? <a href="{% url 'connexion' %}">Connecte-toi</a></p>
-  </section>
+  <div class="transparence-symbole" aria-hidden="true">i</div>
 
-  <footer class="pied-accueil">
-    <a class="marque" href="{% url 'tableau_de_bord' %}">Green<span>Dev</span> Africa</a>
-    <p>Un numérique plus sobre, pensé pour l’Afrique.</p>
-    <a href="{% url 'connexion' %}">Se connecter</a>
-  </footer>
+  <div>
+    <p class="surtitre">MESURER AVEC TRANSPARENCE</p>
+
+    <h2 id="titre-transparence">
+      Des indicateurs utiles, sans promesse floue.
+    </h2>
+
+    <p>
+      Green Dev Africa analyse les ressources transférées par une page
+      et les indicateurs techniques associés. Les résultats permettent
+      de repérer des pistes d'optimisation et de suivre leur évolution.
+      Les métriques techniques ne constituent pas, à elles seules,
+      une mesure complète de l'empreinte carbone d'un site.
+    </p>
+
+    <a href="{% url 'inscription' %}">
+      Découvrir l'analyse avec ton site
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>
+
+
+<section class="accueil-final" aria-labelledby="titre-final">
+
+  <p class="surtitre">
+    LE WEB DE DEMAIN SE CONSTRUIT AUJOURD'HUI
+  </p>
+
+  <h2 id="titre-final">
+    Fais le premier pas vers un site plus sobre.
+  </h2>
+
+  <p>
+    Comprends ce qui peut être amélioré et transforme
+    ton audit en actions concrètes.
+  </p>
+
+  <a class="bouton bouton-grand" href="{% url 'inscription' %}">
+    Créer mon compte <span aria-hidden="true">→</span>
+  </a>
+
+  <p class="deja-compte">
+    Tu as déjà un compte ?
+    <a href="{% url 'connexion' %}">Connecte-toi</a>
+  </p>
+</section>
+
+
+<footer class="pied-accueil">
+  <a class="marque" href="{% url 'tableau_de_bord' %}">
+    Green<span>Dev</span> Africa
+  </a>
+
+  <p>Un numérique plus sobre, pensé pour l'Afrique.</p>
+
+  <a href="{% url 'connexion' %}">Se connecter</a>
+</footer>
+
 {% endblock %}
+```

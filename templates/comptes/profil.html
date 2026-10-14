@@ -3,20 +3,63 @@
 {% block titre %}Mon profil — Green Dev Africa{% endblock %}
 
 {% block contenu %}
-  <h1>Mon profil</h1>
-  <p class="chapeau">
-    Identifiant de connexion : <strong>{{ user.username }}</strong> —
-    rôle : <span class="etiquette">{{ user.get_role_display }}</span>
-  </p>
+  <div class="page-profil">
+    <p class="fil"><a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> › Mon profil</p>
 
-  <div class="carte formulaire-court">
-    <form method="post">
-      {% csrf_token %}
-      {% include "partiels/champs.html" with formulaire=formulaire %}
-      <div class="actions">
-        <button type="submit">Enregistrer</button>
-        <a class="bouton bouton-secondaire" href="{% url 'tableau_de_bord' %}">Retour</a>
-      </div>
-    </form>
+    <header class="profil-entete">
+      <span class="surtitre"><span class="point-actif" aria-hidden="true"></span>VOTRE ESPACE PERSONNEL</span>
+      <h1>Mon profil</h1>
+      <p class="chapeau">Gérez vos informations de compte et vos préférences personnelles.</p>
+    </header>
+
+    <div class="profil-grille">
+      <section class="carte profil-form-carte" aria-labelledby="profil-informations-titre">
+        <div class="profil-identite">
+          <div class="profil-avatar" aria-hidden="true">{{ user.nom|default:user.username|first|upper }}</div>
+          <div class="profil-identite-texte">
+            <h2>{{ user.nom|default:user.username }}</h2>
+            <p>@{{ user.username }} <span class="etiquette">{{ user.get_role_display }}</span></p>
+          </div>
+        </div>
+
+        <div class="profil-section-entete">
+          <h2 id="profil-informations-titre">Informations personnelles</h2>
+          {% if profil_verrouille %}
+            <p>Pour éviter les changements fréquents, le profil est verrouillé 30 jours, jusqu’au {{ profil_modifiable_le|date:"d/m/Y à H:i" }}.</p>
+          {% else %}
+            <p>Après une modification, vos informations seront verrouillées pendant 30 jours.</p>
+          {% endif %}
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          {% include "partiels/champs.html" with formulaire=formulaire %}
+          <div class="actions profil-actions">
+            {% if profil_verrouille %}
+              <button type="submit" disabled>Modifications verrouillées</button>
+            {% else %}
+              <button type="submit">Enregistrer les modifications</button>
+            {% endif %}
+            <a class="bouton bouton-secondaire" href="{% url 'tableau_de_bord' %}">Retour au tableau de bord</a>
+          </div>
+        </form>
+      </section>
+
+      <aside class="profil-aside" aria-label="Détails du compte">
+        <div class="profil-aside-icone" aria-hidden="true">♧</div>
+        <h2>Votre compte</h2>
+        <p class="profil-aside-intro">Votre profil vous permet de personnaliser votre espace de suivi.</p>
+        <dl class="profil-details">
+          <div><dt>Identifiant</dt><dd>{{ user.username }}</dd></div>
+          <div><dt>Rôle</dt><dd>{{ user.get_role_display }}</dd></div>
+          <div><dt>Adresse e-mail</dt><dd>{{ user.email|default:"Non renseignée" }}</dd></div>
+        </dl>
+        {% if profil_verrouille %}
+          <p class="profil-securite profil-verrouille"><span aria-hidden="true">◷</span> Prochaine modification possible le {{ profil_modifiable_le|date:"d/m/Y à H:i" }}.</p>
+        {% else %}
+          <p class="profil-securite"><span aria-hidden="true">✓</span> Après chaque modification, un délai de 30 jours s’applique.</p>
+        {% endif %}
+      </aside>
+    </div>
   </div>
 {% endblock %}

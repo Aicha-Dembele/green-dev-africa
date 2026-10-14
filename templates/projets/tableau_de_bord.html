@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
 {% block titre %}Tableau de bord — Green Dev Africa{% endblock %}
+{% block classe_page %}page-dashboard{% endblock %}
 
 {% block contenu %}
-  <div class="entre-deux">
+  <div class="entre-deux dashboard-entete">
     <div>
       <h1>Tableau de bord</h1>
       <p class="chapeau">Bonjour {{ user }}, voici l'état de sobriété de tes projets.</p>
@@ -11,7 +12,7 @@
     <a class="bouton" href="{% url 'projet_creer' %}">Nouveau projet</a>
   </div>
 
-  <div class="grille grille-4">
+  <div class="grille grille-4 dashboard-stats">
     <div class="chiffre">
       <span class="valeur">{{ nb_projets }}</span>
       <span class="intitule">Projet{{ nb_projets|pluralize }}</span>
@@ -32,11 +33,17 @@
     </div>
   </div>
 
-  <h2>Mes projets</h2>
+  <div class="dashboard-section-entete">
+    <div>
+      <h2>Mes projets</h2>
+      <p>Retrouvez ici les sites suivis et leurs derniers résultats.</p>
+    </div>
+    {% if projets %}<span class="dashboard-compteur">{{ nb_projets }} projet{{ nb_projets|pluralize }}</span>{% endif %}
+  </div>
 
   {% if projets %}
-    <div class="carte">
-      <table>
+    <div class="carte dashboard-projets-carte">
+      <table class="dashboard-table" aria-label="Liste de mes projets">
         <thead>
           <tr>
             <th>Projet</th>
@@ -50,20 +57,20 @@
         <tbody>
           {% for projet in projets %}
             <tr>
-              <td>
+              <td data-label="Projet" aria-label="Projet">
                 <a href="{% url 'projet_detail' projet.pk %}"><strong>{{ projet.nom }}</strong></a>
                 {% if projet.statut != 'actif' %}
                   <span class="etiquette">{{ projet.get_statut_display }}</span>
                 {% endif %}
               </td>
-              <td class="rupture discret">{{ projet.url }}</td>
-              <td class="nombre">{{ projet.nb_analyses }}</td>
-              <td class="nombre">
+              <td class="rupture discret" data-label="Adresse analysée" aria-label="Adresse analysée">{{ projet.url }}</td>
+              <td class="nombre" data-label="Analyses" aria-label="Analyses">{{ projet.nb_analyses }}</td>
+              <td class="nombre" data-label="Dernier score" aria-label="Dernier score">
                 {% if projet.dernier_score is not None %}
                   <strong>{{ projet.dernier_score|floatformat:0 }}</strong>
                 {% else %}—{% endif %}
               </td>
-              <td>
+              <td data-label="Dernière analyse" aria-label="Dernière analyse">
                 {% if projet.derniere_date %}
                   <a href="{% url 'analyse_detail' projet.derniere_analyse_id %}">
                     {{ projet.derniere_date|date:"d/m/Y H:i" }}
@@ -72,7 +79,7 @@
                   <span class="discret">jamais analysé</span>
                 {% endif %}
               </td>
-              <td>
+              <td class="dashboard-action" data-label="Action" aria-label="Action">
                 <a class="bouton bouton-discret" href="{% url 'lancer_analyse' projet.pk %}">Analyser</a>
               </td>
             </tr>

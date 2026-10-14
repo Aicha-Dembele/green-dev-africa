@@ -3,9 +3,12 @@
 Pour les lancer :  python manage.py test comptes
 """
 
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from comptes.models import Notification
 
@@ -71,6 +74,35 @@ class PagesDuCompteTest(TestCase):
 
         self.assertEqual(reponse.status_code, 200)
         self.assertContains(reponse, "aicha")
+        self.assertContains(reponse, 'class="nav-compte"')
+        self.assertContains(reponse, 'aria-label="Mon compte — aicha"')
+
+    def test_profil_verrouille_pendant_trente_jours_apres_modification(self):
+        self.client.post(
+            reverse("profil"),
+            {"nom": "Aïcha D.", "email": "nouvelle@example.com"},
+        )
+
+        reponse = self.client.get(reverse("profil"))
+
+        self.assertContains(reponse, "verrouillées")
+        self.assertContains(reponse, "disabled")
+        self.assertContains(reponse, "30 jours")
+
+    def test_modification_refusee_cote_serveur_pendant_le_delai(self):
+        self.utilisatrice.profil_modifie_le = timezone.now() - timedelta(days=10)
+        self.utilisatrice.save(update_fields=["profil_modifie_le"])
+
+        reponse = self.client.post(
+            reverse("profil"),
+            {"nom": "Nom forcé", "email": "force@example.com"},
+        )
+
+        self.assertEqual(reponse.status_code, 200)
+        self.utilisatrice.refresh_from_db()
+        self.assertEqual(self.utilisatrice.nom, "Aïcha")
+        self.assertEqual(self.utilisatrice.email, "aicha@example.com")
+        self.assertContains(reponse, "temporairement verrouillé")
 
     def test_modifier_son_profil(self):
         reponse = self.client.post(
@@ -81,6 +113,7 @@ class PagesDuCompteTest(TestCase):
         self.utilisatrice.refresh_from_db()
         self.assertEqual(self.utilisatrice.nom, "Aïcha D.")
         self.assertEqual(self.utilisatrice.email, "nouvelle@example.com")
+        self.assertIsNotNone(self.utilisatrice.profil_modifie_le)
 
     def test_se_deconnecter(self):
         reponse = self.client.post(reverse("deconnexion"))
