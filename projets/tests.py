@@ -68,7 +68,11 @@ class AccesSansCompteTest(BaseProjetTest):
         self.assertContains(reponse, "Un web plus léger.")
         self.assertContains(reponse, "Créer mon compte")
         self.assertContains(reponse, reverse("inscription"))
-        self.assertContains(reponse, "empreinte carbone totale")
+        # Garde-fou de transparence : la page d'accueil doit toujours dire que
+        # l'outil ne mesure pas l'empreinte carbone. On vérifie la mention,
+        # pas sa formulation exacte, pour qu'une réécriture du texte ne casse
+        # pas le test — mais sa disparition, elle, doit le casser.
+        self.assertContains(reponse, "empreinte carbone")
 
 
 class TableauDeBordTest(BaseProjetTest):
