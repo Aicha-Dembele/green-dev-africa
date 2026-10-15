@@ -21,6 +21,8 @@ Fichiers à connaître :
 - `templates/` — les gabarits HTML ; `static/css/greendev.css` — tout le style.
 - `analyses/collecteur.py` — **l'outil d'audit** : télécharge la page et ses
   fichiers, et en tire les mesures. Ne connaît ni Django ni la base.
+- `analyses/pdf.py` — **la fabrique du PDF** : reçoit un rapport, rend des
+  octets. Comme le collecteur, elle ne touche jamais à la base.
 - `analyses/indicateurs.py` — le catalogue des indicateurs (intitulé, unité,
   catégorie), source unique lue par le formulaire, le collecteur et la démo.
 - `analyses/management/commands/charger_referentiel.py` — les règles d'analyse
@@ -87,6 +89,7 @@ python manage.py runserver
 | `/analyses/<id>/` | Résultat : score, problèmes, recommandations | Consulter les problèmes |
 | `/analyses/<id>/rapport/` | Rapport + création de liens publics | Générer un rapport, Partager le rapport |
 | `/analyses/<id>/rapport.json` | Export JSON | `exporterJSON()` du diagramme |
+| `/analyses/<id>/rapport.pdf` | Export PDF | `genererPDF()` du diagramme |
 | `/r/<jeton>/` | **Page publique** d'un rapport partagé (sans compte) | Partager le rapport |
 | `/projets/<id>/comparer/` | Comparer deux analyses | Comparer deux analyses (avant / après) |
 | `/comptes/notifications/` | La cloche | Notifier l'utilisateur |
@@ -197,7 +200,21 @@ Il refuse les adresses internes (`localhost`, `192.168.x.x`…) : sans ce
 contrôle, on pourrait faire visiter son propre réseau au serveur et s'en
 faire recopier le contenu (faille SSRF).
 
+## L'export PDF
+
+`Rapport.generer_pdf()` rend le rapport en octets PDF ; le dessin vit dans
+`analyses/pdf.py` et s'appuie sur **ReportLab**. Pas de passage par le HTML :
+les bibliothèques qui convertissent une page web en PDF réclament sous
+Windows des composants système à installer à la main, ce qu'on ne pouvait
+pas se permettre pour une démonstration.
+
+Le PDF est **sur fond blanc**, volontairement : un fond bleu nuit couvrirait
+la page d'encre à l'impression, ce qui serait difficile à défendre pour un
+outil qui mesure la sobriété. La charte reste dans le bandeau et les accents,
+et les seuils de couleur du score (70 et 40) sont les mêmes qu'à l'écran.
+
+Un rapport de cinq problèmes tient en 6 Ko sur deux pages.
+
 ## Ce qui reste à faire
 
-- [ ] `Rapport.generer_pdf()`, à écrire avec le gabarit du rapport.
 - [ ] L'envoi des notifications par e-mail (acteur « Service d'e-mail »).

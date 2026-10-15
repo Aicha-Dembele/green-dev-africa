@@ -19,7 +19,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import modelformset_factory
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -247,6 +247,27 @@ def rapport_json(request, pk):
     reponse = JsonResponse(rapport.exporter_json(), json_dumps_params={"indent": 2})
     reponse["Content-Disposition"] = (
         f'attachment; filename="green-dev-rapport-{analyse.pk}.json"'
+    )
+    return reponse
+
+
+@login_required
+def rapport_pdf(request, pk):
+    """genererPDF() du diagramme, servi comme fichier téléchargeable.
+
+    Même cloisonnement que partout : `_analyse_de` ne trouve l'analyse que si
+    elle appartient à l'utilisateur connecté. Changer le numéro dans l'adresse
+    donne une 404, pas le rapport du voisin.
+    """
+    analyse = _analyse_de(request, pk, Analyse.objects.select_related("projet"))
+    rapport = getattr(analyse, "rapport", None)
+    if rapport is None:
+        messages.error(request, "Cette analyse n'a pas encore de rapport.")
+        return redirect("analyse_detail", pk=analyse.pk)
+
+    reponse = HttpResponse(rapport.generer_pdf(), content_type="application/pdf")
+    reponse["Content-Disposition"] = (
+        f'attachment; filename="green-dev-rapport-{analyse.pk}.pdf"'
     )
     return reponse
 

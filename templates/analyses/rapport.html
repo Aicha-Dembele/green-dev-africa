@@ -21,6 +21,7 @@
     </div>
     {% if not public %}
       <div class="actions">
+        <a class="bouton" href="{% url 'rapport_pdf' analyse.pk %}">Télécharger le PDF</a>
         <a class="bouton bouton-secondaire" href="{% url 'rapport_json' analyse.pk %}">Exporter en JSON</a>
       </div>
     {% endif %}

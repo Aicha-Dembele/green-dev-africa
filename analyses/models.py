@@ -887,14 +887,18 @@ class Rapport(models.Model):
         }
 
     def generer_pdf(self):
-        """genererPDF() : à brancher sur la vue d'export (étape suivante).
+        """genererPDF() : la synthèse du rapport, en octets PDF.
 
-        Le PDF sera produit depuis le gabarit HTML du rapport ; la méthode
-        reste ici pour respecter le diagramme et être remplie ensuite.
+        Le dessin vit dans `analyses/pdf.py`, comme la mesure vit dans
+        `collecteur.py` : le modèle commande, le module fabrique.
+
+        L'import est fait ici et non en haut du fichier pour que ReportLab ne
+        soit chargé qu'au moment où quelqu'un demande vraiment un PDF — le
+        reste du site n'a pas à en payer le coût au démarrage.
         """
-        raise NotImplementedError(
-            "Export PDF à implémenter avec la vue rapport (étape suivante)."
-        )
+        from .pdf import construire_pdf
+
+        return construire_pdf(self)
 
     def partager(self, duree_jours=30):
         """partager() : crée un lien public temporaire vers ce rapport."""

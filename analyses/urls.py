@@ -25,6 +25,7 @@ urlpatterns = [
     # Rapport
     path("analyses/<int:pk>/rapport/", views.rapport_detail, name="rapport_detail"),
     path("analyses/<int:pk>/rapport.json", views.rapport_json, name="rapport_json"),
+    path("analyses/<int:pk>/rapport.pdf", views.rapport_pdf, name="rapport_pdf"),
     path(
         "analyses/<int:pk>/rapport/partager/",
         views.rapport_partager,

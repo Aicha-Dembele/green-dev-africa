@@ -234,6 +234,36 @@ class RapportVueTest(BaseAnalyseVueTest):
         self.assertEqual(donnees["poids_total_ko"], 1600)
         self.assertEqual(len(donnees["problemes"]), 1)
 
+    def test_export_pdf(self):
+        analyse = self.analyse_terminee()
+
+        reponse = self.client.get(reverse("rapport_pdf", args=[analyse.pk]))
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertEqual(reponse["Content-Type"], "application/pdf")
+        self.assertIn(
+            f"green-dev-rapport-{analyse.pk}.pdf", reponse["Content-Disposition"]
+        )
+        # Les quatre premiers octets de tout fichier PDF.
+        self.assertTrue(reponse.content.startswith(b"%PDF"))
+        self.assertGreater(len(reponse.content), 1000)
+
+    def test_pdf_dune_autre_introuvable(self):
+        analyse = self.analyse_terminee(projet=self.projet_fanta)
+
+        reponse = self.client.get(reverse("rapport_pdf", args=[analyse.pk]))
+
+        self.assertEqual(reponse.status_code, 404)
+
+    def test_pdf_sans_rapport_renvoie_vers_lanalyse(self):
+        analyse = Analyse.creer_pour(self.projet)
+
+        reponse = self.client.get(reverse("rapport_pdf", args=[analyse.pk]))
+
+        self.assertRedirects(
+            reponse, reverse("analyse_detail", args=[analyse.pk])
+        )
+
     def test_rapport_absent_renvoie_vers_lanalyse(self):
         analyse = Analyse.creer_pour(self.projet)
 
