@@ -11,6 +11,7 @@ mesure la sobriété. La charte reste dans le bandeau et les accents.
 """
 
 from io import BytesIO
+from xml.sax.saxutils import escape
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -62,6 +63,19 @@ def _nombre(valeur, decimales=0):
     texte = f"{valeur:,.{decimales}f}"
     # La f-string donne « 12,345.7 » : on échange les deux séparateurs.
     return texte.replace(",", " ").replace(".", ",")
+
+
+def _texte(valeur, longueur_max=None):
+    """Prépare un texte venu de la base pour un Paragraph ReportLab.
+
+    ReportLab lit ses paragraphes comme du mini-HTML : une adresse qui
+    contient « & » ou un titre qui contient « < » ferait échouer l'analyse
+    et donc la génération entière du PDF. On échappe avant d'insérer.
+    """
+    texte = escape(str(valeur or ""))
+    if longueur_max is not None and len(texte) > longueur_max:
+        texte = texte[:longueur_max] + "…"
+    return texte
 
 
 def _valeur(valeur, decimales=0, unite=""):
@@ -140,6 +154,22 @@ def _styles():
         ),
         "puce": ParagraphStyle(
             "puce", parent=base, fontSize=9, leading=12.5, leftIndent=10
+        ),
+        # Les exemples de code : en chasse fixe, sur un fond discret, pour
+        # qu'on voie d'un coup d'oeil que ce n'est pas de la prose.
+        "code": ParagraphStyle(
+            "code",
+            parent=base,
+            fontName="Courier",
+            fontSize=8,
+            leading=11,
+            leftIndent=20,
+            rightIndent=6,
+            spaceBefore=3,
+            spaceAfter=4,
+            backColor=FOND_DOUX,
+            borderPadding=5,
+            textColor=colors.HexColor("#1d3b4d"),
         ),
     }
 
@@ -252,8 +282,8 @@ def _bloc_score(rapport, styles, largeur_utile):
 
     colonne_droite = Table(
         [
-            [Paragraph(rapport.analyse.projet.nom, styles["titre"])],
-            [Paragraph(rapport.analyse.projet.url, styles["sous_titre"])],
+            [Paragraph(_texte(rapport.analyse.projet.nom), styles["titre"])],
+            [Paragraph(_texte(rapport.analyse.projet.url), styles["sous_titre"])],
             [jauge],
         ],
         colWidths=[largeur_jauge],
@@ -327,24 +357,45 @@ def _bloc_probleme(probleme, styles):
     couleur = f"#{GRAVITES.get(probleme.gravite, TEXTE_DOUX).hexval()[2:]}"
     morceaux = [
         Paragraph(
-            f'<font color="{couleur}">■</font> {probleme.titre}'
+            f'<font color="{couleur}">■</font> {_texte(probleme.titre)}'
             f' <font size="8" color="{couleur}">'
             f"[{probleme.get_gravite_display().upper()}]</font>",
             styles["probleme"],
         ),
-        Paragraph(probleme.description, styles["base"]),
+        Paragraph(_texte(probleme.description), styles["base"]),
     ]
-    if probleme.localisation:
-        morceaux.append(Paragraph(probleme.localisation[:300], styles["petit"]))
+
+    if probleme.ressource_id:
+        morceaux.append(
+            Paragraph(
+                "Principal fichier en cause : "
+                f"{_texte(probleme.ressource.url, 220)} "
+                f"({_nombre(probleme.ressource.taille, 1)} Ko)",
+                styles["petit"],
+            )
+        )
+    elif probleme.localisation:
+        morceaux.append(
+            Paragraph(_texte(probleme.localisation, 300), styles["petit"])
+        )
 
     for recommandation in probleme.recommandations.all():
         morceaux.append(
             Paragraph(
-                f"→ <b>{recommandation.titre}</b> — "
-                f"{recommandation.description}",
+                f"→ <b>{_texte(recommandation.titre)}</b> — "
+                f"{_texte(recommandation.description)}",
                 styles["puce"],
             )
         )
+        if recommandation.conseil.exemple_code:
+            morceaux.append(
+                Paragraph(
+                    _texte(recommandation.conseil.exemple_code).replace(
+                        "\n", "<br/>"
+                    ),
+                    styles["code"],
+                )
+            )
     morceaux.append(Spacer(1, 5 * mm))
     return KeepTogether(morceaux)
 
@@ -392,7 +443,9 @@ def construire_pdf(rapport):
     ]
 
     problemes = list(
-        analyse.problemes.select_related("regle").prefetch_related("recommandations")
+        analyse.problemes.select_related("regle", "ressource").prefetch_related(
+            "recommandations__conseil"
+        )
     )
     histoire.append(
         Paragraph(f"Problèmes détectés ({len(problemes)})", styles["section"])

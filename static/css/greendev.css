@@ -984,6 +984,53 @@ legend {
   .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+/* --- exemples de code dans les recommandations --- */
+
+.exemple-code {
+  margin: 0.5rem 0;
+  padding: 0.7rem 0.9rem;
+  background: var(--nuit-barre);
+  border: 1px solid var(--bord);
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--texte);
+  white-space: pre;
+}
+
+.exemple-code code { font-family: ui-monospace, Consolas, "Courier New", monospace; }
+
+/* --- mention de methode, au pied des rapports --- */
+
+.mention-methode {
+  margin-top: 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border-left: 3px solid var(--turquoise);
+  background: var(--turquoise-voile);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--texte-doux);
+}
+
+.mention-methode strong { color: var(--texte); }
+
+/* --- bilan avant / apres : les trois listes de problemes --- */
+
+.liste-bilan { list-style: none; margin: 0; padding: 0; }
+
+.liste-bilan li {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--bord);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.liste-bilan li:first-child { border-top: 0; }
+
+.liste-bilan .etiquette { margin-right: 0.4rem; }
+
 /* --- impression du rapport : sur papier, on repasse en clair --- */
 
 @media print {

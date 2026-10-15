@@ -213,7 +213,59 @@ la page d'encre à l'impression, ce qui serait difficile à défendre pour un
 outil qui mesure la sobriété. La charte reste dans le bandeau et les accents,
 et les seuils de couleur du score (70 et 40) sont les mêmes qu'à l'écran.
 
-Un rapport de cinq problèmes tient en 6 Ko sur deux pages.
+Un rapport de cinq problèmes tient en 8 Ko sur trois pages, exemples de code
+compris. Les textes venus de la base y sont échappés avant d'être insérés :
+ReportLab lit ses paragraphes comme du mini-HTML, et une adresse contenant
+« & » ferait échouer la génération entière.
+
+## La mention de méthode
+
+Elle est affichée au pied de **chaque rapport**, y compris le rapport public
+partagé — c'est celui qui part chez un client, donc celui où elle protège le
+plus. Même texte que le PDF et que la page d'accueil : ce qui est mesuré, ce
+qui ne l'est pas (les fichiers ajoutés par JavaScript), et le fait que les
+résultats ne constituent pas un calcul d'empreinte carbone.
+
+Un test de `projets/tests.py` vérifie que la mention existe toujours sur
+l'accueil, et un autre sur le rapport. Ils vérifient la présence des mots
+« empreinte carbone », pas la formulation exacte : une réécriture passe, une
+suppression casse.
+
+## La comparaison avant / après
+
+La page `/comparaisons/<id>/` ne se contente pas des deux scores :
+
+- **chaque indicateur** est repris avant / après, avec l'écart. Pour tous nos
+  indicateurs, baisser est un progrès — c'est le propre d'un outil de
+  sobriété. Seul `nombre_pages` est affiché sans jugement : passer de 1 à 5
+  pages analysées n'est ni un progrès ni une régression.
+- **le bilan des problèmes** en trois colonnes : résolus, toujours là,
+  apparus. Deux problèmes sont « le même » quand ils viennent de la même
+  règle : c'est la seule clé stable entre deux analyses, puisque les
+  identifiants sont recréés à chaque exécution et que les intitulés
+  contiennent la valeur mesurée.
+
+Seul le **nombre** de problèmes résolus est figé en base, comme les scores,
+pour la liste des comparaisons passées. Le détail est recalculé à
+l'affichage : les indicateurs et les problèmes des deux analyses sont déjà
+en base, en faire une seconde copie n'ajouterait qu'un risque de désaccord.
+
+## Nommer le fichier en cause
+
+Quand une règle vise un type de fichier (`poids_images`, `poids_javascript`,
+`poids_css`, `images_non_optimisees`), le problème détecté porte le plus gros
+fichier du lot : « c'est `banniere.png` » est actionnable, « vos images sont
+trop lourdes » ne l'est pas. La recommandation cite alors ce fichier, et non
+plus l'adresse de la page.
+
+**On ne crée pas un problème par fichier**, délibérément : vingt images trop
+lourdes donneraient vingt pénalités et un score écrasé pour une seule et même
+erreur. On nomme le principal responsable, et la table des fichiers de la
+page montre tous les autres, marqués « à alléger ».
+
+`images_sans_alternative` est volontairement absente de cette liste : la plus
+grosse image n'est pas forcément celle à qui il manque un texte alternatif,
+et désigner un fichier au hasard serait pire que de n'en désigner aucun.
 
 ## Ce qui reste à faire
 

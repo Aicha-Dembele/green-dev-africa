@@ -93,7 +93,9 @@
           <span class="etiquette">{{ probleme.regle.get_categorie_display }}</span>
           <span class="etiquette {% if probleme.statut == 'corrige' %}etiquette-ok{% endif %}">{{ probleme.get_statut_display }}</span>
           {% if probleme.ressource %}
-            — fichier concerné : <span class="rupture">{{ probleme.ressource.url }}</span>
+            — principal fichier en cause :
+            <span class="rupture">{{ probleme.ressource.url }}</span>
+            ({{ probleme.ressource.taille|floatformat:"-1" }} Ko)
           {% endif %}
         </p>
         <p>{{ probleme.description }}</p>
@@ -104,6 +106,9 @@
             <span class="etiquette etiquette-{{ probleme.gravite }}">Priorité {{ reco.get_priorite_display|lower }}</span>
             {% if reco.statut == 'faite' %}<span class="etiquette etiquette-ok">Faite</span>{% endif %}
             <p class="solution">{{ reco.description }}</p>
+            {% if reco.conseil.exemple_code %}
+              <pre class="exemple-code"><code>{{ reco.conseil.exemple_code }}</code></pre>
+            {% endif %}
             <p class="gain">Gain attendu : {{ reco.conseil.gain_attendu }}</p>
             {% if reco.statut != 'faite' %}
               <form method="post" action="{% url 'recommandation_faite' reco.pk %}">

@@ -364,6 +364,112 @@ class RessourceWebTest(TestCase):
         self.assertTrue(self.banniere.verifier_optimisation())
         self.assertTrue(RessourceWeb.objects.get(pk=self.banniere.pk).optimisable)
 
+    def test_fichier_principal_dune_regle_dimages(self):
+        trouvee = RessourceWeb.principale_pour(self.analyse, "poids_images")
+
+        self.assertEqual(trouvee, self.banniere)
+
+    def test_fichier_principal_dune_regle_de_page(self):
+        # poids_total ne vise aucun type de fichier : rien à désigner.
+        self.assertIsNone(RessourceWeb.principale_pour(self.analyse, "poids_total"))
+
+    def test_fichier_principal_ignore_les_autres_types(self):
+        # Le CSS pèse moins que l'image, mais c'est lui qui doit sortir.
+        trouvee = RessourceWeb.principale_pour(self.analyse, "poids_css")
+
+        self.assertEqual(trouvee, self.style)
+
+
+class ProblemeRattacheAuFichierTest(TestCase):
+    """« Identifier les ressources trop lourdes » du cahier des charges.
+
+    Un problème qui vise un type de fichier doit nommer le plus gros du lot :
+    « c'est banniere.png » est actionnable, « vos images sont trop lourdes »
+    ne l'est pas.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        Referentiel().handle()
+        utilisateur = Utilisateur.objects.create_user(
+            username="moussa", email="moussa@example.com", password="motdepasse-de-test"
+        )
+        cls.projet = Projet.objects.create(
+            utilisateur=utilisateur, nom="Boutique", url="https://exemple.ml"
+        )
+
+    def analyse_avec_images(self):
+        analyse = self.projet.lancer_analyse()
+        Indicateur.objects.create(
+            analyse=analyse,
+            nom="poids_images",
+            valeur=900,
+            unite="Ko",
+            categorie=RegleAnalyse.Categorie.IMAGES,
+        )
+        RessourceWeb.objects.create(
+            analyse=analyse,
+            url="https://exemple.ml/vignette.jpg",
+            type=RessourceWeb.Type.IMAGE,
+            taille=100,
+        )
+        grosse = RessourceWeb.objects.create(
+            analyse=analyse,
+            url="https://exemple.ml/banniere.png",
+            type=RessourceWeb.Type.IMAGE,
+            taille=800,
+        )
+        # Plus lourd que l'image, mais d'un autre type : ne doit pas sortir.
+        RessourceWeb.objects.create(
+            analyse=analyse,
+            url="https://exemple.ml/app.js",
+            type=RessourceWeb.Type.SCRIPT,
+            taille=950,
+        )
+        analyse.executer_analyse()
+        return analyse, grosse
+
+    def test_le_probleme_nomme_le_fichier_le_plus_lourd(self):
+        analyse, grosse = self.analyse_avec_images()
+
+        probleme = analyse.problemes.get(regle__code="poids_images")
+
+        self.assertEqual(probleme.ressource, grosse)
+
+    def test_la_recommandation_cite_le_fichier_et_non_la_page(self):
+        analyse, grosse = self.analyse_avec_images()
+
+        probleme = analyse.problemes.get(regle__code="poids_images")
+
+        self.assertEqual(probleme.localisation, grosse.url)
+        self.assertIn(grosse.url, probleme.recommandations.get().description)
+
+    def test_un_probleme_de_page_garde_ladresse_de_la_page(self):
+        analyse = self.projet.lancer_analyse()
+        Indicateur.objects.create(
+            analyse=analyse,
+            nom="poids_total",
+            valeur=1600,
+            unite="Ko",
+            categorie=RegleAnalyse.Categorie.POIDS,
+        )
+        analyse.executer_analyse()
+
+        probleme = analyse.problemes.get(regle__code="poids_total")
+
+        self.assertIsNone(probleme.ressource)
+        self.assertEqual(probleme.localisation, self.projet.url)
+
+    def test_le_score_ne_depend_pas_du_nombre_de_fichiers(self):
+        """On nomme un responsable, on ne crée pas un problème par fichier.
+
+        Sans cette règle, vingt images trop lourdes vaudraient vingt
+        pénalités et un score écrasé pour une seule et même erreur.
+        """
+        analyse, _ = self.analyse_avec_images()
+
+        self.assertEqual(analyse.problemes.count(), 1)
+
 
 class ComparaisonTest(TestCase):
     """Le cas d'utilisation « Comparer deux analyses (avant / après) »."""

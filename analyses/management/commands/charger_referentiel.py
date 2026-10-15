@@ -89,6 +89,59 @@ REGLES = [
     },
 ]
 
+# Les exemples de code des conseils. Ils sont volontairement courts et
+# copiables tels quels : un pavé de quarante lignes ne serait jamais lu, et
+# ne tiendrait pas dans le PDF. Ils sont affichés sans coloration ni
+# interprétation — on ne promet pas qu'ils marchent dans tous les contextes,
+# on montre la forme que prend la correction.
+
+EXEMPLE_POIDS = """\
+# nginx : compresser les réponses texte avant de les envoyer
+gzip on;
+gzip_types text/css application/javascript application/json image/svg+xml;
+gzip_min_length 1024;"""
+
+EXEMPLE_REQUETES = """\
+<!-- Avant : trois fichiers, trois allers-retours sur le réseau -->
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="grille.css">
+<link rel="stylesheet" href="boutons.css">
+
+<!-- Après : un seul fichier, un seul aller-retour -->
+<link rel="stylesheet" href="site.css">"""
+
+EXEMPLE_IMAGES = """\
+<picture>
+  <source srcset="photo.avif" type="image/avif">
+  <source srcset="photo.webp" type="image/webp">
+  <img src="photo.jpg" alt="Marché de Bamako"
+       width="800" height="600" loading="lazy">
+</picture>"""
+
+EXEMPLE_CODE = """\
+<!-- defer : le script n'empêche plus la page de s'afficher -->
+<script src="app.js" defer></script>
+
+// et ne charger la grosse brique que si on s'en sert
+bouton.addEventListener("click", async () => {
+  const { afficherCarte } = await import("./carte.js");
+  afficherCarte();
+});"""
+
+EXEMPLE_RESEAU = """\
+# nginx : un an de cache pour les fichiers dont le nom change à chaque version
+location /static/ {
+  add_header Cache-Control "public, max-age=31536000, immutable";
+}"""
+
+EXEMPLE_ACCESSIBILITE = """\
+<!-- Image porteuse de sens : décrire ce qu'elle apporte -->
+<img src="graphique.png" alt="Trafic en hausse de 12 % en 2026">
+
+<!-- Image purement décorative : alt vide, et non alt absent -->
+<img src="separateur.svg" alt="">"""
+
+
 # Un conseil par catégorie : c'est la fiche rattachée aux recommandations.
 CONSEILS = [
     {
@@ -99,6 +152,7 @@ CONSEILS = [
         "solution_technique": "Compresser les réponses (gzip ou brotli), supprimer "
         "les bibliothèques inutilisées, charger les contenus lourds seulement "
         "quand l'utilisateur en a besoin.",
+        "exemple_code": EXEMPLE_POIDS,
         "gain_attendu": "30 à 60 % de poids en moins",
     },
     {
@@ -108,6 +162,7 @@ CONSEILS = [
         "allers-retours, pas de la taille des fichiers.",
         "solution_technique": "Regrouper les fichiers CSS et JS, utiliser des "
         "sprites ou des icônes en SVG, supprimer les traceurs et widgets externes.",
+        "exemple_code": EXEMPLE_REQUETES,
         "gain_attendu": "moitié des requêtes en moins",
     },
     {
@@ -117,6 +172,7 @@ CONSEILS = [
         "poids d'une page, pour un gain visuel souvent invisible.",
         "solution_technique": "Redimensionner aux dimensions réellement affichées, "
         "convertir en WebP ou AVIF, activer le chargement différé (loading=\"lazy\").",
+        "exemple_code": EXEMPLE_IMAGES,
         "gain_attendu": "jusqu'à 70 % du poids des images",
     },
     {
@@ -126,6 +182,7 @@ CONSEILS = [
         "même : c'est la partie la plus coûteuse pour un téléphone d'entrée de gamme.",
         "solution_technique": "Minifier, supprimer le code mort, remplacer les "
         "gros cadres par du code natif, découper par page (code splitting).",
+        "exemple_code": EXEMPLE_CODE,
         "gain_attendu": "40 à 70 % de code en moins",
     },
     {
@@ -136,6 +193,7 @@ CONSEILS = [
         "solution_technique": "Déclarer des en-têtes Cache-Control longs sur les "
         "fichiers statiques, servir depuis un hébergement proche des visiteurs, "
         "activer HTTP/2.",
+        "exemple_code": EXEMPLE_RESEAU,
         "gain_attendu": "1 à 3 secondes de chargement en moins",
     },
     {
@@ -145,6 +203,7 @@ CONSEILS = [
         "tout visiteur dont les images n'ont pas chargé faute de réseau.",
         "solution_technique": "Renseigner l'attribut alt de chaque image porteuse "
         "de sens, garder un contraste suffisant, ne pas dépendre de la couleur seule.",
+        "exemple_code": EXEMPLE_ACCESSIBILITE,
         "gain_attendu": "page utilisable même sans images",
     },
 ]

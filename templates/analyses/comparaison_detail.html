@@ -81,4 +81,113 @@
       </p>
     </div>
   {% endif %}
+
+  <h2>Les métriques, une par une</h2>
+  <div class="carte">
+    {% if indicateurs %}
+      <div class="tableau-defilant">
+        <table aria-label="Comparaison des indicateurs mesurés">
+          <thead>
+            <tr>
+              <th>Indicateur</th>
+              <th class="nombre">Avant</th>
+              <th class="nombre">Après</th>
+              <th class="nombre">Écart</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ligne in indicateurs %}
+              <tr>
+                <td data-label="Indicateur">{{ ligne.libelle }}</td>
+                <td class="nombre" data-label="Avant">
+                  {% if ligne.avant is not None %}
+                    {{ ligne.avant|floatformat:"-2" }}<small> {{ ligne.unite }}</small>
+                  {% else %}<span class="discret">—</span>{% endif %}
+                </td>
+                <td class="nombre" data-label="Après">
+                  {% if ligne.apres is not None %}
+                    {{ ligne.apres|floatformat:"-2" }}<small> {{ ligne.unite }}</small>
+                  {% else %}<span class="discret">—</span>{% endif %}
+                </td>
+                <td class="nombre" data-label="Écart">
+                  {% if ligne.ecart is None %}
+                    <span class="discret">—</span>
+                  {% elif ligne.sens == "mieux" %}
+                    <span class="etiquette etiquette-ok">{{ ligne.ecart|floatformat:"-2" }}</span>
+                  {% elif ligne.sens == "moins_bien" %}
+                    <span class="etiquette etiquette-critique">+{{ ligne.ecart|floatformat:"-2" }}</span>
+                  {% else %}
+                    <span class="discret">inchangé</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="discret">
+        Pour tous ces indicateurs, baisser est un progrès — c'est le propre
+        d'un outil de sobriété. Le nombre de pages analysées est affiché sans
+        jugement : il dit seulement sur combien de pages la moyenne a été faite.
+      </p>
+    {% else %}
+      <p class="discret">Aucun indicateur mesuré dans ces deux analyses.</p>
+    {% endif %}
+  </div>
+
+  <h2>Ce que les corrections ont changé</h2>
+  <div class="grille grille-3">
+
+    <div class="carte">
+      <h3>Problèmes résolus ({{ bilan.resolus|length }})</h3>
+      {% if bilan.resolus %}
+        <ul class="liste-bilan">
+          {% for probleme in bilan.resolus %}
+            <li>
+              <span class="etiquette etiquette-{{ probleme.gravite }}">{{ probleme.get_gravite_display }}</span>
+              {{ probleme.regle.description|truncatewords:14 }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="discret">Aucun problème de l'analyse de départ n'a disparu.</p>
+      {% endif %}
+    </div>
+
+    <div class="carte">
+      <h3>Toujours là ({{ bilan.persistants|length }})</h3>
+      {% if bilan.persistants %}
+        <ul class="liste-bilan">
+          {% for couple in bilan.persistants %}
+            <li>
+              <span class="etiquette etiquette-{{ couple.apres.gravite }}">{{ couple.apres.get_gravite_display }}</span>
+              {{ couple.apres.titre }}
+              {% if couple.avant.gravite != couple.apres.gravite %}
+                <br><small class="discret">était « {{ couple.avant.get_gravite_display }} »</small>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="discret">Plus rien de ce qui avait été détecté.</p>
+      {% endif %}
+    </div>
+
+    <div class="carte">
+      <h3>Apparus ({{ bilan.apparus|length }})</h3>
+      {% if bilan.apparus %}
+        <ul class="liste-bilan">
+          {% for probleme in bilan.apparus %}
+            <li>
+              <span class="etiquette etiquette-{{ probleme.gravite }}">{{ probleme.get_gravite_display }}</span>
+              {{ probleme.titre }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="discret">Les corrections n'ont rien cassé par ailleurs.</p>
+      {% endif %}
+    </div>
+
+  </div>
 {% endblock %}

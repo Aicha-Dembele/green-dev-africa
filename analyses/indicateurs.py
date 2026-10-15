@@ -36,6 +36,11 @@ CATALOGUE = {
     ),
 }
 
+#: Indicateurs qui décrivent l'analyse sans porter de jugement. Les comparer
+#: « en mieux » ou « en moins bien » n'aurait aucun sens : passer de 1 à 5
+#: pages analysées n'est ni un progrès ni une régression.
+INFORMATIFS = {"nombre_pages"}
+
 
 def libelle_de(code):
     """L'intitulé à afficher à l'utilisateur."""
@@ -52,3 +57,8 @@ def unite_de(code):
 def categorie_de(code, defaut="code"):
     """La catégorie de la règle qui surveille cet indicateur."""
     return CATALOGUE[code][2] if code in CATALOGUE else defaut
+
+
+def est_informatif(code):
+    """Cet indicateur se compare-t-il en mieux / moins bien ?"""
+    return code in INFORMATIFS

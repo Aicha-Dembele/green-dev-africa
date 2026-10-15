@@ -53,12 +53,20 @@
         <p class="meta">
           <span class="etiquette etiquette-{{ probleme.gravite }}">{{ probleme.get_gravite_display }}</span>
           <span class="etiquette">{{ probleme.regle.get_categorie_display }}</span>
+          {% if probleme.ressource %}
+            — principal fichier en cause :
+            <span class="rupture">{{ probleme.ressource.url }}</span>
+            ({{ probleme.ressource.taille|floatformat:"-1" }} Ko)
+          {% endif %}
         </p>
         <p>{{ probleme.description }}</p>
         {% for reco in probleme.recommandations.all %}
           <div class="reco">
             <strong>{{ reco.titre }}</strong>
             <p class="solution">{{ reco.description }}</p>
+            {% if reco.conseil.exemple_code %}
+              <pre class="exemple-code"><code>{{ reco.conseil.exemple_code }}</code></pre>
+            {% endif %}
             <p class="gain">Gain attendu : {{ reco.conseil.gain_attendu }}</p>
           </div>
         {% endfor %}
@@ -126,4 +134,19 @@
       Produit avec Green Dev Africa.
     </p>
   {% endif %}
+
+  {% comment %}
+    Affichée dans les deux cas, et surtout dans le cas public : c'est le
+    rapport partagé qui part chez un client, donc celui où la mention
+    protège le plus. Même texte que le PDF et que la page d'accueil.
+  {% endcomment %}
+  <p class="mention-methode">
+    <strong>Ce que mesure ce rapport.</strong>
+    Green Dev Africa examine les ressources que la page transmet depuis le
+    serveur et les indicateurs techniques associés. Les fichiers ajoutés
+    ensuite par JavaScript ne sont pas comptés. Les seuils utilisés sont
+    affichés avec chaque problème. Ces résultats aident à repérer des pistes
+    de sobriété ; ils ne constituent pas un calcul de l'empreinte carbone
+    du site.
+  </p>
 {% endblock %}

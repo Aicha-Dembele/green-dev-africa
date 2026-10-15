@@ -234,6 +234,22 @@ class RapportVueTest(BaseAnalyseVueTest):
         self.assertEqual(donnees["poids_total_ko"], 1600)
         self.assertEqual(len(donnees["problemes"]), 1)
 
+    def test_la_mention_de_methode_est_au_pied_du_rapport(self):
+        analyse = self.analyse_terminee()
+
+        reponse = self.client.get(reverse("rapport_detail", args=[analyse.pk]))
+
+        self.assertContains(reponse, "empreinte carbone")
+        self.assertContains(reponse, "Les seuils utilisés sont")
+
+    def test_lexemple_de_code_accompagne_la_recommandation(self):
+        analyse = self.analyse_terminee()
+
+        reponse = self.client.get(reverse("rapport_detail", args=[analyse.pk]))
+
+        self.assertContains(reponse, "exemple-code")
+        self.assertContains(reponse, "gzip on;")
+
     def test_export_pdf(self):
         analyse = self.analyse_terminee()
 
@@ -289,6 +305,9 @@ class PartagePublicTest(BaseAnalyseVueTest):
         self.assertContains(reponse, "Rapport de sobriété numérique")
         # La page publique ne propose pas de créer d'autres liens.
         self.assertNotContains(reponse, "Créer un lien public")
+        # Mais elle porte la mention de methode : c'est le rapport partage
+        # qui part chez un client, donc celui ou elle protege le plus.
+        self.assertContains(reponse, "empreinte carbone")
 
     def test_duree_hors_limites_ramenee_dans_les_bornes(self):
         analyse = self.analyse_terminee()
@@ -404,6 +423,69 @@ class ComparerVueTest(BaseAnalyseVueTest):
 
         self.assertEqual(reponse.status_code, 200)
         self.assertContains(reponse, "Avant / après")
+        self.assertContains(reponse, "Les métriques, une par une")
+        self.assertContains(reponse, "Ce que les corrections ont changé")
+
+    def _comparaison(self, poids_avant, poids_apres):
+        comparaison = ComparaisonAnalyse.objects.create(
+            analyse_avant=self.analyse_terminee(poids=poids_avant),
+            analyse_apres=self.analyse_terminee(poids=poids_apres),
+        )
+        comparaison.comparer_resultats()
+        return comparaison
+
+    def test_le_detail_indicateur_par_indicateur(self):
+        comparaison = self._comparaison(1600, 600)
+
+        lignes = {l["code"]: l for l in comparaison.comparer_indicateurs()}
+
+        self.assertEqual(lignes["poids_total"]["avant"], 1600)
+        self.assertEqual(lignes["poids_total"]["apres"], 600)
+        self.assertEqual(lignes["poids_total"]["ecart"], -1000)
+        self.assertEqual(lignes["poids_total"]["sens"], "mieux")
+        self.assertEqual(lignes["poids_total"]["unite"], "Ko")
+
+    def test_un_indicateur_qui_remonte_est_signale(self):
+        comparaison = self._comparaison(600, 1600)
+
+        lignes = {l["code"]: l for l in comparaison.comparer_indicateurs()}
+
+        self.assertEqual(lignes["poids_total"]["ecart"], 1000)
+        self.assertEqual(lignes["poids_total"]["sens"], "moins_bien")
+
+    def test_probleme_resolu(self):
+        # 1600 Ko dépasse le seuil de 500, 400 Ko passe dessous.
+        comparaison = self._comparaison(1600, 400)
+
+        bilan = comparaison.bilan_problemes()
+
+        self.assertEqual(len(bilan["resolus"]), 1)
+        self.assertEqual(bilan["persistants"], [])
+        self.assertEqual(bilan["apparus"], [])
+        # Le compte est figé en base, pour la liste des comparaisons passées.
+        self.assertEqual(comparaison.problemes_resolus, 1)
+
+    def test_probleme_persistant_garde_la_trace_de_sa_gravite(self):
+        # Le poids baisse mais reste au-dessus du seuil : même règle, donc
+        # même problème — seule sa gravité a changé.
+        comparaison = self._comparaison(1600, 600)
+
+        bilan = comparaison.bilan_problemes()
+
+        self.assertEqual(bilan["resolus"], [])
+        self.assertEqual(len(bilan["persistants"]), 1)
+        couple = bilan["persistants"][0]
+        self.assertEqual(couple["avant"].gravite, "critique")
+        self.assertEqual(couple["apres"].gravite, "faible")
+        self.assertEqual(comparaison.problemes_resolus, 0)
+
+    def test_probleme_apparu_apres_coup(self):
+        comparaison = self._comparaison(400, 1600)
+
+        bilan = comparaison.bilan_problemes()
+
+        self.assertEqual(bilan["resolus"], [])
+        self.assertEqual(len(bilan["apparus"]), 1)
 
 
 class ReglesSeuilsVueTest(BaseAnalyseVueTest):

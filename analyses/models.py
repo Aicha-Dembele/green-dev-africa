@@ -23,6 +23,8 @@ from django.utils import timezone
 
 from projets.models import Projet
 
+from .indicateurs import CATALOGUE, est_informatif, libelle_de, unite_de
+
 
 def nombre_francais(valeur):
     """1850.0 → « 1850 », 230.82 → « 230,82 ».
@@ -121,6 +123,9 @@ class ConseilOptimisation(models.Model):
     titre = models.CharField("titre", max_length=200)
     explication = models.TextField("explication simple")
     solution_technique = models.TextField("solution technique")
+    #: Facultatif : tout conseil ne se résume pas à un bout de code.
+    #: Affiché tel quel, sans coloration ni interprétation.
+    exemple_code = models.TextField("exemple de code", blank=True)
     gain_attendu = models.CharField("gain attendu", max_length=200)
     categorie = models.CharField(
         "catégorie", max_length=20, choices=RegleAnalyse.Categorie.choices
@@ -283,12 +288,18 @@ class Analyse(models.Model):
             indicateur = indicateurs.get(regle.code)
             if indicateur is None or not regle.verifier_seuil(indicateur.valeur):
                 continue
+            # Quand la règle vise un type de fichier, on nomme le plus lourd
+            # du lot : « c'est banniere.png » est actionnable, « vos images
+            # sont trop lourdes » ne l'est pas.
+            ressource = RessourceWeb.principale_pour(self, regle.code)
+
             probleme = ProblemeDetecte.objects.create(
                 analyse=self,
                 regle=regle,
                 titre=regle.intitule_probleme(indicateur),
                 description=regle.description,
-                localisation=self.projet.url,
+                localisation=ressource.url if ressource else self.projet.url,
+                ressource=ressource,
             )
             probleme.evaluer_gravite(indicateur.valeur)
             probleme.proposer_recommandation()
@@ -553,6 +564,19 @@ class RessourceWeb(models.Model):
     #: Au-dessus de cette taille (en Ko), le fichier est jugé optimisable.
     SEUILS_KO = {Type.IMAGE: 150, Type.SCRIPT: 100, Type.STYLE: 50, Type.VIDEO: 1000}
 
+    #: Les règles qui mettent en cause le poids d'un type de fichier. Pour
+    #: celles-là, le problème peut nommer le fichier responsable au lieu de
+    #: rester au niveau de la page.
+    #: Volontairement absente : images_sans_alternative. La plus grosse image
+    #: n'est pas forcément celle qui manque de texte alternatif — désigner un
+    #: fichier au hasard serait pire que de n'en désigner aucun.
+    TYPE_PAR_REGLE = {
+        "poids_images": Type.IMAGE,
+        "images_non_optimisees": Type.IMAGE,
+        "poids_javascript": Type.SCRIPT,
+        "poids_css": Type.STYLE,
+    }
+
     analyse = models.ForeignKey(
         Analyse,
         on_delete=models.CASCADE,
@@ -586,6 +610,20 @@ class RessourceWeb(models.Model):
         self.optimisable = self.taille > self.SEUILS_KO.get(self.type, 200)
         self.save(update_fields=["optimisable"])
         return self.optimisable
+
+    @classmethod
+    def principale_pour(cls, analyse, code_regle):
+        """Le fichier le plus lourd que cette règle met en cause, ou None.
+
+        On ne crée pas un problème par fichier : vingt images trop lourdes
+        donneraient vingt pénalités et un score écrasé, pour une seule et
+        même erreur. On nomme donc le principal responsable dans le problème,
+        et la table des fichiers montre tous les autres, marqués « à alléger ».
+        """
+        type_vise = cls.TYPE_PAR_REGLE.get(code_regle)
+        if type_vise is None:
+            return None
+        return analyse.ressources.filter(type=type_vise).order_by("-taille").first()
 
 
 # ---------------------------------------------------------------------------
@@ -982,6 +1020,9 @@ class ComparaisonAnalyse(models.Model):
     taux_amelioration = models.FloatField(
         "taux d'amélioration (%)", null=True, blank=True
     )
+    problemes_resolus = models.IntegerField(
+        "problèmes résolus", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "comparaison d'analyses"
@@ -996,7 +1037,13 @@ class ComparaisonAnalyse(models.Model):
     # --- opérations du diagramme ---
 
     def comparer_resultats(self):
-        """comparerResultats() : relève les deux scores et l'écart de poids."""
+        """comparerResultats() : relève les scores, l'écart de poids et le bilan.
+
+        Le nombre de problèmes résolus est figé ici, comme les scores : c'est
+        ce qu'on relit dans la liste des comparaisons passées. Le détail, lui,
+        est recalculé à l'affichage — il n'y a rien à geler dans deux listes
+        qui vivent déjà en base.
+        """
         self.score_avant = self.analyse_avant.score_global
         self.score_apres = self.analyse_apres.score_global
 
@@ -1004,6 +1051,8 @@ class ComparaisonAnalyse(models.Model):
         poids_apres = self._poids(self.analyse_apres)
         if poids_avant is not None and poids_apres is not None:
             self.ecart_poids = round(poids_apres - poids_avant, 2)
+
+        self.problemes_resolus = len(self.bilan_problemes()["resolus"])
 
         self.calculer_evolution()
         return self
@@ -1022,6 +1071,101 @@ class ComparaisonAnalyse(models.Model):
             )
         self.save()
         return self.evolution
+
+    def comparer_indicateurs(self):
+        """Le détail métrique par métrique, et non le seul poids total.
+
+        Une ligne par indicateur mesuré dans l'une ou l'autre analyse, dans
+        l'ordre du catalogue : le tableau garde ainsi la même forme d'une
+        comparaison à l'autre, même si une analyse a mesuré moins de choses.
+
+        Pour tous nos indicateurs, baisser est un progrès — c'est le propre
+        d'un outil de sobriété. Les indicateurs purement informatifs (le
+        nombre de pages analysées) sont donc affichés sans jugement.
+        """
+        avant = dict(self.analyse_avant.indicateurs.values_list("nom", "valeur"))
+        apres = dict(self.analyse_apres.indicateurs.values_list("nom", "valeur"))
+
+        connus = [code for code in CATALOGUE if code in avant or code in apres]
+        inconnus = sorted((set(avant) | set(apres)) - set(CATALOGUE))
+
+        lignes = []
+        for code in connus + inconnus:
+            valeur_avant = avant.get(code)
+            valeur_apres = apres.get(code)
+
+            ecart = None
+            if valeur_avant is not None and valeur_apres is not None:
+                ecart = round(valeur_apres - valeur_avant, 2)
+
+            if ecart is None or est_informatif(code):
+                sens = None
+            elif ecart < 0:
+                sens = "mieux"
+            elif ecart > 0:
+                sens = "moins_bien"
+            else:
+                sens = "stable"
+
+            lignes.append(
+                {
+                    "code": code,
+                    "libelle": libelle_de(code),
+                    "unite": unite_de(code),
+                    "avant": valeur_avant,
+                    "apres": valeur_apres,
+                    "ecart": ecart,
+                    "sens": sens,
+                }
+            )
+        return lignes
+
+    def bilan_problemes(self):
+        """Ce que les corrections ont réglé, laissé en place, ou fait naître.
+
+        Deux problèmes sont « le même problème » quand ils viennent de la
+        même règle : c'est la seule clé stable entre deux analyses. Les
+        identifiants sont recréés à chaque exécution, et les intitulés
+        contiennent la valeur mesurée, qui change par définition.
+        """
+        ordre = [
+            ProblemeDetecte.Gravite.CRITIQUE,
+            ProblemeDetecte.Gravite.ELEVEE,
+            ProblemeDetecte.Gravite.MOYENNE,
+            ProblemeDetecte.Gravite.FAIBLE,
+        ]
+
+        def par_gravite(probleme):
+            """Le plus grave en premier : c'est ce qu'on lit d'abord."""
+            return ordre.index(probleme.gravite)
+
+        avant = {
+            p.regle_id: p
+            for p in self.analyse_avant.problemes.select_related("regle")
+        }
+        apres = {
+            p.regle_id: p
+            for p in self.analyse_apres.problemes.select_related("regle")
+        }
+
+        return {
+            "resolus": sorted(
+                (p for regle, p in avant.items() if regle not in apres),
+                key=par_gravite,
+            ),
+            "persistants": sorted(
+                (
+                    {"avant": p, "apres": apres[regle]}
+                    for regle, p in avant.items()
+                    if regle in apres
+                ),
+                key=lambda couple: par_gravite(couple["apres"]),
+            ),
+            "apparus": sorted(
+                (p for regle, p in apres.items() if regle not in avant),
+                key=par_gravite,
+            ),
+        }
 
     @staticmethod
     def _poids(analyse):

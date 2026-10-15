@@ -226,9 +226,9 @@ def rapport_detail(request, pk):
         {
             "rapport": rapport,
             "analyse": analyse,
-            "problemes": analyse.problemes.select_related("regle").prefetch_related(
-                "recommandations__conseil"
-            ),
+            "problemes": analyse.problemes.select_related(
+                "regle", "ressource"
+            ).prefetch_related("recommandations__conseil"),
             "partages": rapport.partages.all(),
             "public": False,
         },
@@ -334,9 +334,9 @@ def rapport_public(request, jeton):
         {
             "rapport": partage.rapport,
             "analyse": analyse,
-            "problemes": analyse.problemes.select_related("regle").prefetch_related(
-                "recommandations__conseil"
-            ),
+            "problemes": analyse.problemes.select_related(
+                "regle", "ressource"
+            ).prefetch_related("recommandations__conseil"),
             "partage": partage,
             "public": True,
         },
@@ -391,7 +391,15 @@ def comparaison_detail(request, pk):
     return render(
         request,
         "analyses/comparaison_detail.html",
-        {"comparaison": comparaison, "projet": comparaison.analyse_avant.projet},
+        {
+            "comparaison": comparaison,
+            "projet": comparaison.analyse_avant.projet,
+            # Recalculés à l'affichage : les indicateurs et les problèmes des
+            # deux analyses sont déjà en base, les figer une seconde fois
+            # n'apporterait qu'un risque de désaccord entre les deux copies.
+            "indicateurs": comparaison.comparer_indicateurs(),
+            "bilan": comparaison.bilan_problemes(),
+        },
     )
 
 
