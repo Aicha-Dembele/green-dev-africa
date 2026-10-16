@@ -42,7 +42,7 @@
   </div>
 
   {% if projets %}
-    <div class="carte dashboard-projets-carte">
+    <div class="carte dashboard-projets-carte" role="region" aria-label="Liste des projets, défilement horizontal possible" tabindex="0">
       <table class="dashboard-table" aria-label="Liste de mes projets">
         <thead>
           <tr>
@@ -88,11 +88,16 @@
       </table>
     </div>
   {% else %}
-    <div class="carte">
-      <p class="vide">
-        Aucun projet pour l'instant.<br>
-        <a class="bouton" href="{% url 'projet_creer' %}">Créer mon premier projet</a>
-      </p>
+    <div class="carte dashboard-vide" aria-labelledby="dashboard-vide-titre">
+      <div class="dashboard-vide-icone" aria-hidden="true">＋</div>
+      <h3 id="dashboard-vide-titre">Commencez par ajouter un site</h3>
+      <p>Créez votre premier projet pour lancer un audit et suivre les progrès au fil des optimisations.</p>
+      <ol class="dashboard-vide-etapes">
+        <li>Ajoutez le nom et l’adresse de votre site.</li>
+        <li>Lancez une analyse avec un profil de visiteur.</li>
+        <li>Consultez les recommandations et comparez les résultats.</li>
+      </ol>
+      <a class="bouton" href="{% url 'projet_creer' %}">Créer mon premier projet</a>
     </div>
   {% endif %}
 {% endblock %}

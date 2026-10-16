@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load greendev %}
 
 {% block titre %}Analyser {{ projet.nom }} — Green Dev Africa{% endblock %}
 
@@ -15,7 +16,7 @@
     {% csrf_token %}
 
     {% if formulaire.non_field_errors %}
-      <ul class="erreurs">
+      <ul class="erreurs" role="alert">
         {% for erreur in formulaire.non_field_errors %}<li>{{ erreur }}</li>{% endfor %}
       </ul>
     {% endif %}
@@ -56,9 +57,13 @@
         {% for champ in formulaire.champs_mesures %}
           <div class="champ">
             {{ champ.label_tag }}
-            {{ champ }}
+            {{ champ|widget_accessible }}
             {% if champ.help_text %}<span class="aide">{{ champ.help_text }}</span>{% endif %}
-            {% for erreur in champ.errors %}<span class="erreur">{{ erreur }}</span>{% endfor %}
+            {% if champ.errors %}
+              <ul class="erreurs-champ" id="{{ champ.auto_id }}_erreurs" role="alert">
+                {% for erreur in champ.errors %}<li>{{ erreur }}</li>{% endfor %}
+              </ul>
+            {% endif %}
           </div>
         {% endfor %}
       </div>

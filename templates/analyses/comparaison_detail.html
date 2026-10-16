@@ -25,6 +25,31 @@
       </p>
     </div>
 
+    {% if comparaison.score_avant is not None and comparaison.score_apres is not None %}
+      <section class="comparaison-evolution" aria-labelledby="comparaison-evolution-titre">
+        <h2 id="comparaison-evolution-titre">Évolution du Green Score</h2>
+        <div class="carte">
+          <figure class="comparaison-graphique"
+                  role="img"
+                  aria-label="Green Score avant : {{ comparaison.score_avant|floatformat:0 }} sur 100. Après : {{ comparaison.score_apres|floatformat:0 }} sur 100.">
+            <div class="comparaison-barre-ligne">
+              <span>Avant</span>
+              <div class="comparaison-piste"><span class="comparaison-barre comparaison-barre-avant" style="width:{{ comparaison.score_avant|floatformat:'0u' }}%"></span></div>
+              <strong>{{ comparaison.score_avant|floatformat:0 }} / 100</strong>
+            </div>
+            <div class="comparaison-barre-ligne">
+              <span>Après</span>
+              <div class="comparaison-piste"><span class="comparaison-barre comparaison-barre-apres" style="width:{{ comparaison.score_apres|floatformat:'0u' }}%"></span></div>
+              <strong>{{ comparaison.score_apres|floatformat:0 }} / 100</strong>
+            </div>
+            <figcaption class="discret">
+              Un score plus élevé indique moins de problèmes détectés selon les règles actives.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+    {% endif %}
+
     <div class="carte">
       <h3>Après</h3>
       {% include "partiels/score.html" with score=comparaison.score_apres %}

@@ -25,3 +25,17 @@ def libelle(code):
 def unite(code):
     """« poids_total » → « Ko »."""
     return unite_de(code)
+
+
+@register.filter
+def widget_accessible(champ):
+    """Relie un champ invalide à ses erreurs pour les technologies d'assistance."""
+    if not champ.errors:
+        return champ
+    identifiant = champ.auto_id
+    return champ.as_widget(
+        attrs={
+            "aria-describedby": f"{identifiant}_erreurs",
+            "aria-invalid": "true",
+        }
+    )

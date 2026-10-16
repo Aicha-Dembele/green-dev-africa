@@ -4,12 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
+  <meta name="description" content="{% block description %}Green Dev Africa aide à mesurer la sobriété numérique de vos sites et à prioriser des améliorations concrètes.{% endblock %}">
   <title>{% block titre %}Green Dev Africa{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/greendev.css' %}">
   {# defer : le script attend la page, il ne retarde pas son affichage. #}
   <script src="{% static 'js/greendev.js' %}" defer></script>
 </head>
 <body class="{% block classe_page %}{% endblock %}">
+
+<a class="lien-evitement" href="#contenu-principal">Aller au contenu principal</a>
 
 <header class="barre">
   <a class="marque" href="{% url 'tableau_de_bord' %}">Green<span>Dev</span> Africa</a>
@@ -44,7 +47,7 @@
   </nav>
 </header>
 
-<main>
+<main id="contenu-principal" tabindex="-1">
   {% if messages %}
     <ul class="messages">
       {% for message in messages %}

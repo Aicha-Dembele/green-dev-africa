@@ -164,7 +164,7 @@
     <h2>Fichiers téléchargés par la page ({{ ressources|length }})</h2>
     <div class="carte">
       {% if ressources %}
-        <div class="tableau-defilant">
+        <div class="tableau-defilant" role="region" aria-label="Liste des fichiers téléchargés, défilement vertical possible" tabindex="0">
           <table>
             <thead>
               <tr>
