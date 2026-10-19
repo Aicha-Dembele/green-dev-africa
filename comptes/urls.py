@@ -8,12 +8,16 @@ rien d'autre ne bouge.
 from django.contrib.auth import views as vues_auth
 from django.urls import path
 
+from .forms import ConnexionForm
 from . import views
 
 urlpatterns = [
     path(
         "connexion/",
-        vues_auth.LoginView.as_view(template_name="comptes/connexion.html"),
+        vues_auth.LoginView.as_view(
+            template_name="comptes/connexion.html",
+            authentication_form=ConnexionForm,
+        ),
         name="connexion",
     ),
     path("deconnexion/", vues_auth.LogoutView.as_view(), name="deconnexion"),

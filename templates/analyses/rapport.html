@@ -31,17 +31,20 @@
     <div class="carte">
       <h3>Green Score</h3>
       {% include "partiels/score.html" with score=rapport.green_score %}
+      <p class="discret">Plus le score est proche de 100, moins les règles actives détectent de problèmes. C’est un indicateur de suivi, pas un calcul d’empreinte carbone.</p>
     </div>
     <div class="carte">
       <h3>Ce que coûte une visite</h3>
-      <table>
-        <tbody>
-          <tr><td>Poids de la page</td><td class="nombre">{{ rapport.poids_total|floatformat:"-1"|default:"—" }} Ko</td></tr>
-          <tr><td>Nombre de requêtes</td><td class="nombre">{{ rapport.nombre_requetes|default:"—" }}</td></tr>
-          <tr><td>Temps de chargement</td><td class="nombre">{{ rapport.temps_chargement|floatformat:"-1"|default:"—" }} s</td></tr>
-          <tr><td>Données transférées</td><td class="nombre">{{ rapport.donnees_transferees|floatformat:"-2"|default:"—" }} Mo</td></tr>
-        </tbody>
-      </table>
+      <div class="tableau-responsive tableau-responsive-compact" role="region" aria-label="Mesures du rapport" tabindex="0">
+        <table>
+          <tbody>
+            <tr><td>Poids de la page</td><td class="nombre">{{ rapport.poids_total|floatformat:"-1"|default:"—" }} Ko</td></tr>
+            <tr><td>Nombre de requêtes</td><td class="nombre">{{ rapport.nombre_requetes|default:"—" }}</td></tr>
+            <tr><td>Temps de chargement</td><td class="nombre">{{ rapport.temps_chargement|floatformat:"-1"|default:"—" }} s</td></tr>
+            <tr><td>Données transférées</td><td class="nombre">{{ rapport.donnees_transferees|floatformat:"-2"|default:"—" }} Mo</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -94,37 +97,44 @@
       </form>
 
       {% if partages %}
-        <table>
-          <thead>
-            <tr><th>Lien</th><th>Créé le</th><th>Expire le</th><th>État</th><th></th></tr>
-          </thead>
-          <tbody>
-            {% for partage in partages %}
-              <tr>
-                <td class="rupture discret">
-                  <a href="{% url 'rapport_public' partage.jeton %}">/r/{{ partage.jeton|truncatechars:16 }}</a>
-                </td>
-                <td>{{ partage.date_creation|date:"d/m/Y" }}</td>
-                <td>{{ partage.date_expiration|date:"d/m/Y" }}</td>
-                <td>
-                  {% if partage.verifier_validite %}
-                    <span class="etiquette etiquette-ok">Actif</span>
-                  {% else %}
-                    <span class="etiquette">Inactif</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if partage.actif %}
-                    <form method="post" action="{% url 'partage_revoquer' partage.pk %}">
-                      {% csrf_token %}
-                      <button type="submit" class="bouton-discret">Révoquer</button>
-                    </form>
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="tableau-responsive" role="region" aria-label="Liens de partage, défilement horizontal possible" tabindex="0">
+          <table>
+            <thead>
+              <tr><th>Lien</th><th>Expire le</th><th>État</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for partage in partages %}
+                <tr>
+                  <td class="rupture discret">
+                    {% if partage.verifier_validite %}
+                      <a href="{% url 'rapport_public' partage.jeton %}" class="partage-lien">{{ request.scheme }}://{{ request.get_host }}{% url 'rapport_public' partage.jeton %}</a>
+                      <button type="button" class="bouton-discret bouton-copier" data-copier-lien aria-label="Copier le lien de partage pour {{ analyse.projet.nom }}">Copier le lien</button>
+                    {% else %}
+                      <span>Lien expiré ou révoqué</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ partage.date_expiration|date:"d/m/Y" }}</td>
+                  <td>
+                    {% if partage.verifier_validite %}
+                      <span class="etiquette etiquette-ok">Actif</span>
+                    {% else %}
+                      <span class="etiquette">Inactif</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if partage.actif %}
+                      <form method="post" action="{% url 'partage_revoquer' partage.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="bouton-discret">Révoquer</button>
+                      </form>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="copie-statut" data-copie-statut role="status" aria-live="polite"></p>
       {% endif %}
     </div>
   {% else %}

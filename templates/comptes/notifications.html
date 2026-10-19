@@ -3,13 +3,13 @@
 {% block titre %}Notifications — Green Dev Africa{% endblock %}
 
 {% block contenu %}
-  <div class="entre-deux">
+  <div class="entre-deux notifications-entete">
     <div>
       <h1>Notifications</h1>
       <p class="chapeau">Ce que l'application t'a signalé, du plus récent au plus ancien.</p>
     </div>
     {% if notifications_non_lues %}
-      <form method="post" action="{% url 'notifications_toutes_lues' %}">
+      <form class="notifications-actions" method="post" action="{% url 'notifications_toutes_lues' %}">
         {% csrf_token %}
         <button type="submit" class="bouton-secondaire">Tout marquer comme lu</button>
       </form>
@@ -18,40 +18,42 @@
 
   <div class="carte">
     {% if notifications %}
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Message</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for notification in notifications %}
+      <div class="tableau-responsive notifications-tableau" role="region" aria-label="Liste des notifications">
+        <table>
+          <thead>
             <tr>
-              <td>{{ notification.date_envoi|date:"d/m/Y H:i" }}</td>
-              <td><span class="etiquette">{{ notification.get_type_display }}</span></td>
-              <td>
-                {% if notification.lu %}
-                  <span class="discret">{{ notification.message }}</span>
-                {% else %}
-                  <strong>{{ notification.message }}</strong>
-                {% endif %}
-              </td>
-              <td>
-                {% if not notification.lu %}
-                  <form method="post" action="{% url 'notification_lue' notification.pk %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="retour" value="notifications">
-                    <button type="submit" class="bouton-discret">Marquer comme lue</button>
-                  </form>
-                {% endif %}
-              </td>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Message</th>
+              <th></th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {% for notification in notifications %}
+              <tr>
+                <td data-label="Date">{{ notification.date_envoi|date:"d/m/Y H:i" }}</td>
+                <td data-label="Type"><span class="etiquette">{{ notification.get_type_display }}</span></td>
+                <td data-label="Message">
+                  {% if notification.lu %}
+                    <span class="discret">{{ notification.message }}</span>
+                  {% else %}
+                    <strong>{{ notification.message }}</strong>
+                  {% endif %}
+                </td>
+                {% if not notification.lu %}
+                  <td data-label="Action">
+                    <form method="post" action="{% url 'notification_lue' notification.pk %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="retour" value="notifications">
+                      <button type="submit" class="bouton-discret">Marquer comme lue</button>
+                    </form>
+                  </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     {% else %}
       <p class="vide">Aucune notification pour l'instant.</p>
     {% endif %}

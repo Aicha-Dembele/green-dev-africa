@@ -76,6 +76,30 @@ class BaseAnalyseVueTest(TestCase):
 
 
 class LancerAnalyseVueTest(BaseAnalyseVueTest):
+    def test_les_reglages_sont_visibles_et_la_saisie_manuelle_reste_repliee(self):
+        reponse = self.client.get(reverse("lancer_analyse", args=[self.projet.pk]))
+        contenu = " ".join(reponse.content.decode().split())
+
+        self.assertIn('<details class="options-avancees" open>', contenu)
+        self.assertIn(
+            '<details class="options-avancees mesures-avancees" ',
+            contenu,
+        )
+        self.assertNotIn(
+            'class="options-avancees mesures-avancees" open',
+            contenu,
+        )
+        self.assertIn(
+            "Tu peux lancer l'analyse tout de suite : Green Dev Africa mesurera le site automatiquement.",
+            contenu,
+        )
+        self.assertIn("Adapter les conditions de l'audit", contenu)
+        self.assertIn("J'ai déjà mesuré le site avec un autre outil", contenu)
+        self.assertIn(
+            "seules les valeurs saisies seront utilisées.",
+            contenu,
+        )
+
     def test_le_formulaire_propose_un_champ_par_regle_active(self):
         reponse = self.client.get(reverse("lancer_analyse", args=[self.projet.pk]))
 
@@ -83,6 +107,14 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         champs = list(reponse.context["formulaire"].champs_mesures())
         self.assertEqual(len(champs), RegleAnalyse.objects.filter(active=True).count())
         self.assertContains(reponse, "Poids total de la page")
+        poids_total = reponse.context["formulaire"].fields["mesure_poids_total"]
+        self.assertEqual(poids_total.widget.attrs["placeholder"], "850")
+
+    def test_les_listes_de_comparaison_expliquent_quoi_selectionner(self):
+        reponse = self.client.get(reverse("comparer", args=[self.projet.pk]))
+
+        self.assertContains(reponse, "Choisir l&#x27;analyse de départ")
+        self.assertContains(reponse, "Choisir l&#x27;analyse d&#x27;arrivée")
 
     def test_une_regle_desactivee_disparait_du_formulaire(self):
         RegleAnalyse.objects.filter(code="poids_css").update(active=False)
@@ -167,6 +199,18 @@ class AnalyseDetailVueTest(BaseAnalyseVueTest):
         self.assertContains(reponse, "Poids total de la page")
         self.assertNotContains(reponse, ">poids_total<")
 
+    def test_une_analyse_echouee_explique_le_probleme_et_propose_de_reessayer(self):
+        analyse = self.projet.lancer_analyse()
+        analyse.statut = Analyse.Statut.ECHOUEE
+        analyse.save(update_fields=["statut"])
+
+        reponse = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
+
+        self.assertContains(reponse, "L’analyse a échoué")
+        self.assertContains(reponse, "Relancer l’analyse")
+        self.assertContains(reponse, "Aucun problème n’a pu être calculé")
+        self.assertNotContains(reponse, "L’analyse n’a pas encore été exécutée.")
+
     def test_la_liste_des_fichiers_est_plafonnee_en_hauteur(self):
         """Elle peut compter des dizaines de lignes : elle défile au lieu
         d'étirer la page sur deux écrans."""
@@ -221,6 +265,21 @@ class RapportVueTest(BaseAnalyseVueTest):
         self.assertEqual(reponse.status_code, 200)
         self.assertContains(reponse, "Rapport de sobriété numérique")
         self.assertFalse(reponse.context["public"])
+
+    def test_le_rapport_propose_de_copier_le_lien_public(self):
+        analyse = self.analyse_terminee()
+        PartageRapport.objects.create(
+            rapport=Rapport.objects.get(analyse=analyse),
+            jeton="jeton-de-test",
+            date_expiration=timezone.now() + timezone.timedelta(days=7),
+        )
+
+        reponse = self.client.get(reverse("rapport_detail", args=[analyse.pk]))
+
+        self.assertContains(reponse, "Copier le lien")
+        self.assertContains(reponse, "data-copier-lien")
+        self.assertContains(reponse, "data-copie-statut")
+        self.assertContains(reponse, "http://testserver/r/jeton-de-test")
 
     def test_export_json(self):
         analyse = self.analyse_terminee()

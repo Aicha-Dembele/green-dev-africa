@@ -12,7 +12,15 @@ class ProjetForm(forms.ModelForm):
         model = Projet
         fields = ("nom", "url", "description", "statut")
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "nom": forms.TextInput(
+                attrs={"placeholder": "Ex. Site vitrine de mon association"}
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "placeholder": "Ex. Site de présentation et d'inscription de l'association.",
+                }
+            ),
             "url": forms.URLInput(attrs={"placeholder": "https://monsite.ml"}),
         }
         help_texts = {"url": "L'adresse de la page qui sera analysée."}
@@ -29,9 +37,14 @@ class ObjectifForm(forms.ModelForm):
             # sans une ligne de JavaScript.
             "date_limite": forms.DateInput(attrs={"type": "date"}),
             "nom": forms.TextInput(
-                attrs={"placeholder": "Ramener la page d'accueil sous 500 Ko"}
+                attrs={"placeholder": "Ex. Garder la page d'accueil sous 500 Ko"}
             ),
+            "valeur_cible": forms.NumberInput(attrs={"placeholder": "Ex. 500"}),
+            "unite": forms.TextInput(attrs={"placeholder": "Ex. Ko"}),
         }
         help_texts = {
-            "valeur_cible": "Un objectif de sobriété est un plafond : on veut passer en dessous."
+            "valeur_cible": (
+                "Un objectif de sobriété est un plafond : on veut passer en dessous."
+            ),
+            "date_limite": "Facultatif : laisse vide si tu n'as pas encore fixé de date.",
         }

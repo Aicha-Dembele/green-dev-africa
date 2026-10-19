@@ -76,6 +76,30 @@ class AccesSansCompteTest(BaseProjetTest):
 
 
 class TableauDeBordTest(BaseProjetTest):
+    def test_le_bouton_du_projet_ouvre_le_dernier_resultat_disponible(self):
+        analyse = self.projet_aicha.lancer_analyse()
+        self.connecter_aicha()
+
+        reponse = self.client.get(reverse("tableau_de_bord"))
+
+        self.assertContains(
+            reponse,
+            f'href="{reverse("analyse_detail", args=[analyse.pk])}">Voir le résultat</a>',
+        )
+        self.assertNotContains(
+            reponse, f'href="{reverse("lancer_analyse", args=[self.projet_aicha.pk])}">Analyser</a>'
+        )
+
+    def test_le_bouton_du_projet_sans_analyse_lance_une_premiere_analyse(self):
+        self.connecter_aicha()
+
+        reponse = self.client.get(reverse("tableau_de_bord"))
+
+        self.assertContains(
+            reponse,
+            f'href="{reverse("lancer_analyse", args=[self.projet_aicha.pk])}">Analyser</a>',
+        )
+
     def test_je_ne_vois_que_mes_projets(self):
         self.connecter_aicha()
 
@@ -123,6 +147,35 @@ class TableauDeBordTest(BaseProjetTest):
 
         self.assertEqual(reponse.context["problemes_ouverts"], 0)
 
+    def test_le_tableau_de_bord_met_en_avant_les_problemes_les_plus_graves(self):
+        analyse = self.projet_aicha.lancer_analyse()
+        regle = RegleAnalyse.objects.filter(active=True).first()
+        for gravite in (
+            ProblemeDetecte.Gravite.FAIBLE,
+            ProblemeDetecte.Gravite.CRITIQUE,
+            ProblemeDetecte.Gravite.MOYENNE,
+            ProblemeDetecte.Gravite.ELEVEE,
+        ):
+            ProblemeDetecte.objects.create(
+                analyse=analyse,
+                regle=regle,
+                titre=f"Problème {gravite}",
+                description="À corriger.",
+                gravite=gravite,
+            )
+        self.connecter_aicha()
+
+        reponse = self.client.get(reverse("tableau_de_bord"))
+
+        self.assertEqual(
+            [probleme.gravite for probleme in reponse.context["problemes_prioritaires"]],
+            [
+                ProblemeDetecte.Gravite.CRITIQUE,
+                ProblemeDetecte.Gravite.ELEVEE,
+                ProblemeDetecte.Gravite.MOYENNE,
+            ],
+        )
+
     def test_tableau_de_bord_ne_fait_pas_une_requete_par_projet(self):
         """Garde-fou contre le N+1 : le nombre de requêtes ne doit pas suivre
         le nombre de projets affichés."""
@@ -135,9 +188,10 @@ class TableauDeBordTest(BaseProjetTest):
             Analyse.objects.create(projet=projet, score_global=50)
         self.connecter_aicha()
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             # 1 session + 1 utilisateur + 1 projets + 1 agrégat problèmes
-            # + 1 pastille des notifications. Pas de requête par ligne.
+            # + 1 liste priorisée + 1 pastille des notifications.
+            # Pas de requête par ligne.
             self.client.get(reverse("tableau_de_bord"))
 
 
@@ -173,6 +227,18 @@ class ProjetDetailTest(BaseProjetTest):
 
 
 class CreationProjetTest(BaseProjetTest):
+    def test_le_formulaire_de_projet_donne_des_exemples(self):
+        self.connecter_aicha()
+
+        reponse = self.client.get(reverse("projet_creer"))
+
+        self.assertContains(reponse, 'placeholder="Ex. Site vitrine de mon association"')
+        self.assertContains(reponse, 'placeholder="https://monsite.ml"')
+        self.assertContains(
+            reponse,
+            'placeholder="Ex. Site de présentation et d&#x27;inscription de l&#x27;association."',
+        )
+
     def test_creer_un_projet(self):
         self.connecter_aicha()
 
@@ -220,6 +286,21 @@ class CreationProjetTest(BaseProjetTest):
 
 
 class ObjectifTest(BaseProjetTest):
+    def test_le_formulaire_dobjectif_donne_des_exemples_et_precise_lecheance(self):
+        self.connecter_aicha()
+
+        reponse = self.client.get(reverse("projet_detail", args=[self.projet_aicha.pk]))
+
+        self.assertContains(
+            reponse, 'placeholder="Ex. Garder la page d&#x27;accueil sous 500 Ko"'
+        )
+        self.assertContains(reponse, 'placeholder="Ex. 500"')
+        self.assertContains(reponse, 'placeholder="Ex. Ko"')
+        self.assertContains(
+            reponse,
+            "Facultatif : laisse vide si tu n&#x27;as pas encore fixé de date.",
+        )
+
     def test_ajouter_un_objectif_depuis_la_fiche(self):
         self.connecter_aicha()
 

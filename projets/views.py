@@ -8,7 +8,7 @@ projet de quelqu'un d'autre.
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, OuterRef, Q, Subquery
+from django.db.models import Case, Count, IntegerField, OuterRef, Q, Subquery, When
 from django.shortcuts import get_object_or_404, redirect, render
 
 from analyses.models import Analyse, ProblemeDetecte
@@ -49,6 +49,24 @@ def tableau_de_bord(request):
         ),
     )
 
+    problemes_prioritaires = (
+        ProblemeDetecte.objects.filter(
+            analyse__projet__utilisateur=request.user,
+            statut=ProblemeDetecte.Statut.OUVERT,
+        )
+        .annotate(
+            ordre_gravite=Case(
+                When(gravite=ProblemeDetecte.Gravite.CRITIQUE, then=0),
+                When(gravite=ProblemeDetecte.Gravite.ELEVEE, then=1),
+                When(gravite=ProblemeDetecte.Gravite.MOYENNE, then=2),
+                When(gravite=ProblemeDetecte.Gravite.FAIBLE, then=3),
+                output_field=IntegerField(),
+            )
+        )
+        .select_related("analyse__projet")
+        .order_by("ordre_gravite", "-analyse__date_analyse", "pk")[:3]
+    )
+
     scores = [p.dernier_score for p in projets if p.dernier_score is not None]
 
     return render(
@@ -60,6 +78,7 @@ def tableau_de_bord(request):
             "score_moyen": round(sum(scores) / len(scores), 1) if scores else None,
             "problemes_ouverts": problemes["ouverts"],
             "problemes_critiques": problemes["critiques"],
+            "problemes_prioritaires": problemes_prioritaires,
         },
     )
 

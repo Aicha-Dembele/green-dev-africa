@@ -68,6 +68,20 @@ class LancerAnalyseForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        exemples_mesures = {
+            "poids_total": "850",
+            "donnees_transferees": "1.2",
+            "nombre_requetes": "42",
+            "nombre_pages": "1",
+            "temps_chargement": "2.4",
+            "poids_images": "450",
+            "images_non_optimisees": "3",
+            "poids_javascript": "180",
+            "poids_css": "70",
+            "elements_dom": "250",
+            "images_sans_alternative": "2",
+        }
+
         # Un champ de mesure par règle active, créé à la volée.
         self.regles = list(RegleAnalyse.objects.filter(active=True))
         for regle in self.regles:
@@ -82,6 +96,12 @@ class LancerAnalyseForm(forms.Form):
                 help_text=aide,
                 required=False,
                 min_value=0,
+                widget=forms.NumberInput(
+                    attrs={
+                        "placeholder": exemples_mesures.get(regle.code, "Ex. 10"),
+                        "step": "any",
+                    }
+                ),
             )
 
     def champs_mesures(self):
@@ -136,8 +156,16 @@ class ComparaisonForm(forms.Form):
     on ne peut pas comparer avec l'analyse d'un autre utilisateur.
     """
 
-    analyse_avant = forms.ModelChoiceField(label="Analyse de départ", queryset=None)
-    analyse_apres = forms.ModelChoiceField(label="Analyse d'arrivée", queryset=None)
+    analyse_avant = forms.ModelChoiceField(
+        label="Analyse de départ",
+        queryset=None,
+        empty_label="Choisir l'analyse de départ",
+    )
+    analyse_apres = forms.ModelChoiceField(
+        label="Analyse d'arrivée",
+        queryset=None,
+        empty_label="Choisir l'analyse d'arrivée",
+    )
 
     def __init__(self, projet, *args, **kwargs):
         super().__init__(*args, **kwargs)

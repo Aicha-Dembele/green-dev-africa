@@ -10,7 +10,7 @@
     règle de comptage, où toute occurrence est déjà un défaut.
   </p>
 
-  <div class="carte">
+  <div class="carte tableau-responsive" role="region" aria-label="Règles d’analyse, défilement horizontal possible" tabindex="0">
     <form method="post">
       {% csrf_token %}
       {{ formset.management_form }}

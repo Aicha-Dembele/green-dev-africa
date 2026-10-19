@@ -3,12 +3,9 @@
 Pour les lancer :  python manage.py test comptes
 """
 
-from datetime import timedelta
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from comptes.models import Notification
 
@@ -68,6 +65,10 @@ class PagesDuCompteTest(TestCase):
 
         self.assertEqual(reponse.status_code, 200)
         self.assertContains(reponse, "Analyse terminée")
+        self.assertContains(reponse, 'class="nav-notifications"')
+        self.assertContains(reponse, 'class="tableau-responsive notifications-tableau"')
+        self.assertContains(reponse, 'data-label="Message"')
+        self.assertContains(reponse, "Tout marquer comme lu")
 
     def test_page_du_profil(self):
         reponse = self.client.get(reverse("profil"))
@@ -76,33 +77,23 @@ class PagesDuCompteTest(TestCase):
         self.assertContains(reponse, "aicha")
         self.assertContains(reponse, 'class="nav-compte"')
         self.assertContains(reponse, 'aria-label="Mon compte — aicha"')
+        self.assertContains(reponse, 'aria-current="page"')
+        self.assertContains(reponse, f'action="{reverse("deconnexion")}"')
+        self.assertContains(reponse, "Se déconnecter")
+        self.assertContains(reponse, 'placeholder="Ex. Aïcha Dembélé"')
+        self.assertContains(reponse, 'placeholder="Ex. aicha@exemple.com"')
 
-    def test_profil_verrouille_pendant_trente_jours_apres_modification(self):
-        self.client.post(
-            reverse("profil"),
-            {"nom": "Aïcha D.", "email": "nouvelle@example.com"},
-        )
+    def test_navigation_indique_la_page_active(self):
+        reponse = self.client.get(reverse("tableau_de_bord"))
 
+        self.assertContains(reponse, 'aria-current="page"')
+        self.assertNotContains(reponse, "Se déconnecter")
+
+    def test_profil_indique_quil_est_modifiable_a_tout_moment(self):
         reponse = self.client.get(reverse("profil"))
 
-        self.assertContains(reponse, "verrouillées")
-        self.assertContains(reponse, "disabled")
-        self.assertContains(reponse, "30 jours")
-
-    def test_modification_refusee_cote_serveur_pendant_le_delai(self):
-        self.utilisatrice.profil_modifie_le = timezone.now() - timedelta(days=10)
-        self.utilisatrice.save(update_fields=["profil_modifie_le"])
-
-        reponse = self.client.post(
-            reverse("profil"),
-            {"nom": "Nom forcé", "email": "force@example.com"},
-        )
-
-        self.assertEqual(reponse.status_code, 200)
-        self.utilisatrice.refresh_from_db()
-        self.assertEqual(self.utilisatrice.nom, "Aïcha")
-        self.assertEqual(self.utilisatrice.email, "aicha@example.com")
-        self.assertContains(reponse, "temporairement verrouillé")
+        self.assertContains(reponse, "modifier tes informations à tout moment")
+        self.assertNotContains(reponse, "30 jours")
 
     def test_modifier_son_profil(self):
         reponse = self.client.post(
@@ -114,6 +105,21 @@ class PagesDuCompteTest(TestCase):
         self.assertEqual(self.utilisatrice.nom, "Aïcha D.")
         self.assertEqual(self.utilisatrice.email, "nouvelle@example.com")
         self.assertIsNotNone(self.utilisatrice.profil_modifie_le)
+
+    def test_modifier_son_profil_plusieurs_fois_sans_delai(self):
+        self.client.post(
+            reverse("profil"),
+            {"nom": "Aïcha D.", "email": "nouvelle@example.com"},
+        )
+
+        reponse = self.client.post(
+            reverse("profil"),
+            {"nom": "Aïcha Traoré", "email": "aicha@example.com"},
+        )
+
+        self.assertRedirects(reponse, reverse("profil"))
+        self.utilisatrice.refresh_from_db()
+        self.assertEqual(self.utilisatrice.nom, "Aïcha Traoré")
 
     def test_se_deconnecter(self):
         reponse = self.client.post(reverse("deconnexion"))
@@ -171,8 +177,19 @@ class MotDePasseTest(TestCase):
         reponse = self.client.get(reverse("inscription"))
 
         self.assertContains(reponse, "Au moins 8 caractères.")
+        self.assertContains(reponse, 'placeholder="Ex. aicha-dembele"')
+        self.assertContains(reponse, 'placeholder="Ex. Aïcha Dembélé"')
+        self.assertContains(reponse, 'placeholder="Ex. aicha@exemple.com"')
+        self.assertContains(reponse, 'placeholder="8 caractères minimum"')
+        self.assertContains(reponse, 'placeholder="Répète ton mot de passe"')
         # Le pavé d'explications de Django a disparu.
         self.assertNotContains(reponse, "Votre mot de passe ne peut pas trop")
+
+    def test_la_connexion_affiche_des_indices_dans_les_champs(self):
+        reponse = self.client.get(reverse("connexion"))
+
+        self.assertContains(reponse, 'placeholder="Ton identifiant"')
+        self.assertContains(reponse, 'placeholder="Ton mot de passe"')
 
     def test_le_petit_oeil_est_charge_sur_les_pages_de_mot_de_passe(self):
         for adresse in (reverse("inscription"), reverse("connexion")):

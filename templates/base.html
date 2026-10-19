@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="{% block description %}Green Dev Africa aide à mesurer la sobriété numérique de vos sites et à prioriser des améliorations concrètes.{% endblock %}">
+  <meta name="description" content="{% block description %}Green Dev Africa aide à mesurer la sobriété numérique d’un site et à prioriser des améliorations concrètes.{% endblock %}">
   <title>{% block titre %}Green Dev Africa{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/greendev.css' %}">
   {# defer : le script attend la page, il ne retarde pas son affichage. #}
@@ -19,27 +19,22 @@
 
   <nav class="{% if not user.is_authenticated %}nav-visiteur{% endif %}" aria-label="Navigation principale">
     {% if user.is_authenticated %}
-      <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a>
-      <a href="{% url 'projet_creer' %}">Nouveau projet</a>
+      <a href="{% url 'tableau_de_bord' %}"{% if request.resolver_match.url_name == 'tableau_de_bord' or request.resolver_match.url_name == 'projet_detail' or request.resolver_match.url_name == 'analyse_detail' or request.resolver_match.url_name == 'rapport_detail' or request.resolver_match.url_name == 'rapport_pdf' or request.resolver_match.url_name == 'rapport_json' or request.resolver_match.url_name == 'comparer' or request.resolver_match.url_name == 'comparaison_detail' %} aria-current="page"{% endif %}>Tableau de bord</a>
+      <a href="{% url 'projet_creer' %}"{% if request.resolver_match.url_name == 'projet_creer' %} aria-current="page"{% endif %}>Nouveau projet</a>
       {% if user.is_superuser or user.est_administrateur %}
-        <a href="{% url 'regles_seuils' %}">Règles d'analyse</a>
+        <a href="{% url 'regles_seuils' %}"{% if request.resolver_match.url_name == 'regles_seuils' %} aria-current="page"{% endif %}>Règles d'analyse</a>
       {% endif %}
-      <a href="{% url 'notifications' %}">
-        Notifications{% if notifications_non_lues %} <span class="pastille">{{ notifications_non_lues }}</span>{% endif %}
+      <a href="{% url 'notifications' %}"{% if request.resolver_match.url_name == 'notifications' %} aria-current="page"{% endif %}>
+        <span class="nav-notifications">Notifications{% if notifications_non_lues %}<span class="pastille">{{ notifications_non_lues }}</span>{% endif %}</span>
       </a>
       <a class="nav-compte" href="{% url 'profil' %}"
-         aria-label="Mon compte — {{ user.username }}" title="Mon compte — {{ user.username }}">
+         aria-label="Mon compte — {{ user.username }}" title="Mon compte — {{ user.username }}"{% if request.resolver_match.url_name == 'profil' %} aria-current="page"{% endif %}>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="12" cy="8" r="3.5"></circle>
           <path d="M5 20a7 7 0 0 1 14 0"></path>
         </svg>
         <span class="sr-only">Mon compte</span>
       </a>
-      {# Depuis Django 5, la déconnexion passe obligatoirement par un POST. #}
-      <form method="post" action="{% url 'deconnexion' %}">
-        {% csrf_token %}
-        <button type="submit" class="lien nav-deconnexion">Se déconnecter</button>
-      </form>
     {% else %}
       <a class="nav-connexion" href="{% url 'connexion' %}">Se connecter</a>
       <a class="nav-inscription" href="{% url 'inscription' %}">Créer un compte</a>
@@ -51,7 +46,7 @@
   {% if messages %}
     <ul class="messages">
       {% for message in messages %}
-        <li class="{{ message.tags }}">{{ message }}</li>
+        <li class="{{ message.tags }}"{% if "error" in message.tags %} role="alert" aria-live="assertive"{% else %} role="status" aria-live="polite"{% endif %}>{{ message }}</li>
       {% endfor %}
     </ul>
   {% endif %}

@@ -33,7 +33,7 @@
       <h3>Green Score</h3>
       {% include "partiels/score.html" with score=analyse.score_global %}
       <p class="discret">
-        100 au départ, moins des points selon la gravité de chaque problème.
+      Plus le score est proche de 100, moins les règles actives détectent de problèmes. C’est un indicateur de suivi, pas un calcul d’empreinte carbone.
       </p>
     </div>
 
@@ -79,6 +79,22 @@
         <span class="valeur">{{ rapport.donnees_transferees|floatformat:"-2"|default:"—" }}</span>
         <span class="intitule">Mo transférés</span>
       </div>
+    </div>
+  {% endif %}
+
+  {% if analyse.statut == 'echouee' %}
+    <div class="etat-analyse etat-analyse-erreur" role="alert">
+      <h2>L’analyse a échoué</h2>
+      <p>La mesure n’a pas abouti. Vérifie l’adresse du site ou réessaie plus tard.</p>
+      <a class="bouton bouton-secondaire" href="{% url 'lancer_analyse' analyse.projet.pk %}">Relancer l’analyse</a>
+    </div>
+  {% elif analyse.statut == 'en_attente' %}
+    <div class="etat-analyse" role="status" aria-live="polite">
+      <p>L’analyse est en attente de démarrage.</p>
+    </div>
+  {% elif analyse.statut == 'en_cours' %}
+    <div class="etat-analyse" role="status" aria-live="polite">
+      <p>L’analyse est en cours. Les résultats apparaîtront ici lorsqu’elle sera terminée.</p>
     </div>
   {% endif %}
 
@@ -133,8 +149,12 @@
       <p class="vide">
         {% if analyse.statut == 'terminee' %}
           Aucun problème détecté : ce site respecte toutes les règles actives.
+        {% elif analyse.statut == 'echouee' %}
+          Aucun problème n’a pu être calculé, car l’analyse a échoué. Relance l’analyse pour obtenir des résultats.
+        {% elif analyse.statut == 'en_cours' %}
+          Les problèmes seront affichés lorsque l’analyse sera terminée.
         {% else %}
-          L'analyse n'a pas encore été exécutée.
+          L’analyse n’a pas encore été exécutée.
         {% endif %}
       </p>
     {% endfor %}
@@ -164,7 +184,7 @@
     <h2>Fichiers téléchargés par la page ({{ ressources|length }})</h2>
     <div class="carte">
       {% if ressources %}
-        <div class="tableau-defilant" role="region" aria-label="Liste des fichiers téléchargés, défilement vertical possible" tabindex="0">
+        <div class="tableau-defilant" role="region" aria-label="Liste des fichiers téléchargés, défilement possible" tabindex="0">
           <table>
             <thead>
               <tr>

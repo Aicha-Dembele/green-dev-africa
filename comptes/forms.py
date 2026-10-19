@@ -1,6 +1,7 @@
 """Formulaires des comptes : inscription et modification du profil."""
 
-from django.contrib.auth.forms import UserCreationForm
+from django import forms
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.forms import ModelForm
 
 from .models import Utilisateur
@@ -17,6 +18,11 @@ class InscriptionForm(UserCreationForm):
         model = Utilisateur
         fields = ("username", "nom", "email")
         labels = {"username": "Identifiant de connexion"}
+        widgets = {
+            "username": forms.TextInput(attrs={"placeholder": "Ex. aicha-dembele"}),
+            "nom": forms.TextInput(attrs={"placeholder": "Ex. Aïcha Dembélé"}),
+            "email": forms.EmailInput(attrs={"placeholder": "Ex. aicha@exemple.com"}),
+        }
         help_texts = {
             "username": "Sans espace ni accent. C'est ce que tu saisiras pour te connecter."
         }
@@ -28,6 +34,17 @@ class InscriptionForm(UserCreationForm):
         # restantes sont vérifiées de toute façon à l'envoi du formulaire.
         self.fields["password1"].help_text = "Au moins 8 caractères."
         self.fields["password2"].help_text = "Recopie-le pour éviter une faute de frappe."
+        self.fields["password1"].widget.attrs["placeholder"] = "8 caractères minimum"
+        self.fields["password2"].widget.attrs["placeholder"] = "Répète ton mot de passe"
+
+
+class ConnexionForm(AuthenticationForm):
+    """Formulaire de connexion avec des exemples courts pour les champs."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs["placeholder"] = "Ton identifiant"
+        self.fields["password"].widget.attrs["placeholder"] = "Ton mot de passe"
 
 
 class ProfilForm(ModelForm):
@@ -36,9 +53,7 @@ class ProfilForm(ModelForm):
     class Meta:
         model = Utilisateur
         fields = ("nom", "email")
-
-    def __init__(self, *args, verrouille=False, **kwargs):
-        super().__init__(*args, **kwargs)
-        if verrouille:
-            for champ in self.fields.values():
-                champ.disabled = True
+        widgets = {
+            "nom": forms.TextInput(attrs={"placeholder": "Ex. Aïcha Dembélé"}),
+            "email": forms.EmailInput(attrs={"placeholder": "Ex. aicha@exemple.com"}),
+        }

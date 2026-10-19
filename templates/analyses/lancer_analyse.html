@@ -9,10 +9,14 @@
     <a href="{% url 'projet_detail' projet.pk %}">{{ projet.nom }}</a> › Nouvelle analyse
   </p>
 
-  <h1>Analyser {{ projet.nom }}</h1>
+  <h1>Lancer une analyse</h1>
   <p class="chapeau">{{ projet.url }}</p>
+  <p class="analyse-consigne">
+    Tu peux lancer l'analyse tout de suite : Green Dev Africa mesurera le site
+    automatiquement. Les options ci-dessous sont facultatives.
+  </p>
 
-  <form method="post">
+  <form method="post" data-analyse-form>
     {% csrf_token %}
 
     {% if formulaire.non_field_errors %}
@@ -21,37 +25,44 @@
       </ul>
     {% endif %}
 
-    <div class="grille grille-2">
-      <fieldset>
-        <legend>Réglages de l'audit</legend>
-        <div class="champ">{{ formulaire.type_audit.label_tag }}{{ formulaire.type_audit }}</div>
-        <div class="champ">{{ formulaire.mode_analyse.label_tag }}{{ formulaire.mode_analyse }}</div>
-        <div class="champ">
-          <label>{{ formulaire.inclure_medias }} Inclure les images et vidéos</label>
-          <label>{{ formulaire.inclure_javascript }} Inclure le JavaScript</label>
-        </div>
-      </fieldset>
+    <details class="options-avancees" open>
+      <summary>
+        Adapter les conditions de l'audit
+        <span>Facultatif · les choix par défaut conviennent dans la plupart des cas</span>
+      </summary>
+      <div class="grille grille-2">
+        <fieldset>
+          <legend>Réglages de l'audit</legend>
+          <div class="champ">{{ formulaire.type_audit.label_tag }}{{ formulaire.type_audit }}</div>
+          <div class="champ">{{ formulaire.mode_analyse.label_tag }}{{ formulaire.mode_analyse }}</div>
+          <div class="champ">
+            <label>{{ formulaire.inclure_medias }} Inclure les images et vidéos</label>
+            <label>{{ formulaire.inclure_javascript }} Inclure le JavaScript</label>
+          </div>
+        </fieldset>
 
-      <fieldset>
-        <legend>Contexte du visiteur simulé</legend>
-        <p class="discret">
-          C'est ici que se joue l'ancrage africain du projet : un site léger en
-          fibre peut rester inutilisable sur un téléphone d'entrée de gamme en 3G.
-        </p>
-        <div class="champ">{{ formulaire.type_appareil.label_tag }}{{ formulaire.type_appareil }}</div>
-        <div class="champ">{{ formulaire.qualite_connexion.label_tag }}{{ formulaire.qualite_connexion }}</div>
-        <div class="champ">{{ formulaire.forfait_data.label_tag }}{{ formulaire.forfait_data }}</div>
-      </fieldset>
-    </div>
+        <fieldset>
+          <legend>Conditions de visite simulées</legend>
+          <p class="discret">
+            Choisis l'appareil et la connexion à simuler pour évaluer
+            l'expérience de tes visiteurs.
+          </p>
+          <div class="champ">{{ formulaire.type_appareil.label_tag }}{{ formulaire.type_appareil }}</div>
+          <div class="champ">{{ formulaire.qualite_connexion.label_tag }}{{ formulaire.qualite_connexion }}</div>
+          <div class="champ">{{ formulaire.forfait_data.label_tag }}{{ formulaire.forfait_data }}</div>
+        </fieldset>
+      </div>
+    </details>
 
-    <fieldset>
-      <legend>Mesures (facultatif)</legend>
+    <details class="options-avancees mesures-avancees" {% if formulaire.is_bound %}open{% endif %}>
+      <summary>
+        J'ai déjà mesuré le site avec un autre outil
+        <span>Facultatif · réservé aux mesures déjà relevées</span>
+      </summary>
       <p class="discret">
-        <strong>Laisse tout vide et clique sur « Lancer l'analyse » :
-        l'application ira chercher la page et la pèsera elle-même.</strong>
-        Ces cases ne servent qu'à forcer une valeur, ou à rejouer un audit
-        fait avec un autre outil. Dès qu'une seule case est remplie, la mesure
-        automatique est désactivée.
+        Utilise cette partie uniquement si tu as déjà les résultats d'un autre
+        outil. Dès que tu renseignes au moins une valeur, le site ne sera pas
+        mesuré automatiquement : seules les valeurs saisies seront utilisées.
       </p>
       <div class="grille grille-3">
         {% for champ in formulaire.champs_mesures %}
@@ -67,11 +78,14 @@
           </div>
         {% endfor %}
       </div>
-    </fieldset>
+    </details>
 
     <div class="actions">
-      <button type="submit">Lancer l'analyse</button>
+      <button type="submit" data-analyse-submit>Lancer l'analyse</button>
       <a class="bouton bouton-secondaire" href="{% url 'projet_detail' projet.pk %}">Annuler</a>
     </div>
+    <p class="analyse-chargement" data-analyse-chargement role="status" aria-live="polite" hidden>
+      L'analyse démarre. La mesure peut prendre quelques instants ; garde cette page ouverte.
+    </p>
   </form>
 {% endblock %}

@@ -7,7 +7,7 @@
   <div class="entre-deux dashboard-entete">
     <div>
       <h1>Tableau de bord</h1>
-      <p class="chapeau">Bonjour {{ user }}, voici l'état de sobriété de tes projets.</p>
+      <p class="chapeau">Bonjour {{ user }}, voici l’état de sobriété de tes projets.</p>
     </div>
     <a class="bouton" href="{% url 'projet_creer' %}">Nouveau projet</a>
   </div>
@@ -32,11 +32,49 @@
       <span class="intitule">Dont critique{{ problemes_critiques|pluralize }}</span>
     </div>
   </div>
+  <p class="discret dashboard-score-aide">
+    Plus le Green Score est proche de 100, moins les règles actives détectent de problèmes. C’est un indicateur de suivi, pas un calcul d’empreinte carbone.
+  </p>
+
+  {% if nb_projets %}
+    <section class="dashboard-priorites" aria-labelledby="dashboard-priorites-titre">
+      <div class="dashboard-section-entete">
+        <div>
+          <h2 id="dashboard-priorites-titre">Prochaines actions</h2>
+          <p>Commence par les problèmes ouverts les plus importants.</p>
+        </div>
+      </div>
+      {% if problemes_prioritaires %}
+        <div class="carte">
+          <ul class="dashboard-priorites-liste">
+            {% for probleme in problemes_prioritaires %}
+              <li>
+                <span class="etiquette etiquette-{{ probleme.gravite }}">{{ probleme.get_gravite_display }}</span>
+                <div>
+                  <a href="{% url 'analyse_detail' probleme.analyse_id %}"><strong>{{ probleme.titre }}</strong></a>
+                  <span class="discret">{{ probleme.analyse.projet.nom }}</span>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <div class="carte dashboard-priorites-vide">
+          <p>Aucun problème ouvert pour le moment. Relance une analyse après tes prochaines optimisations pour vérifier les progrès.</p>
+          {% if projets.0 %}
+            <a class="bouton bouton-secondaire" href="{% url 'lancer_analyse' projets.0.pk %}">
+              {% if projets.0.derniere_analyse_id %}Relancer une analyse{% else %}Lancer la première analyse{% endif %}
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
 
   <div class="dashboard-section-entete">
     <div>
       <h2>Mes projets</h2>
-      <p>Retrouvez ici les sites suivis et leurs derniers résultats.</p>
+      <p>Retrouve ici les sites suivis et leurs derniers résultats.</p>
     </div>
     {% if projets %}<span class="dashboard-compteur">{{ nb_projets }} projet{{ nb_projets|pluralize }}</span>{% endif %}
   </div>
@@ -80,7 +118,11 @@
                 {% endif %}
               </td>
               <td class="dashboard-action" data-label="Action" aria-label="Action">
-                <a class="bouton bouton-discret" href="{% url 'lancer_analyse' projet.pk %}">Analyser</a>
+                {% if projet.derniere_analyse_id %}
+                  <a class="bouton bouton-discret" href="{% url 'analyse_detail' projet.derniere_analyse_id %}">Voir le résultat</a>
+                {% else %}
+                  <a class="bouton bouton-discret" href="{% url 'lancer_analyse' projet.pk %}">Analyser</a>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}
@@ -90,14 +132,15 @@
   {% else %}
     <div class="carte dashboard-vide" aria-labelledby="dashboard-vide-titre">
       <div class="dashboard-vide-icone" aria-hidden="true">＋</div>
-      <h3 id="dashboard-vide-titre">Commencez par ajouter un site</h3>
-      <p>Créez votre premier projet pour lancer un audit et suivre les progrès au fil des optimisations.</p>
+      <h3 id="dashboard-vide-titre">Commence par ajouter un site</h3>
+      <p>Crée ton premier projet pour lancer un audit et suivre tes progrès au fil des optimisations.</p>
       <ol class="dashboard-vide-etapes">
-        <li>Ajoutez le nom et l’adresse de votre site.</li>
-        <li>Lancez une analyse avec un profil de visiteur.</li>
-        <li>Consultez les recommandations et comparez les résultats.</li>
+        <li>Ajoute le nom et l’adresse de ton site.</li>
+        <li>Lance une analyse avec un profil de visiteur.</li>
+        <li>Consulte les recommandations et compare les résultats.</li>
       </ol>
       <a class="bouton" href="{% url 'projet_creer' %}">Créer mon premier projet</a>
     </div>
   {% endif %}
+
 {% endblock %}

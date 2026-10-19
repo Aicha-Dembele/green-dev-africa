@@ -32,30 +32,32 @@
       <h2>Historique des analyses</h2>
       <div class="carte">
         {% if analyses %}
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th class="nombre">Score</th>
-                <th class="nombre">Problèmes</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for analyse in analyses %}
+          <div class="tableau-responsive" role="region" aria-label="Historique des analyses, défilement horizontal possible" tabindex="0">
+            <table>
+              <thead>
                 <tr>
-                  <td><a href="{% url 'analyse_detail' analyse.pk %}">{{ analyse.date_analyse|date:"d/m/Y H:i" }}</a></td>
-                  <td class="nombre">
-                    {% if analyse.score_global is not None %}
-                      <strong>{{ analyse.score_global|floatformat:0 }}</strong>
-                    {% else %}—{% endif %}
-                  </td>
-                  <td class="nombre">{{ analyse.nb_problemes|default:0 }}</td>
-                  <td><span class="etiquette">{{ analyse.get_statut_display }}</span></td>
+                  <th>Date</th>
+                  <th class="nombre">Score</th>
+                  <th class="nombre">Problèmes</th>
+                  <th>Statut</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {% for analyse in analyses %}
+                  <tr>
+                    <td><a href="{% url 'analyse_detail' analyse.pk %}">{{ analyse.date_analyse|date:"d/m/Y H:i" }}</a></td>
+                    <td class="nombre">
+                      {% if analyse.score_global is not None %}
+                        <strong>{{ analyse.score_global|floatformat:0 }}</strong>
+                      {% else %}—{% endif %}
+                    </td>
+                    <td class="nombre">{{ analyse.nb_problemes|default:0 }}</td>
+                    <td><span class="etiquette">{{ analyse.get_statut_display }}</span></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         {% else %}
           <p class="vide">
             Aucune analyse.<br>
@@ -70,37 +72,39 @@
       <h2>Objectifs d'optimisation</h2>
       <div class="carte">
         {% if objectifs %}
-          <table>
-            <thead>
-              <tr>
-                <th>Objectif</th>
-                <th class="nombre">Cible</th>
-                <th>Échéance</th>
-                <th>État</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for objectif in objectifs %}
+          <div class="tableau-responsive" role="region" aria-label="Objectifs d’optimisation, défilement horizontal possible" tabindex="0">
+            <table>
+              <thead>
                 <tr>
-                  <td>{{ objectif.nom }}</td>
-                  <td class="nombre">{{ objectif.valeur_cible|floatformat:"-2" }} {{ objectif.unite }}</td>
-                  <td>{{ objectif.date_limite|date:"d/m/Y"|default:"—" }}</td>
-                  <td>
-                    <span class="etiquette {% if objectif.statut == 'atteint' %}etiquette-ok{% elif objectif.statut == 'non_atteint' %}etiquette-critique{% endif %}">
-                      {{ objectif.get_statut_display }}
-                    </span>
-                  </td>
-                  <td>
-                    <form method="post" action="{% url 'objectif_supprimer' projet.pk objectif.pk %}">
-                      {% csrf_token %}
-                      <button type="submit" class="bouton-discret">Retirer</button>
-                    </form>
-                  </td>
+                  <th>Objectif</th>
+                  <th class="nombre">Cible</th>
+                  <th>Échéance</th>
+                  <th>État</th>
+                  <th></th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {% for objectif in objectifs %}
+                  <tr>
+                    <td>{{ objectif.nom }}</td>
+                    <td class="nombre">{{ objectif.valeur_cible|floatformat:"-2" }} {{ objectif.unite }}</td>
+                    <td>{{ objectif.date_limite|date:"d/m/Y"|default:"—" }}</td>
+                    <td>
+                      <span class="etiquette {% if objectif.statut == 'atteint' %}etiquette-ok{% elif objectif.statut == 'non_atteint' %}etiquette-critique{% endif %}">
+                        {{ objectif.get_statut_display }}
+                      </span>
+                    </td>
+                    <td>
+                      <form method="post" action="{% url 'objectif_supprimer' projet.pk objectif.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="bouton-discret">Retirer</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         {% else %}
           <p class="discret">Aucun objectif. Fixe une cible chiffrée, elle sera
           vérifiée à chaque analyse.</p>

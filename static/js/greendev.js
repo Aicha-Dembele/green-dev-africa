@@ -49,5 +49,44 @@
     for (var i = 0; i < champs.length; i++) {
       equiper(champs[i]);
     }
+
+    document.querySelectorAll("[data-analyse-form]").forEach(function (form) {
+      form.addEventListener("submit", function () {
+        var bouton = form.querySelector("[data-analyse-submit]");
+        var statut = form.querySelector("[data-analyse-chargement]");
+        if (bouton && statut) {
+          bouton.disabled = true;
+          bouton.textContent = "Analyse en cours…";
+          statut.hidden = false;
+          form.setAttribute("aria-busy", "true");
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-copier-lien]").forEach(function (bouton) {
+      bouton.addEventListener("click", async function () {
+        var ligne = bouton.closest("tr");
+        var lien = ligne && ligne.querySelector(".partage-lien");
+        var statut = document.querySelector("[data-copie-statut]");
+        if (!lien || !statut) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(lien.href);
+          statut.textContent = "Lien copié dans le presse-papiers.";
+        } catch {
+          lien.focus();
+          var selection = window.getSelection();
+          if (selection) {
+            var plage = document.createRange();
+            plage.selectNodeContents(lien);
+            selection.removeAllRanges();
+            selection.addRange(plage);
+          }
+          statut.textContent = "Copie automatique indisponible. Le lien est sélectionné : copie-le manuellement.";
+        }
+      });
+    });
   });
 })();
