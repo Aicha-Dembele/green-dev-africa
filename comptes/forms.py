@@ -2,7 +2,6 @@
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.forms import ModelForm
 
 from .models import Utilisateur
 
@@ -45,15 +44,3 @@ class ConnexionForm(AuthenticationForm):
         super().__init__(*args, **kwargs)
         self.fields["username"].widget.attrs["placeholder"] = "Ton identifiant"
         self.fields["password"].widget.attrs["placeholder"] = "Ton mot de passe"
-
-
-class ProfilForm(ModelForm):
-    """Cas d'utilisation « Modifier son profil »."""
-
-    class Meta:
-        model = Utilisateur
-        fields = ("nom", "email")
-        widgets = {
-            "nom": forms.TextInput(attrs={"placeholder": "Ex. Aïcha Dembélé"}),
-            "email": forms.EmailInput(attrs={"placeholder": "Ex. aicha@exemple.com"}),
-        }

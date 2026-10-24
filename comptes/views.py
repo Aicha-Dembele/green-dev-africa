@@ -8,9 +8,9 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
+from django.views.decorators.http import require_GET
 
-from .forms import InscriptionForm, ProfilForm
+from .forms import InscriptionForm
 from .models import Notification
 
 
@@ -32,30 +32,10 @@ def inscription(request):
 
 
 @login_required
+@require_GET
 def profil(request):
-    """Cas d'utilisation « Modifier son profil »."""
-    maintenant = timezone.now()
-
-    if request.method == "POST":
-        formulaire = ProfilForm(request.POST, instance=request.user)
-        if formulaire.is_valid():
-            if formulaire.has_changed():
-                utilisateur = formulaire.save(commit=False)
-                utilisateur.profil_modifie_le = maintenant
-                utilisateur.save()
-                request.user.refresh_from_db()
-            messages.success(request, "Profil mis à jour.")
-            return redirect("profil")
-    else:
-        formulaire = ProfilForm(instance=request.user)
-
-    return render(
-        request,
-        "comptes/profil.html",
-        {
-            "formulaire": formulaire,
-        },
-    )
+    """Affiche les informations en lecture seule du compte connecté."""
+    return render(request, "comptes/profil.html")
 
 
 @login_required

@@ -5,6 +5,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path(
+        "confidentialite/",
+        views.politique_confidentialite,
+        name="politique_confidentialite",
+    ),
     path("", views.tableau_de_bord, name="tableau_de_bord"),
     path("projets/nouveau/", views.projet_creer, name="projet_creer"),
     path("projets/<int:pk>/", views.projet_detail, name="projet_detail"),

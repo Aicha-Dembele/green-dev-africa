@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block titre %}Politique de confidentialité — Green Dev Africa{% endblock %}
+{% block description %}Découvrez quelles données Green Dev Africa utilise, pourquoi et comment exercer vos droits.{% endblock %}
+{% block classe_page %}page-politique{% endblock %}
+
+{% block contenu %}
+<article class="politique-contenu">
+  <p class="surtitre">INFORMATIONS SUR VOS DONNÉES</p>
+  <h1>Politique de confidentialité</h1>
+  <p class="chapeau">Dernière mise à jour : 20 octobre 2026</p>
+
+  <p>
+    Cette page explique quelles données Green Dev Africa traite lorsque vous
+    utilisez le service, dans quel but et comment demander leur accès ou leur
+    suppression. Green Dev Africa est un outil d'analyse de sobriété numérique
+    de sites web.
+  </p>
+
+  <h2>1. Responsable du traitement et contact</h2>
+  <p>
+    Le responsable indiqué pour ce service est Green Dev Africa. Pour toute
+    question sur vos données ou pour exercer vos droits, contactez :
+    <strong>[adresse de contact à renseigner avant publication]</strong>.
+  </p>
+  <p class="politique-a-completer">
+    Avant la mise en ligne publique, le responsable doit confirmer son identité
+    juridique et remplacer ce texte par une adresse de contact effectivement
+    suivie.
+  </p>
+
+  <h2>2. Données traitées</h2>
+  <ul>
+    <li>
+      <strong>Compte :</strong> identifiant, nom, adresse e-mail, rôle et mot de
+      passe stocké sous forme protégée par le mécanisme d'authentification de
+      Django. Le mot de passe n'est pas affiché dans le profil.
+    </li>
+    <li>
+      <strong>Projets et objectifs :</strong> nom, description éventuelle, URL
+      du site à analyser, objectifs et statut du projet.
+    </li>
+    <li>
+      <strong>Audits :</strong> options d'analyse et de contexte (appareil,
+      connexion, forfait), mesures, ressources et adresses des fichiers
+      repérés, score, problèmes, recommandations, rapports et comparaisons.
+      Vous pouvez aussi saisir manuellement des mesures.
+    </li>
+    <li>
+      <strong>Notifications :</strong> contenu, date et état de lecture des
+      messages affichés dans votre espace.
+    </li>
+    <li>
+      <strong>Données techniques :</strong> le navigateur envoie les
+      informations nécessaires au fonctionnement d'un site web. L'hébergeur
+      peut notamment traiter des journaux de connexion ; leur contenu et leur
+      durée de conservation dépendent de la configuration effective de
+      l'hébergement.
+    </li>
+  </ul>
+
+  <h2>3. Utilisation des données</h2>
+  <p>Ces données servent à :</p>
+  <ul>
+    <li>créer et sécuriser votre compte et vous permettre de vous connecter ;</li>
+    <li>enregistrer vos projets et réaliser les audits que vous demandez ;</li>
+    <li>calculer et afficher les résultats, recommandations et comparaisons ;</li>
+    <li>produire vos rapports et gérer leurs liens de partage ;</li>
+    <li>afficher les notifications liées à votre activité dans l'application.</li>
+  </ul>
+  <p>
+    L'application n'envoie actuellement pas de notifications par e-mail.
+    L'adresse e-mail du compte est enregistrée, mais n'est pas utilisée par
+    l'application pour envoyer des messages.
+  </p>
+
+  <h2>4. Audits de sites web et partage de rapports</h2>
+  <p>
+    Quand vous lancez un audit automatique, le serveur de Green Dev Africa
+    contacte l'adresse du site que vous avez indiquée et certaines ressources
+    qu'il référence. Le site audité peut donc recevoir des requêtes provenant
+    du serveur et voir les informations techniques habituelles de ces
+    requêtes, comme son adresse IP. Les identifiants de votre compte ne sont
+    pas transmis volontairement au site audité. L'outil ne mesure pas les
+    fichiers chargés ultérieurement par JavaScript.
+  </p>
+  <p>
+    Si vous créez un lien de rapport public, toute personne qui possède ce lien
+    peut consulter le rapport jusqu'à son expiration ou sa révocation.
+    Partagez-le uniquement avec les personnes auxquelles vous souhaitez donner
+    accès.
+  </p>
+
+  <h2>5. Cookies et services tiers</h2>
+  <p>
+    Le service utilise les mécanismes techniques nécessaires à la connexion et
+    à la protection des formulaires, notamment une session et une protection
+    contre les requêtes non autorisées. Le code de l'application n'intègre pas
+    de publicité ni d'outil de mesure d'audience tiers. Les éventuels journaux
+    techniques de l'hébergeur restent soumis à la configuration de celui-ci.
+  </p>
+
+  <h2>6. Conservation et suppression</h2>
+  <p>
+    Les projets, audits, rapports et notifications sont conservés dans la base
+    de données du service afin de vous permettre de consulter leur historique.
+    L'application ne propose pas actuellement de fonction de suppression de
+    compte depuis le profil et ne définit pas de délai automatique de
+    suppression. Pour demander la suppression de votre compte et des données
+    qui y sont associées, contactez le responsable à l'adresse indiquée
+    ci-dessus. Les liens de rapport sont limités dans le temps et peuvent être
+    révoqués par leur créateur.
+  </p>
+
+  <h2>7. Destinataires et hébergement</h2>
+  <p>
+    Vos données sont accessibles aux personnes autorisées à administrer le
+    service. Les rapports que vous partagez sont aussi accessibles aux
+    détenteurs de leur lien. Le nom de l'hébergeur, le pays d'hébergement et
+    les éventuels sous-traitants doivent être précisés par l'exploitant avant
+    la mise en production ; ils ne peuvent pas être déterminés à partir du code
+    de l'application seul.
+  </p>
+
+  <h2>8. Sécurité</h2>
+  <p>
+    L'application limite l'accès aux projets et analyses à leur propriétaire,
+    protège les actions de modification par des formulaires sécurisés et
+    s'appuie sur le stockage protégé des mots de passe de Django. Aucun
+    dispositif ne garantissant une sécurité absolue, évitez de saisir dans les
+    projets des informations qui ne sont pas nécessaires à l'audit.
+  </p>
+
+  <h2>9. Vos droits</h2>
+  <p>
+    Selon la législation applicable à votre situation, vous pouvez notamment
+    demander l'accès à vos données, leur rectification ou leur suppression,
+    et, lorsque la loi le prévoit, vous opposer à certains traitements ou en
+    demander la limitation. Adressez votre demande au contact indiqué dans
+    cette page. Si le RGPD s'applique à votre situation, vous pouvez également
+    saisir l'autorité de protection des données compétente.
+  </p>
+
+  <p class="politique-fin">
+    Cette politique décrit le fonctionnement actuel de l'application. Les
+    informations relatives à l'identité du responsable, à l'hébergeur et aux
+    durées de conservation des journaux techniques doivent être confirmées par
+    l'exploitant avant toute mise en production.
+  </p>
+</article>
+{% endblock %}

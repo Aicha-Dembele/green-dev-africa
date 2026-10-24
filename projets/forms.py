@@ -10,7 +10,7 @@ class ProjetForm(forms.ModelForm):
 
     class Meta:
         model = Projet
-        fields = ("nom", "url", "description", "statut")
+        fields = ("nom", "url", "description")
         widgets = {
             "nom": forms.TextInput(
                 attrs={"placeholder": "Ex. Site vitrine de mon association"}

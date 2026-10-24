@@ -44,7 +44,7 @@ class UtilisateurTest(TestCase):
 
 
 class PagesDuCompteTest(TestCase):
-    """Les pages de compte s'affichent et le profil se modifie vraiment."""
+    """Les pages de compte s'affichent et protègent l'accès aux comptes."""
 
     @classmethod
     def setUpTestData(cls):
@@ -80,8 +80,10 @@ class PagesDuCompteTest(TestCase):
         self.assertContains(reponse, 'aria-current="page"')
         self.assertContains(reponse, f'action="{reverse("deconnexion")}"')
         self.assertContains(reponse, "Se déconnecter")
-        self.assertContains(reponse, 'placeholder="Ex. Aïcha Dembélé"')
-        self.assertContains(reponse, 'placeholder="Ex. aicha@exemple.com"')
+        self.assertContains(reponse, "Détails du compte")
+        self.assertContains(reponse, "aicha@example.com")
+        self.assertNotContains(reponse, "Enregistrer les modifications")
+        self.assertNotContains(reponse, '<form method="post">')
 
     def test_navigation_indique_la_page_active(self):
         reponse = self.client.get(reverse("tableau_de_bord"))
@@ -89,37 +91,15 @@ class PagesDuCompteTest(TestCase):
         self.assertContains(reponse, 'aria-current="page"')
         self.assertNotContains(reponse, "Se déconnecter")
 
-    def test_profil_indique_quil_est_modifiable_a_tout_moment(self):
-        reponse = self.client.get(reverse("profil"))
-
-        self.assertContains(reponse, "modifier tes informations à tout moment")
-        self.assertNotContains(reponse, "30 jours")
-
-    def test_modifier_son_profil(self):
+    def test_profil_est_en_lecture_seule(self):
         reponse = self.client.post(
             reverse("profil"), {"nom": "Aïcha D.", "email": "nouvelle@example.com"}
         )
 
-        self.assertRedirects(reponse, reverse("profil"))
+        self.assertEqual(reponse.status_code, 405)
         self.utilisatrice.refresh_from_db()
-        self.assertEqual(self.utilisatrice.nom, "Aïcha D.")
-        self.assertEqual(self.utilisatrice.email, "nouvelle@example.com")
-        self.assertIsNotNone(self.utilisatrice.profil_modifie_le)
-
-    def test_modifier_son_profil_plusieurs_fois_sans_delai(self):
-        self.client.post(
-            reverse("profil"),
-            {"nom": "Aïcha D.", "email": "nouvelle@example.com"},
-        )
-
-        reponse = self.client.post(
-            reverse("profil"),
-            {"nom": "Aïcha Traoré", "email": "aicha@example.com"},
-        )
-
-        self.assertRedirects(reponse, reverse("profil"))
-        self.utilisatrice.refresh_from_db()
-        self.assertEqual(self.utilisatrice.nom, "Aïcha Traoré")
+        self.assertEqual(self.utilisatrice.nom, "Aïcha")
+        self.assertEqual(self.utilisatrice.email, "aicha@example.com")
 
     def test_se_deconnecter(self):
         reponse = self.client.post(reverse("deconnexion"))

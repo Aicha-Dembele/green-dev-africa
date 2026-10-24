@@ -74,6 +74,16 @@ class AccesSansCompteTest(BaseProjetTest):
         # pas le test — mais sa disparition, elle, doit le casser.
         self.assertContains(reponse, "empreinte carbone")
 
+    def test_politique_de_confidentialite_accessible_sans_compte(self):
+        reponse = self.client.get(reverse("politique_confidentialite"))
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Responsable du traitement et contact")
+        self.assertContains(reponse, "adresse de contact à renseigner")
+        self.assertContains(
+            reponse, reverse("politique_confidentialite"), count=1
+        )
+
 
 class TableauDeBordTest(BaseProjetTest):
     def test_le_bouton_du_projet_ouvre_le_dernier_resultat_disponible(self):
@@ -238,6 +248,7 @@ class CreationProjetTest(BaseProjetTest):
             reponse,
             'placeholder="Ex. Site de présentation et d&#x27;inscription de l&#x27;association."',
         )
+        self.assertNotContains(reponse, "Statut")
 
     def test_creer_un_projet(self):
         self.connecter_aicha()
@@ -248,13 +259,13 @@ class CreationProjetTest(BaseProjetTest):
                 "nom": "Nouveau site",
                 "url": "https://nouveau.example.ml",
                 "description": "Un essai",
-                "statut": "actif",
             },
         )
 
         projet = Projet.objects.get(nom="Nouveau site")
         self.assertRedirects(reponse, reverse("projet_detail", args=[projet.pk]))
         self.assertEqual(projet.utilisateur, self.aicha)
+        self.assertEqual(projet.statut, Projet.Statut.ACTIF)
 
     def test_le_proprietaire_ne_peut_pas_etre_force_par_le_formulaire(self):
         """Même en trafiquant la page, on ne crée pas un projet au nom d'autrui."""
@@ -266,7 +277,6 @@ class CreationProjetTest(BaseProjetTest):
                 "nom": "Tentative",
                 "url": "https://tentative.example.ml",
                 "description": "",
-                "statut": "actif",
                 "utilisateur": self.fanta.pk,  # champ ajouté de force
             },
         )
@@ -278,7 +288,7 @@ class CreationProjetTest(BaseProjetTest):
 
         reponse = self.client.post(
             reverse("projet_creer"),
-            {"nom": "Bancal", "url": "pas-une-adresse", "description": "", "statut": "actif"},
+            {"nom": "Bancal", "url": "pas-une-adresse", "description": ""},
         )
 
         self.assertEqual(reponse.status_code, 200)

@@ -59,6 +59,32 @@ body {
 a { color: var(--turquoise); text-decoration-color: rgba(45, 212, 167, 0.4); }
 a:hover { color: #6ae8c4; }
 
+.pied-page {
+  padding: 1.25rem clamp(1rem, 3.5vw, 2.75rem);
+  border-top: 1px solid var(--bord);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.politique-contenu {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2.5rem 0 4rem;
+}
+.politique-contenu h1 { margin-bottom: 0; }
+.politique-contenu h2 { margin: 2rem 0 0.6rem; }
+.politique-contenu p,
+.politique-contenu li { color: var(--texte-doux); }
+.politique-contenu li { margin: 0.55rem 0; padding-left: 0.2rem; }
+.politique-contenu strong { color: var(--texte); }
+.politique-a-completer,
+.politique-fin {
+  padding: 0.9rem 1rem;
+  border-left: 3px solid var(--moyenne);
+  background: rgba(242, 193, 78, 0.08);
+}
+.politique-fin { margin-top: 2rem; }
+
 ::selection { background: var(--turquoise); color: var(--nuit); }
 
 a:focus-visible,
@@ -590,56 +616,28 @@ legend {
 /* --- profil du compte --- */
 
 .page-profil { max-width: 980px; margin: 0 auto; }
-.profil-entete { margin-bottom: 1.75rem; }
+.profil-entete { max-width: 680px; margin: 0 auto 1.75rem; }
 .profil-entete .surtitre { display: block; margin-bottom: 0.55rem; }
 .profil-entete h1 { font-size: clamp(1.8rem, 4vw, 2.35rem); }
 .profil-entete .chapeau { margin: 0.55rem 0 0; }
-.profil-grille { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 0.62fr); gap: 1.25rem; align-items: start; }
-.profil-form-carte { padding: clamp(1.2rem, 3vw, 1.8rem); margin: 0; background: linear-gradient(155deg, var(--carte-haute), var(--carte) 48%); }
+.profil-carte { max-width: 680px; padding: clamp(1.2rem, 3vw, 1.8rem); margin: 0 auto; background: linear-gradient(155deg, var(--carte-haute), var(--carte) 48%); }
 .profil-identite { display: flex; align-items: center; gap: 0.9rem; padding-bottom: 1.35rem; border-bottom: 1px solid var(--bord); }
 .profil-avatar { display: grid; place-items: center; flex: 0 0 3.35rem; width: 3.35rem; height: 3.35rem; border: 1px solid rgba(45, 212, 167, 0.32); border-radius: 50%; color: var(--turquoise); background: var(--turquoise-voile); font-size: 1.3rem; font-weight: 800; }
 .profil-identite-texte { min-width: 0; }
 .profil-identite h2 { overflow-wrap: anywhere; margin: 0; color: var(--texte); font-size: 1.1rem; text-transform: none; letter-spacing: -0.02em; }
-.profil-identite p { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; margin: 0.25rem 0 0; color: var(--texte-faible); font-size: 0.82rem; }
-.profil-identite .etiquette { color: var(--turquoise); background: var(--turquoise-voile); border-color: rgba(45, 212, 167, 0.22); }
-.profil-section-entete { margin: 1.35rem 0 1.15rem; }
-.profil-section-entete h2, .profil-aside h2 { margin: 0; color: var(--texte); font-size: 1.03rem; text-transform: none; letter-spacing: -0.01em; }
-.profil-section-entete p { margin: 0.2rem 0 0; color: var(--texte-faible); font-size: 0.83rem; }
-.profil-form-carte .champ { margin-bottom: 1.2rem; }
-.profil-form-carte input { min-height: 2.9rem; padding: 0.72rem 0.8rem; background: rgba(8, 23, 34, 0.55); }
-.profil-form-carte input:disabled { cursor: not-allowed; opacity: 0.68; border-style: dashed; }
-.profil-form-carte input:disabled:focus { box-shadow: none; border-color: var(--bord); }
-.profil-actions { gap: 0.75rem; margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--bord); }
-.profil-actions > * { min-height: 2.8rem; }
-.profil-aside { padding: 1.4rem; border: 1px solid var(--bord); border-radius: var(--rayon); background: linear-gradient(155deg, rgba(22, 55, 74, 0.8), rgba(13, 36, 52, 0.72)); box-shadow: var(--ombre); }
-.profil-aside-icone { display: grid; place-items: center; width: 2.65rem; height: 2.65rem; margin-bottom: 1rem; border: 1px solid rgba(45, 212, 167, 0.27); border-radius: 10px; color: var(--turquoise); background: var(--turquoise-voile); font-size: 1.35rem; }
-.profil-aside-intro { margin: 0.45rem 0 1.1rem; color: var(--texte-doux); font-size: 0.86rem; line-height: 1.65; }
+.profil-section-entete { margin: 1.35rem 0 0.75rem; }
+.profil-section-entete h2 { margin: 0; color: var(--texte); font-size: 1.03rem; text-transform: none; letter-spacing: -0.01em; }
 .profil-details { margin: 0; border-top: 1px solid var(--bord); }
 .profil-details > div { padding: 0.8rem 0; border-bottom: 1px solid var(--bord); }
 .profil-details dt { color: var(--texte-faible); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .profil-details dd { overflow-wrap: anywhere; margin: 0.18rem 0 0; color: var(--texte); font-size: 0.9rem; font-weight: 600; }
-.profil-securite { display: flex; align-items: flex-start; gap: 0.55rem; margin: 1rem 0 0; color: var(--texte-faible); font-size: 0.77rem; line-height: 1.55; }
-.profil-securite span { color: var(--turquoise); font-weight: 800; }
-.profil-securite.profil-verrouille { padding: 0.75rem; border: 1px solid rgba(242, 193, 78, 0.25); border-radius: 9px; background: rgba(242, 193, 78, 0.08); color: var(--moyenne); }
-.profil-securite.profil-verrouille span { color: var(--moyenne); }
-.profil-deconnexion { margin-top: 1rem; }
+.profil-deconnexion { margin-top: 1.2rem; }
 .profil-deconnexion button { width: 100%; }
-
-@media (max-width: 760px) {
-  .profil-grille { grid-template-columns: minmax(0, 1fr); }
-  .profil-aside { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 0.8rem; padding: 1.15rem; }
-  .profil-aside-icone { grid-row: 1 / span 2; margin: 0; }
-  .profil-aside h2 { align-self: end; }
-  .profil-aside-intro { grid-column: 2; margin: 0.15rem 0 0; }
-  .profil-details, .profil-securite, .profil-deconnexion { grid-column: 1 / -1; }
-}
 
 @media (max-width: 480px) {
   .page-profil .fil { margin-top: 0; font-size: 0.78rem; }
   .profil-entete { margin-bottom: 1.25rem; }
-  .profil-form-carte { padding: 1rem; }
-  .profil-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
-  .profil-actions > * { width: 100%; text-align: center; }
+  .profil-carte { padding: 1rem; }
 }
 
 @media (max-width: 760px) {

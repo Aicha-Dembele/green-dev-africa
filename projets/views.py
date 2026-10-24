@@ -17,6 +17,11 @@ from .forms import ObjectifForm, ProjetForm
 from .models import Projet
 
 
+def politique_confidentialite(request):
+    """Affiche la politique de confidentialité, accessible sans compte."""
+    return render(request, "projets/politique_confidentialite.html")
+
+
 def tableau_de_bord(request):
     """Cas d'utilisation « Consulter le tableau de bord ».
 

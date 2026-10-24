@@ -9,49 +9,29 @@
     <header class="profil-entete">
       <span class="surtitre"><span class="point-actif" aria-hidden="true"></span>TON ESPACE PERSONNEL</span>
       <h1>Mon profil</h1>
-      <p class="chapeau">Gère tes informations de compte et tes préférences personnelles.</p>
+      <p class="chapeau">Consulte les informations associées à ton compte.</p>
     </header>
 
-    <div class="profil-grille">
-      <section class="carte profil-form-carte" aria-labelledby="profil-informations-titre">
-        <div class="profil-identite">
-          <div class="profil-avatar" aria-hidden="true">{{ user.nom|default:user.username|first|upper }}</div>
-          <div class="profil-identite-texte">
-            <h2>{{ user.nom|default:user.username }}</h2>
-            <p>@{{ user.username }} <span class="etiquette">{{ user.get_role_display }}</span></p>
-          </div>
+    <section class="carte profil-carte" aria-labelledby="profil-compte-titre">
+      <div class="profil-identite">
+        <div class="profil-avatar" aria-hidden="true">{{ user.nom|default:user.username|first|upper }}</div>
+        <div class="profil-identite-texte">
+          <h2>{{ user.nom|default:user.username }}</h2>
         </div>
+      </div>
 
-        <div class="profil-section-entete">
-          <h2 id="profil-informations-titre">Informations personnelles</h2>
-          <p>Tu peux modifier tes informations à tout moment.</p>
-        </div>
-
-        <form method="post">
-          {% csrf_token %}
-          {% include "partiels/champs.html" with formulaire=formulaire %}
-          <div class="actions profil-actions">
-            <button type="submit">Enregistrer les modifications</button>
-            <a class="bouton bouton-secondaire" href="{% url 'tableau_de_bord' %}">Retour au tableau de bord</a>
-          </div>
-        </form>
-      </section>
-
-      <aside class="profil-aside" aria-label="Détails du compte">
-        <div class="profil-aside-icone" aria-hidden="true">♧</div>
-        <h2>Ton compte</h2>
-        <p class="profil-aside-intro">Ton profil te permet de personnaliser ton espace de suivi.</p>
-        <dl class="profil-details">
-          <div><dt>Identifiant</dt><dd>{{ user.username }}</dd></div>
-          <div><dt>Rôle</dt><dd>{{ user.get_role_display }}</dd></div>
-          <div><dt>Adresse e-mail</dt><dd>{{ user.email|default:"Non renseignée" }}</dd></div>
-        </dl>
-        <p class="profil-securite"><span aria-hidden="true">✓</span> Tu peux mettre à jour ces informations quand tu en as besoin.</p>
-        <form class="profil-deconnexion" method="post" action="{% url 'deconnexion' %}">
-          {% csrf_token %}
-          <button type="submit" class="bouton bouton-secondaire">Se déconnecter</button>
-        </form>
-      </aside>
-    </div>
+      <div class="profil-section-entete">
+        <h2 id="profil-compte-titre">Détails du compte</h2>
+      </div>
+      <dl class="profil-details">
+        <div><dt>Identifiant</dt><dd>{{ user.username }}</dd></div>
+        <div><dt>Adresse e-mail</dt><dd>{{ user.email|default:"Non renseignée" }}</dd></div>
+        <div><dt>Rôle</dt><dd>{{ user.get_role_display }}</dd></div>
+      </dl>
+      <form class="profil-deconnexion" method="post" action="{% url 'deconnexion' %}">
+        {% csrf_token %}
+        <button type="submit" class="bouton bouton-secondaire">Se déconnecter</button>
+      </form>
+    </section>
   </div>
 {% endblock %}
