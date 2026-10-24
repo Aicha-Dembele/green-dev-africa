@@ -439,6 +439,12 @@ def collecter_site(
                 if lien not in deja_vues and lien not in a_visiter:
                     a_visiter.append(lien)
 
+        if not resultats:
+            raise ErreurCollecte(
+                "Aucune page n'a pu être analysée : le site est vide ou interdit "
+                "par robots.txt."
+            )
+
         mesures = {
             cle: _moyenne(resultats, cle) for cle in resultats[0]["mesures"]
         }

@@ -337,6 +337,15 @@ class CollecteSiteTest(TestCase):
         with self.assertRaises(ErreurCollecte):
             collecter_site("https://exemple.ml/", session=session)
 
+    def test_si_robots_txt_bloque_toutes_les_pages_on_le_signale_clairement(self):
+        site = dict(PETIT_SITE)
+        site["https://exemple.ml/robots.txt"] = b"User-agent: *\nDisallow: /\n"
+
+        with self.assertRaises(ErreurCollecte) as souleve:
+            collecter_site("https://exemple.ml/", session=FausseSession(site))
+
+        self.assertIn("Aucune page n'a pu être analysée", str(souleve.exception))
+
     def test_une_redirection_ne_fait_pas_visiter_deux_fois_la_meme_page(self):
         """Vu sur un vrai site : surveylama.com redirige vers /en, et la page
         d'accueil était comptée deux fois dans la moyenne."""
