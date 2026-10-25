@@ -95,10 +95,14 @@
                       </span>
                     </td>
                     <td>
-                      <form method="post" action="{% url 'objectif_supprimer' projet.pk objectif.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="bouton-discret">Retirer</button>
-                      </form>
+                      <details>
+                        <summary class="bouton bouton-discret">Retirer</summary>
+                        <form method="post" action="{% url 'objectif_supprimer' projet.pk objectif.pk %}">
+                          {% csrf_token %}
+                          <p>Retirer cet objectif du projet ?</p>
+                          <button type="submit" class="bouton-discret">Confirmer le retrait</button>
+                        </form>
+                      </details>
                     </td>
                   </tr>
                 {% endfor %}

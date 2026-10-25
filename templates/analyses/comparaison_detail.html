@@ -138,9 +138,9 @@
                   {% if ligne.ecart is None %}
                     <span class="discret">—</span>
                   {% elif ligne.sens == "mieux" %}
-                    <span class="etiquette etiquette-ok">{{ ligne.ecart|floatformat:"-2" }}</span>
+                    <span class="etiquette etiquette-ok">{{ ligne.ecart|floatformat:"-2" }} {{ ligne.unite }}</span>
                   {% elif ligne.sens == "moins_bien" %}
-                    <span class="etiquette etiquette-critique">+{{ ligne.ecart|floatformat:"-2" }}</span>
+                    <span class="etiquette etiquette-critique">+{{ ligne.ecart|floatformat:"-2" }} {{ ligne.unite }}</span>
                   {% else %}
                     <span class="discret">inchangé</span>
                   {% endif %}
