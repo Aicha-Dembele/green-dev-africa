@@ -79,7 +79,9 @@ class AccesSansCompteTest(BaseProjetTest):
 
         self.assertEqual(reponse.status_code, 200)
         self.assertContains(reponse, "Responsable du traitement et contact")
-        self.assertContains(reponse, "adresse de contact à renseigner")
+        self.assertContains(reponse, "équipe Green")
+        self.assertContains(reponse, "mailto:sadoudev223@gmail.com")
+        self.assertNotContains(reponse, "adresse de contact à renseigner")
         self.assertContains(
             reponse, reverse("politique_confidentialite"), count=1
         )
