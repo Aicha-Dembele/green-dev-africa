@@ -43,6 +43,20 @@ ALLOWED_HOSTS = [
     if hote.strip()
 ]
 
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 3600
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    if os.environ.get("DJANGO_BEHIND_PROXY") == "True":
+        # À activer seulement si le proxy de confiance écrase cet en-tête :
+        # sinon un client pourrait le falsifier et contourner la détection HTTPS.
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Application definition
 

@@ -60,7 +60,11 @@ $env:DJANGO_DEBUG = "True"
 ```
 
 Hors mode debug, l'application exige `DJANGO_SECRET_KEY` et ne démarre pas
-avec une clé de secours.
+avec une clé de secours. En production, configure aussi `DJANGO_DEBUG=False`
+et `DJANGO_ALLOWED_HOSTS` avec les noms d'hôte exacts du site. HTTPS et les
+cookies sécurisés sont imposés automatiquement hors mode debug. Ne règle
+`DJANGO_BEHIND_PROXY=True` qu'après avoir vérifié que le proxy de confiance
+remplace lui-même l'en-tête `X-Forwarded-Proto`.
 
 **Enfin, prépare la base et lance le serveur :**
 
