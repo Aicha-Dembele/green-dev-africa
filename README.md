@@ -42,15 +42,25 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Puis crée ta clé secrète.** Elle n'est volontairement pas dans le dépôt :
-une clé secrète publiée permettrait de fabriquer de fausses sessions.
-Recopie le modèle, génère une clé, et colle-la dedans à la place de
-`colle-ici-ta-cle-secrete` :
+**Configure ensuite les variables d'environnement.** Le fichier
+[`.env.example`](./.env.example) est un modèle à recopier dans ton outil
+d'hébergement ou ton terminal ; Django ne charge pas automatiquement un
+fichier `.env`. Ne publie jamais la vraie `DJANGO_SECRET_KEY` : elle permet
+notamment de signer les sessions.
 
 ```bash
-copy config\local_settings.example.py config\local_settings.py
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
+
+Pour le développement local sous PowerShell, active explicitement le mode
+debug avant de lancer le serveur :
+
+```powershell
+$env:DJANGO_DEBUG = "True"
+```
+
+Hors mode debug, l'application exige `DJANGO_SECRET_KEY` et ne démarre pas
+avec une clé de secours.
 
 **Enfin, prépare la base et lance le serveur :**
 

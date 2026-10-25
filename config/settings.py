@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,26 +22,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# La clé secrète signe les sessions et les formulaires. Elle ne doit JAMAIS
-# être publiée : elle est donc lue dans l'environnement, ou dans
-# config/local_settings.py qui n'est pas versionné (voir .gitignore).
-# La valeur ci-dessous ne sert qu'à faire tourner le projet sur une machine
-# fraîchement clonée ; elle est volontairement inutilisable en ligne.
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-cle-de-developpement-a-remplacer-en-ligne",
-)
+# DEBUG affiche les erreurs en détail : il doit être activé explicitement
+# uniquement pour le développement local.
+DEBUG = os.environ.get("DJANGO_DEBUG") == "True"
 
-# DEBUG affiche les erreurs en détail : parfait pour développer, dangereux
-# en ligne. On le coupe avec la variable DJANGO_DEBUG=0.
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-local-development-only"
+    else:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY doit être défini hors du mode de développement."
+        )
 
 ALLOWED_HOSTS = [
-    hote
+    hote.strip()
     for hote in os.environ.get(
-        "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1"
+        "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost"
     ).split(",")
-    if hote
+    if hote.strip()
 ]
 
 
@@ -148,14 +149,3 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 LOGIN_URL = 'connexion'
 LOGIN_REDIRECT_URL = 'tableau_de_bord'
 LOGOUT_REDIRECT_URL = 'connexion'
-
-
-# --- Réglages propres à cette machine -------------------------------------
-# config/local_settings.py contient la vraie clé secrète, et plus tard les
-# accès à la base ou au service d'e-mail. Il n'est jamais publié : chaque
-# personne qui clone le projet crée le sien à partir du modèle
-# config/local_settings.example.py.
-try:
-    from .local_settings import *  # noqa: F401,F403
-except ImportError:
-    pass
