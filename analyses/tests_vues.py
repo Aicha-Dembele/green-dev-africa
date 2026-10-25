@@ -80,6 +80,10 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         reponse = self.client.get(reverse("lancer_analyse", args=[self.projet.pk]))
         contenu = " ".join(reponse.content.decode().split())
 
+        self.assertEqual(
+            reponse.context["formulaire"].fields["type_audit"].initial,
+            "site_complet",
+        )
         self.assertIn('<details class="options-avancees">', contenu)
         self.assertIn(
             '<details class="options-avancees mesures-avancees" ',

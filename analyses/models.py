@@ -370,7 +370,7 @@ class ConfigurationAnalyse(models.Model):
         "type d'audit",
         max_length=15,
         choices=TypeAudit.choices,
-        default=TypeAudit.PAGE_UNIQUE,
+        default=TypeAudit.SITE_COMPLET,
     )
     inclure_medias = models.BooleanField("inclure les images et vidéos", default=True)
     inclure_javascript = models.BooleanField("inclure le JavaScript", default=True)

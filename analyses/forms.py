@@ -34,7 +34,7 @@ class LancerAnalyseForm(forms.Form):
     type_audit = forms.ChoiceField(
         label="Type d'audit",
         choices=ConfigurationAnalyse.TypeAudit.choices,
-        initial=ConfigurationAnalyse.TypeAudit.PAGE_UNIQUE,
+        initial=ConfigurationAnalyse.TypeAudit.SITE_COMPLET,
     )
     mode_analyse = forms.ChoiceField(
         label="Mode d'analyse",
