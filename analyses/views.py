@@ -13,8 +13,6 @@ Seule exception à la règle 1 : la page publique d'un rapport partagé, qui
 s'ouvre sans compte mais exige un jeton valide.
 """
 
-import logging
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -25,7 +23,6 @@ from django.urls import reverse
 
 from projets.models import Projet
 
-from .collecteur import ErreurCollecte
 from .forms import ComparaisonForm, LancerAnalyseForm
 from .models import (
     Analyse,
@@ -37,9 +34,6 @@ from .models import (
     Recommandation,
     RegleAnalyse,
 )
-
-journal = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 #  Raccourcis de chargement : ils portent le cloisonnement des données
@@ -90,30 +84,10 @@ def lancer_analyse(request, pk):
                 for mesure in formulaire.mesures()
             )
 
-            try:
-                analyse.executer_analyse()
-            except ErreurCollecte as erreur:
-                # Le site n'a pas pu être mesuré : le message vient du
-                # collecteur, il est écrit pour l'utilisateur.
-                messages.error(request, f"Mesure impossible — {erreur}")
-                return redirect("analyse_detail", pk=analyse.pk)
-            except Exception:
-                # On trace l'erreur côté serveur, mais on ne montre pas une
-                # page de plantage : l'analyse reste visible, en statut
-                # « Échouée », et l'utilisateur peut recommencer.
-                journal.exception("Échec de l'analyse %s", analyse.pk)
-                messages.error(
-                    request,
-                    "L'analyse n'a pas pu aller jusqu'au bout. Elle est "
-                    "enregistrée comme échouée.",
-                )
-                return redirect("analyse_detail", pk=analyse.pk)
-
             messages.success(
                 request,
-                f"Analyse terminée : Green Score {analyse.score_global:g}/100 "
-                f"({analyse.indicateurs.count()} mesures, "
-                f"{analyse.ressources.count()} fichiers pesés).",
+                "Ta demande est enregistrée. Tu peux suivre l'avancement de "
+                "l'analyse sur cette page.",
             )
             return redirect("analyse_detail", pk=analyse.pk)
     else:
@@ -124,6 +98,17 @@ def lancer_analyse(request, pk):
         "analyses/lancer_analyse.html",
         {"projet": projet, "formulaire": formulaire},
     )
+
+
+@login_required
+def analyse_statut(request, pk):
+    """Expose uniquement le statut de l'analyse appartenant à l'utilisateur."""
+    analyse = _analyse_de(request, pk)
+    reponse = JsonResponse(
+        {"statut": analyse.statut, "libelle": analyse.get_statut_display()}
+    )
+    reponse["Cache-Control"] = "no-store"
+    return reponse
 
 
 @login_required

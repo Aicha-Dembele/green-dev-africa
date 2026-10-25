@@ -12,6 +12,7 @@ urlpatterns = [
         name="lancer_analyse",
     ),
     path("analyses/<int:pk>/", views.analyse_detail, name="analyse_detail"),
+    path("analyses/<int:pk>/statut/", views.analyse_statut, name="analyse_statut"),
     path(
         "recommandations/<int:pk>/faite/",
         views.recommandation_faite,

@@ -57,12 +57,80 @@
         var statut = form.querySelector("[data-analyse-chargement]");
         if (bouton && statut) {
           bouton.disabled = true;
-          bouton.textContent = "Analyse en cours…";
+          bouton.textContent = "Envoi de la demande…";
           statut.hidden = false;
+          statut.textContent = "Enregistrement de ta demande d'analyse…";
           form.setAttribute("aria-busy", "true");
         }
       });
     });
+
+    var suivi = document.querySelector("[data-analyse-suivi]");
+    if (suivi) {
+      var titre = suivi.querySelector("[data-analyse-titre]");
+      var message = suivi.querySelector("[data-analyse-message]");
+      var etapes = suivi.querySelectorAll("[data-etape]");
+      var urlStatut = suivi.getAttribute("data-url");
+
+      function afficherEtapes(statut) {
+        var ordre = ["en_attente", "en_cours", "terminee"];
+        var indexActuel = ordre.indexOf(statut);
+
+        etapes.forEach(function (etape) {
+          var indexEtape = ordre.indexOf(etape.getAttribute("data-etape"));
+          var icone = etape.querySelector("[data-icone]");
+          if (indexEtape < indexActuel) {
+            icone.textContent = "✓";
+            etape.removeAttribute("aria-current");
+          } else if (indexEtape === indexActuel) {
+            icone.textContent = "→";
+            etape.setAttribute("aria-current", "step");
+          } else {
+            icone.textContent = "○";
+            etape.removeAttribute("aria-current");
+          }
+        });
+      }
+
+      function actualiserStatut() {
+        window.fetch(urlStatut, {
+          headers: { Accept: "application/json" },
+          credentials: "same-origin"
+        })
+          .then(function (reponse) {
+            if (!reponse.ok) {
+              throw new Error("Le statut n'est pas disponible.");
+            }
+            return reponse.json();
+          })
+          .then(function (donnees) {
+            if (donnees.statut === "terminee" || donnees.statut === "echouee") {
+              window.location.reload();
+              return;
+            }
+
+            suivi.setAttribute("data-statut", donnees.statut);
+            afficherEtapes(donnees.statut);
+            if (donnees.statut === "en_attente") {
+              titre.textContent = "Demande enregistrée — en attente";
+              message.textContent =
+                "Ta demande est bien enregistrée. L'analyse démarrera dès que le service la prendra en charge.";
+            } else {
+              titre.textContent = "Analyse en cours";
+              message.textContent =
+                "Le site est en cours de mesure. Les résultats apparaîtront ici automatiquement lorsqu'ils seront prêts.";
+            }
+            window.setTimeout(actualiserStatut, 2500);
+          })
+          .catch(function () {
+            message.textContent =
+              "Le suivi est momentanément indisponible. Ta demande reste enregistrée ; nouvelle vérification dans quelques instants.";
+            window.setTimeout(actualiserStatut, 5000);
+          });
+      }
+
+      window.setTimeout(actualiserStatut, 1500);
+    }
 
     document.querySelectorAll("[data-copier-lien]").forEach(function (bouton) {
       bouton.addEventListener("click", async function () {

@@ -185,6 +185,7 @@ class Analyse(models.Model):
     statut = models.CharField(
         "statut", max_length=10, choices=Statut.choices, default=Statut.EN_ATTENTE
     )
+    message_erreur = models.TextField("message d'échec", blank=True)
     score_global = models.FloatField("score global (Green Score)", null=True, blank=True)
 
     class Meta:

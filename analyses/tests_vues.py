@@ -4,8 +4,10 @@ Pour les lancer :  python manage.py test analyses.tests_vues
 """
 
 import json
+from io import StringIO
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -136,7 +138,23 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
 
         analyse = Analyse.objects.get(projet=self.projet)
         self.assertRedirects(reponse, reverse("analyse_detail", args=[analyse.pk]))
+        self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
+        self.assertFalse(Rapport.objects.filter(analyse=analyse).exists())
+        suivi = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
+        self.assertContains(suivi, "Demande enregistrée")
+        self.assertContains(suivi, "data-analyse-suivi")
+        self.assertNotContains(suivi, "Problèmes détectés")
+
+        call_command("traiter_analyses", once=True, stdout=StringIO())
+        analyse.refresh_from_db()
+
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
+        self.assertEqual(
+            self.client.get(reverse("analyse_statut", args=[analyse.pk])).json()[
+                "statut"
+            ],
+            "terminee",
+        )
         self.assertEqual(analyse.score_global, 80.0)
         self.assertEqual(analyse.indicateurs.count(), 1)
         self.assertEqual(analyse.problemes.count(), 1)
@@ -144,6 +162,19 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         # Les réglages du formulaire sont bien arrivés dans la base.
         self.assertEqual(analyse.contexte.qualite_connexion, "3g")
         self.assertEqual(analyse.configurations.first().mode_analyse, "rapide")
+
+    def test_le_suivi_de_statut_est_cloisonne_par_utilisateur(self):
+        analyse = self.projet.lancer_analyse()
+
+        reponse = self.client.get(reverse("analyse_statut", args=[analyse.pk]))
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertEqual(reponse.json()["statut"], "en_attente")
+        analyse_autre = self.projet_fanta.lancer_analyse()
+        reponse_autre = self.client.get(
+            reverse("analyse_statut", args=[analyse_autre.pk])
+        )
+        self.assertEqual(reponse_autre.status_code, 404)
 
     def test_une_mesure_saisie_est_prise_telle_quelle(self):
         """Dès qu'une case est remplie, on ne va pas interroger le site.

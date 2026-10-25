@@ -11,7 +11,9 @@ from unittest.mock import patch
 
 import requests
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
+from django.urls import reverse
 
 from analyses.collecteur import (
     ErreurCollecte,
@@ -523,7 +525,9 @@ class AnalyseAvecCollecteTest(TestCase):
         )
 
     def test_sans_mesure_saisie_lanalyse_va_chercher_le_site(self):
-        analyse = self.projet.lancer_analyse()
+        analyse = self.projet.lancer_analyse(
+            configuration={"type_audit": "page_unique"}
+        )
 
         with self.collecte_simulee():
             analyse.executer_analyse()
@@ -536,7 +540,9 @@ class AnalyseAvecCollecteTest(TestCase):
         self.assertTrue(analyse.problemes.exists())
 
     def test_les_indicateurs_recoivent_unite_et_categorie_du_catalogue(self):
-        analyse = self.projet.lancer_analyse()
+        analyse = self.projet.lancer_analyse(
+            configuration={"type_audit": "page_unique"}
+        )
 
         with self.collecte_simulee():
             analyse.collecter_mesures()
@@ -652,6 +658,8 @@ class LancementDepuisLaPageTest(TestCase):
         }
 
     def test_formulaire_sans_mesure_declenche_la_mesure_automatique(self):
+        from io import StringIO
+
         with patch(
             "analyses.collecteur.collecter",
             return_value={
@@ -661,30 +669,38 @@ class LancementDepuisLaPageTest(TestCase):
             },
         ):
             reponse = self.client.post(
-                reverse_lancer(self.projet.pk), self.formulaire_vide(), follow=True
+                reverse_lancer(self.projet.pk), self.formulaire_vide()
             )
+            analyse = Analyse.objects.get(projet=self.projet)
+            self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
+            call_command("traiter_analyses", once=True, stdout=StringIO())
 
-        analyse = Analyse.objects.get(projet=self.projet)
-        self.assertEqual(reponse.status_code, 200)
+        self.assertEqual(reponse.status_code, 302)
+        analyse.refresh_from_db()
+
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
         self.assertEqual(analyse.rapport.poids_total, 1850)
         self.assertEqual(analyse.rapport.nombre_requetes, 62)
-        self.assertContains(reponse, "1850")
 
     def test_message_clair_si_le_site_ne_repond_pas(self):
+        from io import StringIO
+
         with patch(
             "analyses.collecteur.collecter",
             side_effect=ErreurCollecte("Le domaine « exemple.ml » est introuvable."),
         ):
             reponse = self.client.post(
-                reverse_lancer(self.projet.pk), self.formulaire_vide(), follow=True
+                reverse_lancer(self.projet.pk), self.formulaire_vide()
             )
+            call_command("traiter_analyses", once=True, stdout=StringIO())
 
-        self.assertContains(reponse, "Mesure impossible")
-        self.assertContains(reponse, "introuvable")
-        self.assertEqual(
-            Analyse.objects.get(projet=self.projet).statut, Analyse.Statut.ECHOUEE
-        )
+        analyse = Analyse.objects.get(projet=self.projet)
+        self.assertEqual(reponse.status_code, 302)
+        analyse.refresh_from_db()
+        self.assertEqual(analyse.statut, Analyse.Statut.ECHOUEE)
+        detail = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
+        self.assertEqual(detail.status_code, 200)
+        self.assertContains(detail, "Le domaine « exemple.ml » est introuvable.")
 
 
 def reverse_lancer(pk):

@@ -75,6 +75,20 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+Dans un second terminal, démarre aussi le service qui traite les analyses :
+
+```bash
+python manage.py traiter_analyses
+```
+
+Les demandes sont conservées dans la base partagée entre le site et ce
+processus : elles passent de « En attente » à « En cours », puis « Terminée »
+ou « Échouée ». La page de suivi actualise le statut automatiquement. En
+production, configure `traiter_analyses` comme un processus de travail
+persistant, lancé avec la même configuration et la même base que le serveur
+Django. Sans ce processus, les demandes restent en attente. La file repose sur
+la base existante et ne nécessite pas Redis.
+
 Puis <http://127.0.0.1:8000/> pour l'application, et
 <http://127.0.0.1:8000/admin/> pour l'administration.
 
@@ -88,6 +102,12 @@ démonstration et deux analyses déjà exécutées :
 ```bash
 venv\Scripts\activate
 python manage.py runserver
+```
+
+Dans un second terminal, relance aussi le traitement des analyses :
+
+```bash
+python manage.py traiter_analyses
 ```
 
 ## Les pages du site
@@ -119,10 +139,10 @@ Deux règles tenues partout dans les vues :
 
 Le style tient dans un seul fichier, `static/css/greendev.css` (charte bleu
 nuit et turquoise), sans Bootstrap et sans police distante. Le seul
-JavaScript du site est `static/js/greendev.js`, environ 1 Ko : il ajoute le
-bouton « afficher le mot de passe », et les pages restent utilisables s'il ne
-charge pas. Une application qui mesure la sobriété numérique ne peut pas
-charger 300 Ko de cadre pour afficher un tableau.
+JavaScript du site est `static/js/greendev.js`, de quelques Ko : il améliore
+le suivi d'une analyse et ajoute le bouton « afficher le mot de passe » ; les
+pages restent utilisables s'il ne charge pas. Une application qui mesure la
+sobriété numérique ne peut pas charger 300 Ko de cadre pour afficher un tableau.
 
 Les règles de mot de passe sont volontairement réduites à deux (8 caractères
 minimum, pas uniquement des chiffres) : voir le commentaire dans

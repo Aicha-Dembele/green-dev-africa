@@ -28,6 +28,58 @@
     </div>
   </div>
 
+  {% if analyse.statut == 'en_attente' or analyse.statut == 'en_cours' %}
+    <div
+      class="etat-analyse"
+      data-analyse-suivi
+      data-statut="{{ analyse.statut }}"
+      data-url="{% url 'analyse_statut' analyse.pk %}"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <h2 data-analyse-titre>
+        {% if analyse.statut == 'en_attente' %}Demande enregistrée{% else %}Analyse en cours{% endif %}
+      </h2>
+      <p data-analyse-message>
+        {% if analyse.statut == 'en_attente' %}
+          Ta demande est enregistrée et attend le démarrage. Tu peux quitter cette page et revenir plus tard.
+        {% else %}
+          Le site est en cours de mesure. Les résultats apparaîtront ici automatiquement lorsqu'ils seront prêts.
+        {% endif %}
+      </p>
+      <ol>
+        <li data-etape="en_attente" {% if analyse.statut == 'en_attente' %}aria-current="step"{% endif %}>
+          <span data-icone aria-hidden="true">{% if analyse.statut == 'en_attente' %}→{% else %}✓{% endif %}</span>
+          Demande reçue
+        </li>
+        <li data-etape="en_cours" {% if analyse.statut == 'en_cours' %}aria-current="step"{% endif %}>
+          <span data-icone aria-hidden="true">{% if analyse.statut == 'en_cours' %}→{% else %}○{% endif %}</span>
+          Analyse du site
+        </li>
+        <li data-etape="terminee">
+          <span data-icone aria-hidden="true">○</span>
+          Résultats prêts
+        </li>
+      </ol>
+      <p class="discret">
+        Cette page se met à jour automatiquement.
+        <a href="{% url 'analyse_detail' analyse.pk %}">Actualiser le statut</a>
+      </p>
+      <noscript>
+        <p class="discret">JavaScript est désactivé : actualise cette page pour voir le nouveau statut.</p>
+      </noscript>
+    </div>
+  {% elif analyse.statut == 'echouee' %}
+    <div class="etat-analyse etat-analyse-erreur" role="alert">
+      <h2>L’analyse a échoué</h2>
+      <p>{{ analyse.message_erreur|default:"La mesure n’a pas abouti. Vérifie l’adresse du site ou réessaie plus tard." }}</p>
+      <p>Aucun problème n’a pu être calculé, car l’analyse a échoué. Relance l’analyse pour obtenir des résultats.</p>
+      <a class="bouton bouton-secondaire" href="{% url 'lancer_analyse' analyse.projet.pk %}">Relancer l’analyse</a>
+    </div>
+  {% endif %}
+
+  {% if analyse.statut == 'terminee' %}
   <div class="grille grille-2">
     <div class="carte">
       <h3>Green Score</h3>
@@ -79,22 +131,6 @@
         <span class="valeur">{{ rapport.donnees_transferees|floatformat:"-2"|default:"—" }}</span>
         <span class="intitule">Mo transférés</span>
       </div>
-    </div>
-  {% endif %}
-
-  {% if analyse.statut == 'echouee' %}
-    <div class="etat-analyse etat-analyse-erreur" role="alert">
-      <h2>L’analyse a échoué</h2>
-      <p>La mesure n’a pas abouti. Vérifie l’adresse du site ou réessaie plus tard.</p>
-      <a class="bouton bouton-secondaire" href="{% url 'lancer_analyse' analyse.projet.pk %}">Relancer l’analyse</a>
-    </div>
-  {% elif analyse.statut == 'en_attente' %}
-    <div class="etat-analyse" role="status" aria-live="polite">
-      <p>L’analyse est en attente de démarrage.</p>
-    </div>
-  {% elif analyse.statut == 'en_cours' %}
-    <div class="etat-analyse" role="status" aria-live="polite">
-      <p>L’analyse est en cours. Les résultats apparaîtront ici lorsqu’elle sera terminée.</p>
     </div>
   {% endif %}
 
@@ -218,4 +254,5 @@
       {% endif %}
     </div>
   </section>
+  {% endif %}
 {% endblock %}
