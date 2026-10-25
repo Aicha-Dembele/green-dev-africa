@@ -1,7 +1,8 @@
 /* Green Dev Africa — le seul JavaScript du site.
  *
  * Il ajoute le petit œil qui montre ou cache le mot de passe. Rien d'autre :
- * environ 1 Ko, contre 90 Ko pour une bibliothèque qui ferait la même chose.
+ * quelques Ko, contre des dizaines de Ko pour une bibliothèque qui ferait
+ * la même chose.
  * Les pages restent utilisables si ce fichier ne charge pas — le champ reste
  * simplement masqué, comme avant.
  */

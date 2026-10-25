@@ -184,7 +184,7 @@
     <h2>Fichiers téléchargés par la page ({{ ressources|length }})</h2>
     <div class="carte">
       {% if ressources %}
-        <div class="tableau-defilant" role="region" aria-label="Liste des fichiers téléchargés, défilement possible" tabindex="0">
+        <div class="tableau-defilant tableau-cartes-mobile" role="region" aria-label="Liste des fichiers téléchargés" tabindex="0">
           <table>
             <thead>
               <tr>
@@ -197,10 +197,10 @@
             <tbody>
               {% for ressource in ressources %}
                 <tr>
-                  <td class="rupture">{{ ressource.url|cut:"https://" }}</td>
-                  <td class="discret">{{ ressource.get_type_display }}</td>
-                  <td class="nombre">{{ ressource.taille|floatformat:"-1" }} Ko</td>
-                  <td class="nombre">
+                  <td class="rupture" data-label="Fichier">{{ ressource.url|cut:"https://" }}</td>
+                  <td class="discret" data-label="Type">{{ ressource.get_type_display }}</td>
+                  <td class="nombre" data-label="Taille">{{ ressource.taille|floatformat:"-1" }} Ko</td>
+                  <td class="nombre" data-label="Part du poids">
                     {{ ressource.part|floatformat:"-1" }} %
                     {% if ressource.optimisable %}<span class="etiquette etiquette-moyenne">à alléger</span>{% endif %}
                   </td>

@@ -10,7 +10,7 @@
     règle de comptage, où toute occurrence est déjà un défaut.
   </p>
 
-  <div class="carte tableau-responsive" role="region" aria-label="Règles d’analyse, défilement horizontal possible" tabindex="0">
+  <div class="carte tableau-responsive tableau-cartes-mobile" role="region" aria-label="Règles d’analyse" tabindex="0">
     <form method="post">
       {% csrf_token %}
       {{ formset.management_form }}
@@ -30,14 +30,14 @@
             <tr>
               {# Le champ caché porte l'identifiant de la ligne modifiée. #}
               {{ form.id }}
-              <td><strong>{{ form.instance.code }}</strong></td>
-              <td class="discret">{{ form.instance.get_categorie_display }}</td>
-              <td class="nombre">
+              <td data-label="Règle"><strong>{{ form.instance.code }}</strong></td>
+              <td class="discret" data-label="Catégorie">{{ form.instance.get_categorie_display }}</td>
+              <td class="nombre" data-label="Seuil">
                 {{ form.seuil }}
                 {% for erreur in form.seuil.errors %}<span class="erreur">{{ erreur }}</span>{% endfor %}
               </td>
-              <td>{{ form.active }}</td>
-              <td class="discret">{{ form.instance.description }}</td>
+              <td data-label="Active">{{ form.active }}</td>
+              <td class="discret" data-label="Ce qu’elle signale">{{ form.instance.description }}</td>
             </tr>
           {% endfor %}
         </tbody>

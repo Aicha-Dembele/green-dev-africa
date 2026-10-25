@@ -97,7 +97,7 @@
       </form>
 
       {% if partages %}
-        <div class="tableau-responsive" role="region" aria-label="Liens de partage, défilement horizontal possible" tabindex="0">
+        <div class="tableau-responsive tableau-cartes-mobile" role="region" aria-label="Liens de partage" tabindex="0">
           <table>
             <thead>
               <tr><th>Lien</th><th>Expire le</th><th>État</th><th></th></tr>
@@ -105,7 +105,7 @@
             <tbody>
               {% for partage in partages %}
                 <tr>
-                  <td class="rupture discret">
+                  <td class="rupture discret" data-label="Lien">
                     {% if partage.verifier_validite %}
                       <a href="{% url 'rapport_public' partage.jeton %}" class="partage-lien">{{ request.scheme }}://{{ request.get_host }}{% url 'rapport_public' partage.jeton %}</a>
                       <button type="button" class="bouton-discret bouton-copier" data-copier-lien aria-label="Copier le lien de partage pour {{ analyse.projet.nom }}">Copier le lien</button>
@@ -113,15 +113,15 @@
                       <span>Lien expiré ou révoqué</span>
                     {% endif %}
                   </td>
-                  <td>{{ partage.date_expiration|date:"d/m/Y" }}</td>
-                  <td>
+                  <td data-label="Expire le">{{ partage.date_expiration|date:"d/m/Y" }}</td>
+                  <td data-label="État">
                     {% if partage.verifier_validite %}
                       <span class="etiquette etiquette-ok">Actif</span>
                     {% else %}
                       <span class="etiquette">Inactif</span>
                     {% endif %}
                   </td>
-                  <td>
+                  <td data-label="Action">
                     {% if partage.actif %}
                       <form method="post" action="{% url 'partage_revoquer' partage.pk %}">
                         {% csrf_token %}

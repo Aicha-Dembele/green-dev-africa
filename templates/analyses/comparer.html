@@ -24,7 +24,7 @@
 
   {% if comparaisons %}
     <h2>Comparaisons déjà faites</h2>
-    <div class="carte tableau-responsive" role="region" aria-label="Comparaisons précédentes, défilement horizontal possible" tabindex="0">
+    <div class="carte tableau-responsive tableau-cartes-mobile" role="region" aria-label="Comparaisons précédentes" tabindex="0">
       <table>
         <thead>
           <tr>
@@ -38,17 +38,17 @@
         <tbody>
           {% for comparaison in comparaisons %}
             <tr>
-              <td><a href="{% url 'comparaison_detail' comparaison.pk %}">{{ comparaison.date_comparaison|date:"d/m/Y H:i" }}</a></td>
-              <td class="nombre">{{ comparaison.score_avant|floatformat:0|default:"—" }}</td>
-              <td class="nombre">{{ comparaison.score_apres|floatformat:0|default:"—" }}</td>
-              <td class="nombre">
+              <td data-label="Date"><a href="{% url 'comparaison_detail' comparaison.pk %}">{{ comparaison.date_comparaison|date:"d/m/Y H:i" }}</a></td>
+              <td class="nombre" data-label="Avant">{{ comparaison.score_avant|floatformat:0|default:"—" }}</td>
+              <td class="nombre" data-label="Après">{{ comparaison.score_apres|floatformat:0|default:"—" }}</td>
+              <td class="nombre" data-label="Évolution">
                 {% if comparaison.evolution is not None %}
                   <span class="etiquette {% if comparaison.evolution > 0 %}etiquette-ok{% elif comparaison.evolution < 0 %}etiquette-critique{% endif %}">
                     {{ comparaison.evolution|floatformat:"-1" }} pts
                   </span>
                 {% else %}—{% endif %}
               </td>
-              <td class="nombre">{{ comparaison.ecart_poids|floatformat:"-1"|default:"—" }} Ko</td>
+              <td class="nombre" data-label="Poids">{{ comparaison.ecart_poids|floatformat:"-1"|default:"—" }} Ko</td>
             </tr>
           {% endfor %}
         </tbody>
