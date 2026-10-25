@@ -39,7 +39,34 @@ DELAI_SECONDES = 10        # au-delà, on abandonne une requête
 MAX_RESSOURCES = 60        # on ne télécharge pas un site entier
 MAX_PAGES = 10             # plafond de pages en audit « site complet »
 MAX_OCTETS_PAR_FICHIER = 5 * 1024 * 1024   # 5 Mo : on ne tire pas tout d'une vidéo
+MAX_REDIRECTIONS = 5
 CONNEXIONS_PARALLELES = 6  # ce qu'ouvre un navigateur sur un même domaine
+REDIRECTIONS_HTTP = {301, 302, 303, 307, 308}
+TYPES_PAGE = {"text/html", "application/xhtml+xml"}
+TYPES_ROBOTS = {"text/plain"}
+TYPES_RESSOURCE = {
+    "image": {"image/*"},
+    "style": {"text/css"},
+    "script": {
+        "application/javascript",
+        "text/javascript",
+        "application/x-javascript",
+    },
+    "police": {
+        "font/*",
+        "application/font-woff",
+        "application/vnd.ms-fontobject",
+        "application/octet-stream",
+    },
+    "video": {"video/*"},
+    "autre": {
+        "application/json",
+        "application/octet-stream",
+        "application/xml",
+        "text/plain",
+        "text/xml",
+    },
+}
 
 #: Adresses qu'on ne suit pas en parcourant le site : ce ne sont pas des pages.
 EXTENSIONS_NON_HTML = (
@@ -153,26 +180,52 @@ def verifier_adresse(url):
     ou une adresse interne : le serveur irait la chercher pour lui et en
     recopierait le contenu. C'est la faille appelée SSRF.
     """
-    decoupe = urlparse(url)
-    if decoupe.scheme not in ("http", "https"):
+    try:
+        decoupe = urlparse(url)
+    except ValueError:
+        raise ErreurCollecte("Cette adresse n'est pas valide.")
+    if decoupe.scheme.lower() not in ("http", "https"):
         raise ErreurCollecte("Seules les adresses http:// et https:// sont analysables.")
     if not decoupe.hostname:
         raise ErreurCollecte("Cette adresse ne contient pas de nom de domaine.")
 
     try:
-        adresses = socket.getaddrinfo(decoupe.hostname, None)
-    except socket.gaierror:
+        hote = decoupe.hostname
+        try:
+            adresse_litterale = ipaddress.ip_address(hote)
+        except ValueError:
+            adresse_litterale = None
+
+        if adresse_litterale is not None:
+            adresses_ip = [adresse_litterale]
+        else:
+            resultats_dns = socket.getaddrinfo(
+                hote, decoupe.port or (443 if decoupe.scheme.lower() == "https" else 80),
+                type=socket.SOCK_STREAM,
+            )
+            adresses_ip = [
+                ipaddress.ip_address(information[4][0].split("%", 1)[0])
+                for information in resultats_dns
+            ]
+    except (socket.gaierror, ValueError, UnicodeError):
         raise ErreurCollecte(
-            f"Le domaine « {decoupe.hostname} » est introuvable. Vérifie l'adresse."
+            "Le domaine est introuvable ou l'adresse n'est pas valide. Vérifie l'adresse."
         )
 
-    for information in adresses:
-        adresse_ip = ipaddress.ip_address(information[4][0])
+    if not adresses_ip:
+        raise ErreurCollecte("Le domaine ne possède aucune adresse IP valide.")
+
+    for adresse_ip in adresses_ip:
+        if isinstance(adresse_ip, ipaddress.IPv6Address) and adresse_ip.ipv4_mapped:
+            adresse_ip = adresse_ip.ipv4_mapped
         if (
             adresse_ip.is_private
             or adresse_ip.is_loopback
             or adresse_ip.is_link_local
             or adresse_ip.is_reserved
+            or adresse_ip.is_multicast
+            or adresse_ip.is_unspecified
+            or not adresse_ip.is_global
         ):
             raise ErreurCollecte(
                 "Cette adresse pointe vers un réseau interne : analyse refusée."
@@ -184,20 +237,86 @@ def verifier_adresse(url):
 # ---------------------------------------------------------------------------
 
 
-def _telecharger(session, url):
-    """Renvoie (octets, type MIME) ou None si le fichier n'a pas pu être lu."""
+def _type_accepte(type_mime, types_acceptes):
+    type_mime = type_mime.split(";", 1)[0].strip().lower()
+    return any(
+        type_mime == type_accepte
+        or (type_accepte.endswith("/*") and type_mime.startswith(type_accepte[:-1]))
+        for type_accepte in types_acceptes
+    )
+
+
+def _telecharger(session, url, types_acceptes):
+    """Télécharge une ressource publique avec des limites et chaque saut validé."""
+    adresse = url
+
+    for saut in range(MAX_REDIRECTIONS + 1):
+        verifier_adresse(adresse)
+        try:
+            reponse = session.get(
+                adresse,
+                timeout=DELAI_SECONDES,
+                stream=True,
+                allow_redirects=False,
+            )
+        except requests.Timeout:
+            raise ErreurCollecte(
+                f"Le site n'a pas répondu en moins de {DELAI_SECONDES} secondes."
+            )
+        except requests.RequestException:
+            raise ErreurCollecte("Impossible de télécharger cette page ou ressource.")
+
+        try:
+            if reponse.status_code in REDIRECTIONS_HTTP:
+                destination = reponse.headers.get("Location")
+                if not destination:
+                    raise ErreurCollecte("Le site a renvoyé une redirection invalide.")
+                if saut == MAX_REDIRECTIONS:
+                    raise ErreurCollecte("Le site renvoie trop de redirections.")
+                adresse = urljoin(adresse, destination)
+                continue
+
+            try:
+                reponse.raise_for_status()
+            except requests.RequestException:
+                raise ErreurCollecte("Impossible de télécharger cette page ou ressource.")
+
+            type_mime = reponse.headers.get("Content-Type", "")
+            if not _type_accepte(type_mime, types_acceptes):
+                raise ErreurCollecte("Le site a renvoyé un type de contenu non accepté.")
+
+            longueur = reponse.headers.get("Content-Length")
+            if longueur:
+                try:
+                    if int(longueur) > MAX_OCTETS_PAR_FICHIER:
+                        raise ErreurCollecte("La réponse du site dépasse la taille autorisée.")
+                except ValueError:
+                    pass
+
+            contenu = bytearray()
+            try:
+                for morceau in reponse.iter_content(chunk_size=16384):
+                    contenu.extend(morceau)
+                    if len(contenu) > MAX_OCTETS_PAR_FICHIER:
+                        raise ErreurCollecte(
+                            "La réponse du site dépasse la taille autorisée."
+                        )
+            except requests.RequestException:
+                raise ErreurCollecte("La réponse du site a été interrompue.")
+            return bytes(contenu), type_mime, adresse
+        finally:
+            reponse.close()
+
+    raise ErreurCollecte("Le site renvoie trop de redirections.")
+
+
+def _telecharger_ressource(session, url, type_fichier):
+    """Ignore une ressource inaccessible sans masquer les erreurs de la page."""
     try:
-        with session.get(url, timeout=DELAI_SECONDES, stream=True) as reponse:
-            reponse.raise_for_status()
-            total = 0
-            for morceau in reponse.iter_content(chunk_size=16384):
-                total += len(morceau)
-                if total >= MAX_OCTETS_PAR_FICHIER:
-                    break
-            return total, reponse.headers.get("Content-Type", "")
-    except requests.RequestException:
-        # Un fichier manquant ou trop lent ne doit pas faire échouer l'audit :
-        # on le signale en l'ignorant, comme le ferait un navigateur.
+        return _telecharger(
+            session, url, TYPES_RESSOURCE.get(type_fichier, TYPES_RESSOURCE["autre"])
+        )
+    except ErreurCollecte:
         return None
 
 
@@ -216,8 +335,6 @@ def collecter(
     `session` permet de passer un objet de remplacement dans les tests, pour
     ne pas sortir sur le réseau.
     """
-    verifier_adresse(url)
-
     fermer = session is None
     if session is None:
         session = requests.Session()
@@ -228,18 +345,14 @@ def collecter(
 
         # 1. la page elle-même
         try:
-            reponse = session.get(url, timeout=DELAI_SECONDES)
-            reponse.raise_for_status()
-        except requests.Timeout:
-            raise ErreurCollecte(
-                f"Le site n'a pas répondu en moins de {DELAI_SECONDES} secondes."
+            contenu_page, _mime, adresse_finale = _telecharger(
+                session, url, TYPES_PAGE
             )
-        except requests.RequestException as erreur:
+        except ErreurCollecte as erreur:
             raise ErreurCollecte(f"Impossible d'ouvrir cette page : {erreur}")
 
-        html = reponse.text
-        octets_html = len(reponse.content)
-        adresse_finale = reponse.url  # après d'éventuelles redirections
+        html = contenu_page.decode("utf-8", errors="replace")
+        octets_html = len(contenu_page)
 
         # 2. ce que la page réclame
         lecteur = _LecteurHTML()
@@ -268,13 +381,16 @@ def collecter(
         if a_telecharger:
             with ThreadPoolExecutor(max_workers=CONNEXIONS_PARALLELES) as pool:
                 resultats = pool.map(
-                    lambda cible: _telecharger(session, cible[0]), a_telecharger
+                    lambda cible: _telecharger_ressource(
+                        session, cible[0], cible[1]
+                    ),
+                    a_telecharger,
                 )
                 for (adresse, type_fichier), resultat in zip(a_telecharger, resultats):
                     if resultat is None:
                         continue
-                    octets, _mime = resultat
-                    taille_ko = round(octets / 1024, 2)
+                    contenu, _mime, _adresse_finale = resultat
+                    taille_ko = round(len(contenu) / 1024, 2)
                     ressources.append(
                         {
                             "url": adresse,
@@ -352,13 +468,13 @@ def _lire_robots(session, url):
     decoupe = urlparse(url)
     adresse = f"{decoupe.scheme}://{decoupe.netloc}/robots.txt"
     try:
-        reponse = session.get(adresse, timeout=DELAI_SECONDES)
-        if reponse.status_code != 200:
-            return None
+        contenu, _mime, _adresse_finale = _telecharger(
+            session, adresse, TYPES_ROBOTS
+        )
         lecteur = urllib.robotparser.RobotFileParser()
-        lecteur.parse(reponse.text.splitlines())
+        lecteur.parse(contenu.decode("utf-8", errors="replace").splitlines())
         return lecteur
-    except (requests.RequestException, UnicodeDecodeError):
+    except ErreurCollecte:
         return None
 
 
@@ -381,8 +497,6 @@ def collecter_site(
     Les fichiers sont dédoublonnés : une feuille de style chargée par les dix
     pages n'est comptée qu'une fois dans la liste des ressources.
     """
-    verifier_adresse(url)
-
     fermer = session is None
     if session is None:
         session = requests.Session()

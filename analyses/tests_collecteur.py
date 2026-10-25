@@ -33,11 +33,11 @@ Utilisateur = get_user_model()
 
 
 class FausseReponse:
-    def __init__(self, contenu=b"", url="", echec=False):
+    def __init__(self, contenu=b"", url="", echec=False, statut=200, headers=None):
         self.content = contenu
         self.url = url
-        self.status_code = 200
-        self.headers = {"Content-Type": "text/html"}
+        self.status_code = statut
+        self.headers = headers or {"Content-Type": "text/html"}
         self._echec = echec
 
     @property
@@ -58,6 +58,9 @@ class FausseReponse:
     def __exit__(self, *_):
         return False
 
+    def close(self):
+        pass
+
 
 class FausseSession:
     """Répond d'après un annuaire {adresse: octets}. Tout le reste est en 404.
@@ -71,12 +74,29 @@ class FausseSession:
         self.redirections = redirections or {}
         self.demandes = []
 
-    def get(self, url, timeout=None, stream=False):
+    def get(self, url, timeout=None, stream=False, allow_redirects=True):
         self.demandes.append(url)
-        cible = self.redirections.get(url, url)
-        if cible not in self.fichiers:
+        if url in self.redirections:
+            return FausseReponse(
+                url=url,
+                statut=302,
+                headers={"Location": self.redirections[url]},
+            )
+        if url not in self.fichiers:
             raise requests.ConnectionError(f"introuvable : {url}")
-        return FausseReponse(self.fichiers[cible], url=cible)
+        if url.endswith(".css"):
+            mime = "text/css"
+        elif url.endswith(".js"):
+            mime = "application/javascript"
+        elif url.endswith((".png", ".jpg", ".jpeg")):
+            mime = "image/png"
+        elif url.endswith("/robots.txt"):
+            mime = "text/plain"
+        else:
+            mime = "text/html"
+        return FausseReponse(
+            self.fichiers[url], url=url, headers={"Content-Type": mime}
+        )
 
     def close(self):
         pass
@@ -395,16 +415,26 @@ class GardeFouAdresseTest(TestCase):
     """Le serveur ne doit pas pouvoir être utilisé pour visiter son réseau."""
 
     def test_adresse_de_bouclage_refusee(self):
-        for adresse in ("http://127.0.0.1/", "http://localhost:8000/admin/"):
+        for adresse in (
+            "http://127.0.0.1/",
+            "http://[::1]/",
+            "http://10.0.0.5/",
+            "http://192.168.1.1/",
+            "http://169.254.169.254/",
+            "http://224.0.0.1/",
+            "http://0.0.0.0/",
+        ):
             with self.subTest(adresse=adresse):
                 with self.assertRaises(ErreurCollecte):
                     verifier_adresse(adresse)
 
-    def test_adresse_de_reseau_prive_refusee(self):
-        for adresse in ("http://192.168.1.1/", "http://10.0.0.5/"):
-            with self.subTest(adresse=adresse):
-                with self.assertRaises(ErreurCollecte):
-                    verifier_adresse(adresse)
+    def test_localhost_refuse(self):
+        with patch(
+            "analyses.collecteur.socket.getaddrinfo",
+            return_value=[(2, 1, 6, "", ("127.0.0.1", 0))],
+        ):
+            with self.assertRaises(ErreurCollecte):
+                verifier_adresse("http://localhost:8000/admin/")
 
     def test_protocole_fichier_refuse(self):
         with self.assertRaises(ErreurCollecte):
@@ -425,6 +455,21 @@ class GardeFouAdresseTest(TestCase):
             return_value=[(2, 1, 6, "", ("93.184.216.34", 0))],
         ):
             verifier_adresse("https://exemple.ml/")  # ne lève rien
+
+    def test_redirection_vers_une_ip_interne_refusee(self):
+        session = FausseSession(
+            {"https://exemple.ml/": OCTETS_PAGE},
+            redirections={"https://exemple.ml/": "http://169.254.169.254/"},
+        )
+
+        with patch(
+            "analyses.collecteur.socket.getaddrinfo",
+            return_value=[(2, 1, 6, "", ("93.184.216.34", 0))],
+        ):
+            with self.assertRaises(ErreurCollecte):
+                collecter("https://exemple.ml/", session=session)
+
+        self.assertEqual(session.demandes, ["https://exemple.ml/"])
 
 
 class CatalogueTest(TestCase):
