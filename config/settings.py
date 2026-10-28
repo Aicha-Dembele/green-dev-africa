@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'comptes',
     'projets',
     'analyses',
+    'credits',
 ]
 
 # Notre propre classe Utilisateur remplace celle de Django (diagramme de classes).
