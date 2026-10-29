@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.utils import timezone
 
@@ -66,11 +66,17 @@ def calculer_cout(configuration, utilisateur=None):
     return 0
 
 
+def assurer_solde_utilisateur(utilisateur):
+    solde, _ = SoldeCredits.objects.get_or_create(utilisateur=utilisateur)
+    solde.recalculer()
+    return solde
+
+
 def ajouter_credits(utilisateur, montant, type, note=""):
     if montant == 0:
         return None
 
-    solde, _ = SoldeCredits.objects.get_or_create(utilisateur=utilisateur)
+    solde = assurer_solde_utilisateur(utilisateur)
     with transaction.atomic():
         transaction_obj = JournalCredits.objects.create(
             utilisateur=utilisateur,
@@ -103,7 +109,7 @@ def debiter_pour_analyse(utilisateur, analyse, cout):
     if cout < 0:
         raise ValueError("Le coût ne peut pas être négatif.")
 
-    solde, _ = SoldeCredits.objects.get_or_create(utilisateur=utilisateur)
+    solde = assurer_solde_utilisateur(utilisateur)
     total = JournalCredits.objects.filter(utilisateur=utilisateur).aggregate(
         total=Sum("montant")
     )["total"] or 0
@@ -120,13 +126,17 @@ def debiter_pour_analyse(utilisateur, analyse, cout):
         if total < cout:
             return False
 
-        JournalCredits.objects.create(
-            utilisateur=utilisateur,
-            analyse=analyse,
-            montant=-cout,
-            type=JournalCredits.Type.DEBIT_ANALYSE,
-            note=f"Débit pour analyse {analyse.pk}",
-        )
+        try:
+            JournalCredits.objects.create(
+                utilisateur=utilisateur,
+                analyse=analyse,
+                montant=-cout,
+                type=JournalCredits.Type.DEBIT_ANALYSE,
+                note=f"Débit pour analyse {analyse.pk}",
+            )
+        except IntegrityError:
+            return False
+
         solde.recalculer()
         return True
 

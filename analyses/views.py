@@ -79,6 +79,7 @@ def lancer_analyse(request, pk):
         return redirect("projet_detail", pk=projet.pk)
 
     solde, _ = SoldeCredits.objects.get_or_create(utilisateur=request.user)
+    solde.recalculer()
     gratuits_restants = max(
         QUOTA_GRATUIT_MENSUEL - compter_analyses_gratuites_du_mois(request.user),
         0,

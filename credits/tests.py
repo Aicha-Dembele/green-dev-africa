@@ -1,4 +1,7 @@
+from io import StringIO
+
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 
 from analyses.models import Analyse, ConfigurationAnalyse
@@ -208,3 +211,72 @@ class CreditsMetierTest(TestCase):
             calculer_cout({"type_audit": TYPE_AUDIT_PAGE_UNIQUE}, utilisateur),
             COUT_PAGE_HORS_QUOTA,
         )
+
+    def test_initialiser_credits_cree_les_soldes_manquants_et_attribue_bienvenue_une_fois(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="nour",
+            email="nour@example.com",
+            password="Test12345",
+            nom="Nour",
+        )
+        SoldeCredits.objects.filter(utilisateur=utilisateur).delete()
+
+        out = StringIO()
+        call_command("initialiser_credits", stdout=out)
+
+        self.assertTrue(SoldeCredits.objects.filter(utilisateur=utilisateur).exists())
+        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, CREDITS_BIENVENUE)
+        self.assertEqual(
+            JournalCredits.objects.filter(
+                utilisateur=utilisateur,
+                type=JournalCredits.Type.BIENVENUE,
+            ).count(),
+            1,
+        )
+
+        call_command("initialiser_credits", stdout=out)
+        self.assertEqual(
+            JournalCredits.objects.filter(
+                utilisateur=utilisateur,
+                type=JournalCredits.Type.BIENVENUE,
+            ).count(),
+            1,
+        )
+
+    def test_initialiser_credits_dry_run_ne_modifie_pas_la_base(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="seynabou",
+            email="seynabou@example.com",
+            password="Test12345",
+            nom="Seynabou",
+        )
+        SoldeCredits.objects.filter(utilisateur=utilisateur).delete()
+
+        out = StringIO()
+        call_command("initialiser_credits", dry_run=True, stdout=out)
+
+        self.assertFalse(SoldeCredits.objects.filter(utilisateur=utilisateur).exists())
+        self.assertIn("--dry-run", out.getvalue())
+
+    def test_verifier_credits_signale_solde_absent_et_soldes_incoherents(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="oumar",
+            email="oumar@example.com",
+            password="Test12345",
+            nom="Oumar",
+        )
+        SoldeCredits.objects.filter(utilisateur=utilisateur).delete()
+        out = StringIO()
+        call_command("verifier_credits", stdout=out)
+
+        self.assertIn("AVERTISSEMENT", out.getvalue())
+
+        solde, _ = SoldeCredits.objects.get_or_create(utilisateur=utilisateur)
+        ajouter_credits(utilisateur, 5, JournalCredits.Type.AJUSTEMENT_ADMIN, "test")
+        solde.refresh_from_db()
+        solde.solde = 0
+        solde.save(update_fields=["solde"])
+
+        out = StringIO()
+        call_command("verifier_credits", stdout=out)
+        self.assertIn("ERREUR", out.getvalue())

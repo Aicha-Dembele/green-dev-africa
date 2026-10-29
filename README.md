@@ -152,7 +152,24 @@ minimum, pas uniquement des chiffres) : voir le commentaire dans
 
 ```bash
 python manage.py test
+python manage.py check
 ```
+
+## Système de crédits
+
+Le système de crédits est un journal comptable par utilisateur. Chaque utilisateur a un `SoldeCredits` et une liste de `JournalCredits` ; le solde de référence est toujours recalculé à partir de la somme des montants du journal.
+
+- `credits.services.ajouter_credits()` ajoute un montant au journal et recalcule le solde.
+- `credits.services.debiter_pour_analyse()` retire le coût d'une analyse quand les fonds sont suffisants.
+- `credits.services.rembourser_analyse()` crédite le client si l'analyse échoue et qu'un débit a bien été enregistré.
+- `credits.services.attribuer_credits_bienvenue()` n'attribue les crédits de bienvenue qu'une seule fois par utilisateur.
+- Les crédits ne sont jamais expiés : le solde reste valide tant qu'il n'est pas dépensé ou ajusté par l'administration.
+- Le quota gratuit est calculé par mois calendaire (`date_analyse__year`, `date_analyse__month`) ; il se réinitialise au 1er jour du mois. Il ne s'agit pas d'un quota glissant sur 30 jours.
+- Les coûts sont configurés dans `credits/config.py` : `COUT_PAGE_HORS_QUOTA`, `COUT_SITE_COMPLET_RAPIDE`, `COUT_SITE_COMPLET_APPROFONDI`, `QUOTA_GRATUIT_MENSUEL` et les constantes de type d'audit.
+- L'interface utilisateur expose le solde, le quota gratuit restant et l'historique des mouvements.
+- La page d'administration permet de voir le solde et les mouvements de chaque utilisateur et d'ajouter des crédits via une action dédiée, sans modifier directement le `solde` de la table.
+
+Ce qui n'est pas encore implémenté : paiement mobile money, confirmation d'e-mail avant attribution, et les mécanismes de rate limiting pour bloquer la création de comptes en série.
 
 ## Comment une analyse se déroule
 

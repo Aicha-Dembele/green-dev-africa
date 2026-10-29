@@ -20,6 +20,7 @@ def _libelle_transaction(transaction):
 @login_required
 def mes_credits(request):
     solde, _ = SoldeCredits.objects.get_or_create(utilisateur=request.user)
+    solde.recalculer()
     transactions = list(request.user.credits_journal.order_by("date", "pk"))
     historique = []
     solde_courant = 0
