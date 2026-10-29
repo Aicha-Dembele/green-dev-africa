@@ -28,7 +28,11 @@ from credits.config import (
     QUOTA_GRATUIT_MENSUEL,
 )
 from credits.models import SoldeCredits
-from credits.services import calculer_cout, compter_analyses_gratuites_du_mois
+from credits.services import (
+    calculer_cout,
+    compter_analyses_gratuites_du_mois,
+    debiter_pour_analyse,
+)
 from projets.models import Projet
 
 from .forms import ComparaisonForm, LancerAnalyseForm
@@ -117,6 +121,34 @@ def lancer_analyse(request, pk):
                 Indicateur(analyse=analyse, **mesure)
                 for mesure in formulaire.mesures()
             )
+
+            cout = calculer_cout(formulaire.configuration(), request.user)
+            debit_ok = debiter_pour_analyse(request.user, analyse, cout)
+            if not debit_ok:
+                analyse.statut = Analyse.Statut.ECHOUEE
+                analyse.message_erreur = (
+                    "Le débit de crédits n’a pas pu être effectué pour cette analyse."
+                )
+                analyse.save(update_fields=["statut", "message_erreur"])
+                messages.error(
+                    request,
+                    "Le débit n’a pas pu être effectué. Vérifie ton solde et réessaie.",
+                )
+                return render(
+                    request,
+                    "analyses/lancer_analyse.html",
+                    {
+                        "projet": projet,
+                        "formulaire": formulaire,
+                        "solde": solde.solde,
+                        "gratuites_restantes": gratuits_restants,
+                        "cout_analyse": cout,
+                        "cout_page_hors_quota": COUT_PAGE_HORS_QUOTA,
+                        "cout_site_rapide": COUT_SITE_COMPLET_RAPIDE,
+                        "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
+                        "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
+                    },
+                )
 
             messages.success(
                 request,

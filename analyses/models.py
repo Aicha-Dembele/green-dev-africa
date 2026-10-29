@@ -270,6 +270,9 @@ class Analyse(models.Model):
         except Exception:
             self.statut = self.Statut.ECHOUEE
             self.save(update_fields=["statut"])
+            from credits.services import rembourser_analyse
+
+            rembourser_analyse(self)
             raise
         self.statut = self.Statut.TERMINEE
         self.save(update_fields=["statut"])
