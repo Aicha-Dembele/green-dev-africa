@@ -130,6 +130,21 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         noms = [champ.name for champ in reponse.context["formulaire"].champs_mesures()]
         self.assertNotIn("mesure_poids_css", noms)
 
+    def test_une_analyse_en_cours_empeche_un_second_lancement(self):
+        self.projet.lancer_analyse()
+
+        reponse = self.client.post(
+            reverse("lancer_analyse", args=[self.projet.pk]),
+            self.donnees_formulaire(),
+        )
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(
+            reponse,
+            "Une analyse est déjà en cours pour ce projet.",
+        )
+        self.assertEqual(self.projet.analyses.count(), 1)
+
     def test_lancer_une_analyse_complete(self):
         reponse = self.client.post(
             reverse("lancer_analyse", args=[self.projet.pk]),

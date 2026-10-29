@@ -24,8 +24,14 @@ def mes_credits(request):
     transactions = list(request.user.credits_journal.order_by("date", "pk"))
     historique = []
     solde_courant = 0
+    credits_recus = 0
+    depenses = 0
     for transaction in transactions:
         solde_courant += transaction.montant
+        if transaction.montant > 0:
+            credits_recus += transaction.montant
+        else:
+            depenses += abs(transaction.montant)
         historique.append(
             {
                 "date": transaction.date,
@@ -33,6 +39,8 @@ def mes_credits(request):
                 "montant": transaction.montant,
                 "note": transaction.note,
                 "solde_apres": solde_courant,
+                "type": transaction.type,
+                "est_positif": transaction.montant >= 0,
             }
         )
     historique.reverse()
@@ -48,5 +56,8 @@ def mes_credits(request):
             "solde": solde.solde,
             "gratuites_restantes": gratuites_restantes,
             "historique": historique,
+            "credits_recus": credits_recus,
+            "depenses": depenses,
+            "dernier_mouvement": historique[0] if historique else None,
         },
     )

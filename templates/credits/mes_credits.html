@@ -14,11 +14,17 @@
     </header>
 
     <section class="grille grille-2" aria-label="Solde et analyses gratuites">
-      <article class="carte chiffre-carte">
+      <article class="carte chiffre-carte carte-credit-principal">
         <div class="chiffre">
           <span class="valeur">{{ solde }}</span>
           <span class="intitule">Solde actuel</span>
         </div>
+        {% if dernier_mouvement %}
+          <p class="credit-dernier-mouvement">
+            Dernier mouvement : <strong>{{ dernier_mouvement.libelle }}</strong>
+            {% if dernier_mouvement.montant > 0 %}(+{% endif %}{{ dernier_mouvement.montant }})
+          </p>
+        {% endif %}
       </article>
 
       <article class="carte chiffre-carte">
@@ -29,8 +35,26 @@
       </article>
     </section>
 
+    <section class="grille grille-3" aria-label="Synthèse de mes crédits">
+      <article class="carte mini-stat">
+        <span class="mini-stat-libelle">Crédits ajoutés</span>
+        <strong class="mini-stat-valeur positive">+{{ credits_recus }}</strong>
+      </article>
+      <article class="carte mini-stat">
+        <span class="mini-stat-libelle">Crédits dépensés</span>
+        <strong class="mini-stat-valeur negative">-{{ depenses }}</strong>
+      </article>
+      <article class="carte mini-stat">
+        <span class="mini-stat-libelle">Quota gratuit</span>
+        <strong class="mini-stat-valeur">{{ gratuites_restantes }}/5</strong>
+      </article>
+    </section>
+
     <section class="carte" aria-labelledby="historique-credits-titre">
-      <h2 id="historique-credits-titre">Historique des mouvements</h2>
+      <div class="entre-deux">
+        <h2 id="historique-credits-titre">Historique des mouvements</h2>
+        <span class="etiquette etiquette-ok">{{ historique|length }} mouvement{{ historique|length|pluralize }}</span>
+      </div>
       {% if historique %}
         <div class="tableau-responsive">
           <table>
@@ -44,7 +68,7 @@
             </thead>
             <tbody>
               {% for mouvement in historique %}
-                <tr>
+                <tr class="ligne-mouvement {% if mouvement.est_positif %}ligne-positif{% else %}ligne-negatif{% endif %}">
                   <td>{{ mouvement.date|date:"d/m/Y" }}</td>
                   <td>
                     {{ mouvement.libelle }}

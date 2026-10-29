@@ -16,6 +16,12 @@
     automatiquement. Les options ci-dessous sont facultatives.
   </p>
 
+  {% if analyse_en_cours %}
+    <div class="carte erreur-carte" role="alert">
+      <p>Une analyse est déjà en cours pour ce projet. Patientez qu’elle se termine avant d’en lancer une autre.</p>
+    </div>
+  {% endif %}
+
   <div class="carte analyse-cout-carte" data-cout-analyse
        data-solde="{{ solde }}"
        data-gratuites="{{ gratuites_restantes }}"
@@ -134,7 +140,7 @@
     </details>
 
     <div class="actions">
-      <button type="submit" data-analyse-submit>Lancer l'analyse</button>
+      <button type="submit" data-analyse-submit {% if analyse_en_cours %}disabled{% endif %}>Lancer l'analyse</button>
       <a class="bouton bouton-secondaire" href="{% url 'projet_detail' projet.pk %}">Annuler</a>
     </div>
     <p class="analyse-chargement" data-analyse-chargement role="status" aria-live="polite" hidden>

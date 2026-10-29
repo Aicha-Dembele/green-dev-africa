@@ -82,6 +82,10 @@ def lancer_analyse(request, pk):
         )
         return redirect("projet_detail", pk=projet.pk)
 
+    analyse_en_cours = projet.analyses.filter(
+        statut__in=[Analyse.Statut.EN_ATTENTE, Analyse.Statut.EN_COURS]
+    ).exists()
+
     solde, _ = SoldeCredits.objects.get_or_create(utilisateur=request.user)
     solde.recalculer()
     gratuits_restants = max(
@@ -92,6 +96,27 @@ def lancer_analyse(request, pk):
     if request.method == "POST":
         formulaire = LancerAnalyseForm(request.POST)
         if formulaire.is_valid():
+            if analyse_en_cours:
+                messages.error(
+                    request,
+                    "Une analyse est déjà en cours pour ce projet. "
+                    "Patientez qu'elle se termine avant d'en lancer une autre.",
+                )
+                return render(
+                    request,
+                    "analyses/lancer_analyse.html",
+                    {
+                        "projet": projet,
+                        "formulaire": formulaire,
+                        "solde": solde.solde,
+                        "gratuites_restantes": gratuits_restants,
+                        "cout_analyse": calculer_cout(
+                            formulaire.configuration(), request.user
+                        ),
+                        "analyse_en_cours": True,
+                    },
+                )
+
             cout = calculer_cout(formulaire.configuration(), request.user)
             if cout > 0 and solde.solde < cout:
                 messages.error(
@@ -108,6 +133,7 @@ def lancer_analyse(request, pk):
                         "solde": solde.solde,
                         "gratuites_restantes": gratuits_restants,
                         "cout_analyse": cout,
+                        "analyse_en_cours": False,
                     },
                 )
 
@@ -179,6 +205,7 @@ def lancer_analyse(request, pk):
             "cout_site_rapide": COUT_SITE_COMPLET_RAPIDE,
             "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
             "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
+            "analyse_en_cours": analyse_en_cours,
         },
     )
 
