@@ -65,6 +65,56 @@
       });
     });
 
+    var carteCout = document.querySelector("[data-cout-analyse]");
+    if (carteCout) {
+      var typeAudit = document.getElementById("id_type_audit");
+      var modeAnalyse = document.getElementById("id_mode_analyse");
+
+      function nombre(valeur) {
+        var nombreVal = Number(valeur);
+        return Number.isFinite(nombreVal) ? nombreVal : 0;
+      }
+
+      function mettreAJourCout() {
+        var solde = nombre(carteCout.dataset.solde);
+        var restantes = nombre(carteCout.dataset.gratuites);
+        var coutPage = nombre(carteCout.dataset.coutPage);
+        var coutSiteRapide = nombre(carteCout.dataset.coutSiteRapide);
+        var coutSiteApprofondi = nombre(carteCout.dataset.coutSiteApprofondi);
+        var valeurType = typeAudit ? typeAudit.value : "page_unique";
+        var valeurMode = modeAnalyse ? modeAnalyse.value : "rapide";
+        var cout = 0;
+
+        if (valeurType === "page_unique") {
+          cout = restantes > 0 ? 0 : coutPage;
+        } else if (valeurType === "site_complet") {
+          cout = valeurMode === "approfondi" ? coutSiteApprofondi : coutSiteRapide;
+        }
+
+        var message = document.querySelector("[data-analyse-cout-message]");
+        var erreur = document.querySelector("[data-analyse-solde-insuffisant]");
+
+        if (message) {
+          if (cout === 0) {
+            message.textContent = "Gratuite : il vous reste " + restantes + " analyses gratuites ce mois-ci.";
+          } else {
+            message.textContent = "Cette analyse coûte " + cout + " crédits. Il vous en reste " + solde + ".";
+          }
+        }
+
+        if (erreur) {
+          erreur.hidden = cout === 0 || solde >= cout;
+        }
+      }
+
+      [typeAudit, modeAnalyse].forEach(function (champ) {
+        if (champ) {
+          champ.addEventListener("change", mettreAJourCout);
+        }
+      });
+      mettreAJourCout();
+    }
+
     var suivi = document.querySelector("[data-analyse-suivi]");
     if (suivi) {
       var titre = suivi.querySelector("[data-analyse-titre]");

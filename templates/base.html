@@ -21,6 +21,7 @@
     {% if user.is_authenticated %}
       <a href="{% url 'tableau_de_bord' %}"{% if request.resolver_match.url_name == 'tableau_de_bord' or request.resolver_match.url_name == 'projet_detail' or request.resolver_match.url_name == 'analyse_detail' or request.resolver_match.url_name == 'rapport_detail' or request.resolver_match.url_name == 'rapport_pdf' or request.resolver_match.url_name == 'rapport_json' or request.resolver_match.url_name == 'comparer' or request.resolver_match.url_name == 'comparaison_detail' %} aria-current="page"{% endif %}>Tableau de bord</a>
       <a href="{% url 'projet_creer' %}"{% if request.resolver_match.url_name == 'projet_creer' %} aria-current="page"{% endif %}>Nouveau projet</a>
+      <a href="{% url 'mes_credits' %}"{% if request.resolver_match.url_name == 'mes_credits' %} aria-current="page"{% endif %}>Mes crédits</a>
       {% if user.is_superuser or user.est_administrateur %}
         <a href="{% url 'regles_seuils' %}"{% if request.resolver_match.url_name == 'regles_seuils' %} aria-current="page"{% endif %}>Règles d'analyse</a>
       {% endif %}

@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Accueil</a>
+    › <a href="{% url 'admin:app_list' app_label='credits' %}">Crédits</a>
+    › <a href="{% url 'admin:credits_soldecredits_changelist' %}">Soldes de crédits</a>
+    › Ajouter des crédits
+  </div>
+{% endblock %}
+
+{% block content %}
+  <h1>Ajouter des crédits</h1>
+  <p>Pour {{ solde.utilisateur }}, le solde actuel est de {{ solde.solde }} crédits.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="submit-row">
+      <input type="submit" value="Enregistrer" class="default">
+      <a href="{% url 'admin:credits_soldecredits_change' solde.pk %}" class="button cancel-link">Retour</a>
+    </div>
+  </form>
+{% endblock %}

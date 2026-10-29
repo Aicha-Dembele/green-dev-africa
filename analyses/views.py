@@ -21,6 +21,14 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from credits.config import (
+    COUT_PAGE_HORS_QUOTA,
+    COUT_SITE_COMPLET_APPROFONDI,
+    COUT_SITE_COMPLET_RAPIDE,
+    QUOTA_GRATUIT_MENSUEL,
+)
+from credits.models import SoldeCredits
+from credits.services import calculer_cout, compter_analyses_gratuites_du_mois
 from projets.models import Projet
 
 from .forms import ComparaisonForm, LancerAnalyseForm
@@ -70,9 +78,34 @@ def lancer_analyse(request, pk):
         )
         return redirect("projet_detail", pk=projet.pk)
 
+    solde, _ = SoldeCredits.objects.get_or_create(utilisateur=request.user)
+    gratuits_restants = max(
+        QUOTA_GRATUIT_MENSUEL - compter_analyses_gratuites_du_mois(request.user),
+        0,
+    )
+
     if request.method == "POST":
         formulaire = LancerAnalyseForm(request.POST)
         if formulaire.is_valid():
+            cout = calculer_cout(formulaire.configuration(), request.user)
+            if cout > 0 and solde.solde < cout:
+                messages.error(
+                    request,
+                    "Tu n'as pas assez de crédits pour lancer cette analyse. "
+                    "Pour obtenir plus de crédits, contacte l'administrateur.",
+                )
+                return render(
+                    request,
+                    "analyses/lancer_analyse.html",
+                    {
+                        "projet": projet,
+                        "formulaire": formulaire,
+                        "solde": solde.solde,
+                        "gratuites_restantes": gratuits_restants,
+                        "cout_analyse": cout,
+                    },
+                )
+
             analyse = projet.lancer_analyse(
                 configuration=formulaire.configuration(),
                 contexte=formulaire.contexte(),
@@ -93,10 +126,27 @@ def lancer_analyse(request, pk):
     else:
         formulaire = LancerAnalyseForm()
 
+    cout_initial = calculer_cout(
+        {
+            "type_audit": formulaire.fields["type_audit"].initial,
+            "mode_analyse": formulaire.fields["mode_analyse"].initial,
+        },
+        request.user,
+    )
     return render(
         request,
         "analyses/lancer_analyse.html",
-        {"projet": projet, "formulaire": formulaire},
+        {
+            "projet": projet,
+            "formulaire": formulaire,
+            "solde": solde.solde,
+            "gratuites_restantes": gratuits_restants,
+            "cout_analyse": cout_initial,
+            "cout_page_hors_quota": COUT_PAGE_HORS_QUOTA,
+            "cout_site_rapide": COUT_SITE_COMPLET_RAPIDE,
+            "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
+            "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
+        },
     )
 
 

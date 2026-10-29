@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block titre %}Mes crédits — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <div class="page-credits">
+    <p class="fil">
+      <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> › Mes crédits
+    </p>
+
+    <header class="credit-entete">
+      <h1>Mes crédits</h1>
+      <p class="chapeau">Voici ton solde actuel et l’historique de tes mouvements.</p>
+    </header>
+
+    <section class="grille grille-2" aria-label="Solde et analyses gratuites">
+      <article class="carte chiffre-carte">
+        <div class="chiffre">
+          <span class="valeur">{{ solde }}</span>
+          <span class="intitule">Solde actuel</span>
+        </div>
+      </article>
+
+      <article class="carte chiffre-carte">
+        <div class="chiffre">
+          <span class="valeur">{{ gratuites_restantes }}</span>
+          <span class="intitule">Analyses gratuites restantes ce mois-ci</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="carte" aria-labelledby="historique-credits-titre">
+      <h2 id="historique-credits-titre">Historique des mouvements</h2>
+      {% if historique %}
+        <div class="tableau-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Libellé</th>
+                <th class="nombre">Montant</th>
+                <th class="nombre">Solde après</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for mouvement in historique %}
+                <tr>
+                  <td>{{ mouvement.date|date:"d/m/Y" }}</td>
+                  <td>
+                    {{ mouvement.libelle }}
+                    {% if mouvement.note %}<br><small>{{ mouvement.note }}</small>{% endif %}
+                  </td>
+                  <td class="nombre">
+                    {% if mouvement.montant > 0 %}+{% endif %}{{ mouvement.montant }}
+                  </td>
+                  <td class="nombre">{{ mouvement.solde_apres }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="discret">Aucun mouvement pour le moment.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

@@ -10,6 +10,7 @@ from django.urls import include, path
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("comptes/", include("comptes.urls")),
+    path("credits/", include("credits.urls")),
     path("", include("analyses.urls")),
     # Les projets en dernier : leur adresse "" est le tableau de bord.
     path("", include("projets.urls")),

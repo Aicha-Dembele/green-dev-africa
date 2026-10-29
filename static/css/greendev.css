@@ -413,6 +413,19 @@ td.nombre, th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
 .etat-analyse-erreur { border-color: rgba(255, 107, 129, 0.35); background: rgba(255, 107, 129, 0.08); }
 .analyse-chargement { margin: 0.9rem 0 0; padding: 0.8rem 1rem; border-left: 3px solid var(--turquoise); background: var(--turquoise-voile); color: var(--texte-doux); }
 .analyse-chargement[hidden] { display: none; }
+.analyse-cout-carte { margin-bottom: 1.5rem; }
+.analyse-cout-titre { margin: 0 0 0.5rem; font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--texte-faible); }
+.analyse-cout-message { margin: 0.75rem 0 1rem; color: var(--texte); font-size: 1.02rem; }
+.analyse-couts-tableau { margin-top: 1rem; }
+.erreur-simple {
+  margin: 1rem 0 0;
+  padding: 0.8rem 0.9rem;
+  border-left: 3px solid var(--critique);
+  background: rgba(255, 107, 129, 0.08);
+  color: var(--texte-doux);
+  border-radius: 0 8px 8px 0;
+}
+.erreur-simple[hidden] { display: none; }
 .bouton-copier { margin-top: 0.45rem; }
 .copie-statut { min-height: 1.5em; margin: 0.6rem 0 0; color: var(--turquoise); font-size: 0.85rem; }
 button:disabled { cursor: wait; opacity: 0.7; }

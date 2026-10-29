@@ -16,6 +16,59 @@
     automatiquement. Les options ci-dessous sont facultatives.
   </p>
 
+  <div class="carte analyse-cout-carte" data-cout-analyse
+       data-solde="{{ solde }}"
+       data-gratuites="{{ gratuites_restantes }}"
+       data-cout-page="{{ cout_page_hors_quota }}"
+       data-cout-site-rapide="{{ cout_site_rapide }}"
+       data-cout-site-approfondi="{{ cout_site_approfondi }}"
+       data-quota-gratuit="{{ quota_gratuit_mensuel }}">
+    <div class="entre-deux">
+      <h2 class="analyse-cout-titre">Coût de l'analyse</h2>
+      <span class="etiquette etiquette-ok">Solde : {{ solde }} crédits</span>
+    </div>
+    <p class="analyse-cout-message" data-analyse-cout-message>
+      {% if cout_analyse == 0 %}
+        Gratuite : il vous reste {{ gratuites_restantes }} analyses gratuites ce mois-ci.
+      {% else %}
+        Cette analyse coûte {{ cout_analyse }} crédits. Il vous en reste {{ solde }}.
+      {% endif %}
+    </p>
+    <div class="tableau-responsive analyse-couts-tableau">
+      <table>
+        <thead>
+          <tr>
+            <th>Type d'analyse</th>
+            <th>Coût</th>
+            <th>Quand c'est gratuit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Page unique</td>
+            <td>{{ cout_page_hors_quota }} crédits</td>
+            <td>Gratuit tant qu'il reste des analyses gratuites dans le mois.</td>
+          </tr>
+          <tr>
+            <td>Site complet, rapide</td>
+            <td>{{ cout_site_rapide }} crédits</td>
+            <td>Payant</td>
+          </tr>
+          <tr>
+            <td>Site complet, approfondi</td>
+            <td>{{ cout_site_approfondi }} crédits</td>
+            <td>Payant</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% if solde < cout_analyse and cout_analyse > 0 %}
+      <p class="erreur-simple" data-analyse-solde-insuffisant>
+        Tu n'as pas assez de crédits pour lancer cette analyse. Pour obtenir plus de crédits, contacte l'administrateur.
+      </p>
+    {% endif %}
+  </div>
+
   <form method="post" data-analyse-form>
     {% csrf_token %}
 
