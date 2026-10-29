@@ -1,4 +1,5 @@
 from io import StringIO
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
@@ -280,3 +281,37 @@ class CreditsMetierTest(TestCase):
         out = StringIO()
         call_command("verifier_credits", stdout=out)
         self.assertIn("ERREUR", out.getvalue())
+
+    def test_echec_danalyze_rembourse_le_debit_et_restaure_le_solde(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="serigne",
+            email="serigne@example.com",
+            password="motdepasse-de-test",
+            nom="Sérigne",
+        )
+        ajouter_credits(utilisateur, 20, JournalCredits.Type.AJUSTEMENT_ADMIN, "test")
+        analyse = self.creer_analyse(utilisateur)
+
+        self.assertTrue(debiter_pour_analyse(utilisateur, analyse, 5))
+
+        with self.assertRaises(RuntimeError):
+            with patch.object(Analyse, "collecter_mesures", side_effect=RuntimeError("bug collecte")):
+                analyse.executer_analyse()
+
+        analyse.refresh_from_db()
+        self.assertEqual(analyse.statut, Analyse.Statut.ECHOUEE)
+        self.assertEqual(
+            JournalCredits.objects.filter(
+                utilisateur=utilisateur,
+                analyse=analyse,
+                type=JournalCredits.Type.DEBIT_ANALYSE,
+            ).count(),
+            1,
+        )
+        remboursement = JournalCredits.objects.get(
+            utilisateur=utilisateur,
+            analyse=analyse,
+            type=JournalCredits.Type.REMBOURSEMENT,
+        )
+        self.assertEqual(remboursement.montant, 5)
+        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, 30)
