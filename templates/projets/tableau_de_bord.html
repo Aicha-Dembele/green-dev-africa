@@ -13,21 +13,21 @@
   </div>
 
   <div class="grille grille-4 dashboard-stats">
-    <div class="chiffre">
+    <div class="chiffre reveal-card" data-reveal>
       <span class="valeur">{{ nb_projets }}</span>
       <span class="intitule">Projet{{ nb_projets|pluralize }}</span>
     </div>
-    <div class="chiffre">
+    <div class="chiffre reveal-card" data-reveal>
       <span class="valeur">
         {% if score_moyen is not None %}{{ score_moyen|floatformat:0 }}{% else %}—{% endif %}
       </span>
       <span class="intitule">Green Score moyen</span>
     </div>
-    <div class="chiffre">
+    <div class="chiffre reveal-card" data-reveal>
       <span class="valeur">{{ problemes_ouverts }}</span>
       <span class="intitule">Problème{{ problemes_ouverts|pluralize }} ouvert{{ problemes_ouverts|pluralize }}</span>
     </div>
-    <div class="chiffre">
+    <div class="chiffre reveal-card" data-reveal>
       <span class="valeur">{{ problemes_critiques }}</span>
       <span class="intitule">Dont critique{{ problemes_critiques|pluralize }}</span>
     </div>
@@ -45,10 +45,10 @@
         </div>
       </div>
       {% if problemes_prioritaires %}
-        <div class="carte">
+        <div class="carte reveal-card" data-reveal>
           <ul class="dashboard-priorites-liste">
             {% for probleme in problemes_prioritaires %}
-              <li>
+              <li class="reveal-item" data-reveal>
                 <span class="etiquette etiquette-{{ probleme.gravite }}">{{ probleme.get_gravite_display }}</span>
                 <div>
                   <a href="{% url 'analyse_detail' probleme.analyse_id %}"><strong>{{ probleme.titre }}</strong></a>
@@ -80,7 +80,7 @@
   </div>
 
   {% if projets %}
-    <div class="carte dashboard-projets-carte tableau-cartes-mobile" role="region" aria-label="Liste de mes projets" tabindex="0">
+    <div class="carte dashboard-projets-carte tableau-cartes-mobile reveal-card" data-reveal role="region" aria-label="Liste de mes projets" tabindex="0">
       <table class="dashboard-table" aria-label="Liste de mes projets">
         <thead>
           <tr>
@@ -94,7 +94,7 @@
         </thead>
         <tbody>
           {% for projet in projets %}
-            <tr>
+            <tr class="dashboard-ligne" data-reveal>
               <td data-label="Projet" aria-label="Projet">
                 <a href="{% url 'projet_detail' projet.pk %}"><strong>{{ projet.nom }}</strong></a>
                 {% if projet.statut != 'actif' %}

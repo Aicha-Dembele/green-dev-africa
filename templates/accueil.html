@@ -26,6 +26,11 @@
       même avec une connexion limitée.
     </p>
 
+    <div class="accueil-loader" aria-live="polite">
+      <span class="chargeur" aria-hidden="true"></span>
+      <span>Loading...</span>
+    </div>
+
     <div class="accueil-actions">
       <a class="bouton bouton-grand" href="{% url 'inscription' %}">
         Analyser mon site <span aria-hidden="true">→</span>
@@ -147,7 +152,7 @@
 
   <div class="grille grille-3 cartes-valeur">
 
-    <article class="carte-valeur">
+    <article class="carte-valeur reveal-card" data-reveal>
       <span class="valeur-icone" aria-hidden="true">◉</span>
       <h3>Comprendre</h3>
       <p>
@@ -156,7 +161,7 @@
       </p>
     </article>
 
-    <article class="carte-valeur">
+    <article class="carte-valeur reveal-card" data-reveal>
       <span class="valeur-icone" aria-hidden="true">⌁</span>
       <h3>Améliorer</h3>
       <p>
@@ -165,7 +170,7 @@
       </p>
     </article>
 
-    <article class="carte-valeur">
+    <article class="carte-valeur reveal-card" data-reveal>
       <span class="valeur-icone" aria-hidden="true">↗</span>
       <h3>Mesurer tes progrès</h3>
       <p>

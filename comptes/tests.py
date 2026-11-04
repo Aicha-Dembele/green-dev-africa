@@ -4,7 +4,8 @@ Pour les lancer :  python manage.py test comptes
 """
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from comptes.models import Notification
@@ -41,6 +42,19 @@ class UtilisateurTest(TestCase):
         self.assertFalse(notification.lu)
         notification.marquer_comme_lue()
         self.assertTrue(Notification.objects.get(pk=notification.pk).lu)
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_envoyer_envoie_un_email_avec_le_message(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="aicha", email="aicha@example.com", password="motdepasse-de-test"
+        )
+
+        Notification.envoyer(utilisateur, "Analyse terminée")
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["aicha@example.com"])
+        self.assertIn("Analyse terminée", mail.outbox[0].body)
+        self.assertIn("[Green Dev Africa]", mail.outbox[0].subject)
 
 
 class PagesDuCompteTest(TestCase):

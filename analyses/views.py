@@ -35,6 +35,9 @@ from credits.services import (
 )
 from projets.models import Projet
 
+from analyses.collecteur import ErreurCollecte, verifier_adresse
+from analyses.management.commands.traiter_analyses import traiter_une_analyse_en_attente
+
 from .forms import ComparaisonForm, LancerAnalyseForm
 from .models import (
     Analyse,
@@ -92,96 +95,155 @@ def lancer_analyse(request, pk):
         QUOTA_GRATUIT_MENSUEL - compter_analyses_gratuites_du_mois(request.user),
         0,
     )
+    solde_insuffisant = False
 
     if request.method == "POST":
         formulaire = LancerAnalyseForm(request.POST)
-        if formulaire.is_valid():
-            if analyse_en_cours:
-                messages.error(
-                    request,
-                    "Une analyse est déjà en cours pour ce projet. "
-                    "Patientez qu'elle se termine avant d'en lancer une autre.",
-                )
-                return render(
-                    request,
-                    "analyses/lancer_analyse.html",
-                    {
-                        "projet": projet,
-                        "formulaire": formulaire,
-                        "solde": solde.solde,
-                        "gratuites_restantes": gratuits_restants,
-                        "cout_analyse": calculer_cout(
-                            formulaire.configuration(), request.user
-                        ),
-                        "analyse_en_cours": True,
-                    },
-                )
-
-            cout = calculer_cout(formulaire.configuration(), request.user)
-            if cout > 0 and solde.solde < cout:
-                messages.error(
-                    request,
-                    "Tu n'as pas assez de crédits pour lancer cette analyse. "
-                    "Pour obtenir plus de crédits, contacte l'administrateur.",
-                )
-                return render(
-                    request,
-                    "analyses/lancer_analyse.html",
-                    {
-                        "projet": projet,
-                        "formulaire": formulaire,
-                        "solde": solde.solde,
-                        "gratuites_restantes": gratuits_restants,
-                        "cout_analyse": cout,
-                        "analyse_en_cours": False,
-                    },
-                )
-
-            analyse = projet.lancer_analyse(
-                configuration=formulaire.configuration(),
-                contexte=formulaire.contexte(),
-            )
-
-            # Un seul aller-retour vers la base pour toutes les mesures.
-            Indicateur.objects.bulk_create(
-                Indicateur(analyse=analyse, **mesure)
-                for mesure in formulaire.mesures()
-            )
-
-            cout = calculer_cout(formulaire.configuration(), request.user)
-            debit_ok = debiter_pour_analyse(request.user, analyse, cout)
-            if not debit_ok:
-                analyse.statut = Analyse.Statut.ECHOUEE
-                analyse.message_erreur = (
-                    "Le débit de crédits n’a pas pu être effectué pour cette analyse."
-                )
-                analyse.save(update_fields=["statut", "message_erreur"])
-                messages.error(
-                    request,
-                    "Le débit n’a pas pu être effectué. Vérifie ton solde et réessaie.",
-                )
-                return render(
-                    request,
-                    "analyses/lancer_analyse.html",
-                    {
-                        "projet": projet,
-                        "formulaire": formulaire,
-                        "solde": solde.solde,
-                        "gratuites_restantes": gratuits_restants,
-                        "cout_analyse": cout,
-                        "cout_page_hors_quota": COUT_PAGE_HORS_QUOTA,
-                        "cout_site_rapide": COUT_SITE_COMPLET_RAPIDE,
-                        "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
-                        "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
-                    },
-                )
-
-            messages.success(
+        if not formulaire.is_valid():
+            return render(
                 request,
-                "Ta demande est enregistrée. Tu peux suivre l'avancement de "
-                "l'analyse sur cette page.",
+                "analyses/lancer_analyse.html",
+                {
+                    "projet": projet,
+                    "formulaire": formulaire,
+                    "solde": solde.solde,
+                    "gratuites_restantes": gratuits_restants,
+                    "cout_analyse": calculer_cout(
+                        {
+                            "type_audit": formulaire.data.get("type_audit", "site_complet"),
+                            "mode_analyse": formulaire.data.get("mode_analyse", "rapide"),
+                        },
+                        request.user,
+                    ),
+                    "cout_page_hors_quota": COUT_PAGE_HORS_QUOTA,
+                    "cout_site_rapide": COUT_SITE_COMPLET_RAPIDE,
+                    "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
+                    "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
+                    "analyse_en_cours": analyse_en_cours,
+                    "solde_insuffisant": False,
+                },
             )
-            return redirect("analyse_detail", pk=analyse.pk)
+
+        try:
+            verifier_adresse(projet.url)
+        except ErreurCollecte as erreur:
+            formulaire.add_error(None, str(erreur))
+            messages.error(request, str(erreur))
+            return render(
+                request,
+                "analyses/lancer_analyse.html",
+                {
+                    "projet": projet,
+                    "formulaire": formulaire,
+                    "solde": solde.solde,
+                    "gratuites_restantes": gratuits_restants,
+                    "cout_analyse": calculer_cout(
+                        {
+                            "type_audit": formulaire.cleaned_data["type_audit"],
+                            "mode_analyse": formulaire.cleaned_data["mode_analyse"],
+                        },
+                        request.user,
+                    ),
+                    "cout_page_hors_quota": COUT_PAGE_HORS_QUOTA,
+                    "cout_site_rapide": COUT_SITE_COMPLET_RAPIDE,
+                    "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
+                    "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
+                    "analyse_en_cours": analyse_en_cours,
+                    "solde_insuffisant": False,
+                },
+            )
+
+        cout = calculer_cout(formulaire.configuration(), request.user)
+        solde_insuffisant = cout > 0 and solde.solde < cout
+
+        if analyse_en_cours:
+            messages.error(
+                request,
+                "Une analyse est déjà en cours pour ce projet. "
+                "Patientez qu'elle se termine avant d'en lancer une autre.",
+            )
+            return render(
+                request,
+                "analyses/lancer_analyse.html",
+                {
+                    "projet": projet,
+                    "formulaire": formulaire,
+                    "solde": solde.solde,
+                    "gratuites_restantes": gratuits_restants,
+                    "cout_analyse": cout,
+                    "analyse_en_cours": True,
+                    "solde_insuffisant": solde_insuffisant,
+                },
+            )
+
+        if solde_insuffisant:
+            messages.error(
+                request,
+                "Tu n'as pas assez de crédits pour lancer cette analyse. "
+                "Achète des crédits pour continuer.",
+            )
+            return render(
+                request,
+                "analyses/lancer_analyse.html",
+                {
+                    "projet": projet,
+                    "formulaire": formulaire,
+                    "solde": solde.solde,
+                    "gratuites_restantes": gratuits_restants,
+                    "cout_analyse": cout,
+                    "analyse_en_cours": False,
+                    "solde_insuffisant": True,
+                },
+            )
+
+        analyse = projet.lancer_analyse(
+            configuration=formulaire.configuration(),
+            contexte=formulaire.contexte(),
+        )
+
+        # Un seul aller-retour vers la base pour toutes les mesures.
+        Indicateur.objects.bulk_create(
+            Indicateur(analyse=analyse, **mesure)
+            for mesure in formulaire.mesures()
+        )
+
+        cout = calculer_cout(formulaire.configuration(), request.user)
+        debit_ok = debiter_pour_analyse(request.user, analyse, cout)
+        if not debit_ok:
+            analyse.statut = Analyse.Statut.ECHOUEE
+            analyse.message_erreur = (
+                "Le débit de crédits n’a pas pu être effectué pour cette analyse."
+            )
+            analyse.save(update_fields=["statut", "message_erreur"])
+            messages.error(
+                request,
+                "Le débit n’a pas pu être effectué. Vérifie ton solde et réessaie.",
+            )
+            return render(
+                request,
+                "analyses/lancer_analyse.html",
+                {
+                    "projet": projet,
+                    "formulaire": formulaire,
+                    "solde": solde.solde,
+                    "gratuites_restantes": gratuits_restants,
+                    "cout_analyse": cout,
+                    "cout_page_hors_quota": COUT_PAGE_HORS_QUOTA,
+                    "cout_site_rapide": COUT_SITE_COMPLET_RAPIDE,
+                    "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
+                    "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
+                },
+            )
+
+        traiter_une_analyse_en_attente(request.user)
+        analyse.refresh_from_db()
+        messages.success(
+            request,
+            "Analyse lancée : Green Dev Africa traite automatiquement votre site. "
+            "Tu peux suivre l'avancement sur cette page et revenir plus tard si "
+            "besoin.",
+        )
+        return redirect("analyse_detail", pk=analyse.pk)
     else:
         formulaire = LancerAnalyseForm()
 
@@ -192,6 +254,7 @@ def lancer_analyse(request, pk):
         },
         request.user,
     )
+    solde_insuffisant = cout_initial > 0 and solde.solde < cout_initial
     return render(
         request,
         "analyses/lancer_analyse.html",
@@ -206,16 +269,44 @@ def lancer_analyse(request, pk):
             "cout_site_approfondi": COUT_SITE_COMPLET_APPROFONDI,
             "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
             "analyse_en_cours": analyse_en_cours,
+            "solde_insuffisant": solde_insuffisant,
         },
     )
+
+
+def _message_statut_analyse(analyse):
+    """Renvoie un message lisible pour chaque état de l'analyse."""
+    if analyse.statut == Analyse.Statut.EN_ATTENTE:
+        return (
+            "Ta demande est bien enregistrée. L'analyse démarre dès que le "
+            "service la prend en charge."
+        )
+    if analyse.statut == Analyse.Statut.EN_COURS:
+        return (
+            "Le site est en cours de mesure. Les résultats apparaîtront ici "
+            "automatiquement lorsqu'ils seront prêts."
+        )
+    if analyse.statut == Analyse.Statut.ECHOUEE:
+        return (
+            analyse.message_erreur
+            or "La mesure n’a pas abouti. Vérifie l’adresse du site ou réessaie plus tard."
+        )
+    return "L'analyse est terminée et le rapport est prêt à consulter."
 
 
 @login_required
 def analyse_statut(request, pk):
     """Expose uniquement le statut de l'analyse appartenant à l'utilisateur."""
     analyse = _analyse_de(request, pk)
+    if analyse.statut == Analyse.Statut.EN_ATTENTE:
+        traiter_une_analyse_en_attente(request.user)
+        analyse.refresh_from_db()
     reponse = JsonResponse(
-        {"statut": analyse.statut, "libelle": analyse.get_statut_display()}
+        {
+            "statut": analyse.statut,
+            "libelle": analyse.get_statut_display(),
+            "message": _message_statut_analyse(analyse),
+        }
     )
     reponse["Cache-Control"] = "no-store"
     return reponse
@@ -229,6 +320,9 @@ def analyse_detail(request, pk):
         pk,
         Analyse.objects.select_related("projet", "contexte", "rapport"),
     )
+    if analyse.statut == Analyse.Statut.EN_ATTENTE:
+        traiter_une_analyse_en_attente(request.user)
+        analyse.refresh_from_db()
 
     problemes = analyse.problemes.select_related("regle", "ressource").prefetch_related(
         "recommandations__conseil"

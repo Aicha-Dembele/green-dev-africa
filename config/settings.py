@@ -24,7 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # DEBUG affiche les erreurs en détail : il doit être activé explicitement
 # uniquement pour le développement local.
-DEBUG = os.environ.get("DJANGO_DEBUG") == "True"
+# Par défaut, on part en mode développement local pour éviter les redirections
+# HTTPS et les blocages d'hôtes au moment des tests et du développement.
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
@@ -38,7 +40,7 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = [
     hote.strip()
     for hote in os.environ.get(
-        "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost"
+        "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver"
     ).split(",")
     if hote.strip()
 ]
@@ -164,3 +166,22 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 LOGIN_URL = 'connexion'
 LOGIN_REDIRECT_URL = 'tableau_de_bord'
 LOGOUT_REDIRECT_URL = 'connexion'
+
+# Configuration e-mail : par défaut, le site affiche les e-mails dans la console
+# pour faciliter le développement local. En production, configurez un backend SMTP
+# ou un fournisseur dédié dans l'environnement.
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend"
+    if DEBUG
+    else "django.core.mail.backends.smtp.EmailBackend",
+)
+EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST")
+EMAIL_PORT = int(os.environ.get("DJANGO_EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("DJANGO_EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.environ.get("DJANGO_EMAIL_USE_TLS", "True") == "True"
+DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", "noreply@green-dev-africa.local")
+
+if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend" and not EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

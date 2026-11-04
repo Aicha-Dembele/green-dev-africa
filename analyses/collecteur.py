@@ -184,10 +184,8 @@ def verifier_adresse(url):
         decoupe = urlparse(url)
     except ValueError:
         raise ErreurCollecte("Cette adresse n'est pas valide.")
-    if decoupe.scheme.lower() not in ("http", "https"):
-        raise ErreurCollecte("Seules les adresses http:// et https:// sont analysables.")
-    if not decoupe.hostname:
-        raise ErreurCollecte("Cette adresse ne contient pas de nom de domaine.")
+    if decoupe.scheme.lower() not in ("http", "https") or not decoupe.hostname:
+        raise ErreurCollecte("Cette adresse n'est pas valide.")
 
     try:
         hote = decoupe.hostname

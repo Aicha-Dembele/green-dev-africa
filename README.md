@@ -167,6 +167,7 @@ Le système de crédits est un journal comptable par utilisateur. Chaque utilisa
 - Le quota gratuit est calculé par mois calendaire (`date_analyse__year`, `date_analyse__month`) ; il se réinitialise au 1er jour du mois. Il ne s'agit pas d'un quota glissant sur 30 jours.
 - Les coûts sont configurés dans `credits/config.py` : `COUT_PAGE_HORS_QUOTA`, `COUT_SITE_COMPLET_RAPIDE`, `COUT_SITE_COMPLET_APPROFONDI`, `QUOTA_GRATUIT_MENSUEL` et les constantes de type d'audit.
 - L'interface utilisateur expose le solde, le quota gratuit restant et l'historique des mouvements.
+- La page « Mes crédits » propose un parcours d'achat de packs de crédits, avec validation immédiate en prototype et ajout automatique dans le journal de transactions.
 - La page d'administration permet de voir le solde et les mouvements de chaque utilisateur et d'ajouter des crédits via une action dédiée, sans modifier directement le `solde` de la table.
 
 Ce qui n'est pas encore implémenté : paiement mobile money, confirmation d'e-mail avant attribution, et les mécanismes de rate limiting pour bloquer la création de comptes en série.
@@ -320,4 +321,4 @@ et désigner un fichier au hasard serait pire que de n'en désigner aucun.
 
 ## Ce qui reste à faire
 
-- [ ] L'envoi des notifications par e-mail (acteur « Service d'e-mail »).
+- [x] L'envoi des notifications par e-mail (acteur « Service d'e-mail ») via le backend Django configuré dans l'environnement.

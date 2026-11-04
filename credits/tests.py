@@ -4,6 +4,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
+from django.urls import reverse
 
 from analyses.models import Analyse, ConfigurationAnalyse
 from credits.config import (
@@ -14,6 +15,7 @@ from credits.config import (
 )
 from credits.models import JournalCredits, SoldeCredits
 from credits.services import (
+    acheter_credits,
     ajouter_credits,
     attribuer_credits_bienvenue,
     calculer_cout,
@@ -44,10 +46,38 @@ class CreditsMetierTest(TestCase):
         )
         return analyse
 
+    def test_acheter_credits_ajoute_une_transaction_et_met_a_jour_le_solde(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="aicha_achat",
+            email="aicha-achat@example.com",
+            password="Passw0rd!123",
+            nom="Aïcha",
+        )
+
+        transaction = acheter_credits(utilisateur, 25, "Achat de 25 crédits")
+
+        self.assertEqual(transaction.montant, 25)
+        self.assertEqual(transaction.type, JournalCredits.Type.ACHAT_MANUEL)
+        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, CREDITS_BIENVENUE + 25)
+
+    def test_achat_de_credits_par_la_vue_majore_le_solde(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="bintou",
+            email="bintou@example.com",
+            password="Passw0rd!123",
+            nom="Bintou",
+        )
+        self.client.force_login(utilisateur)
+
+        response = self.client.post(reverse("acheter_credits"), {"montant": 50})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, CREDITS_BIENVENUE + 50)
+
     def test_debit_normal(self):
         utilisateur = Utilisateur.objects.create_user(
-            username="aicha",
-            email="aicha@example.com",
+            username="aicha_achat_2",
+            email="aicha-achat-2@example.com",
             password="motdepasse-de-test",
             nom="Aïcha",
         )

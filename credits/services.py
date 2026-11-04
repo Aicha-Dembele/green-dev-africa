@@ -88,6 +88,18 @@ def ajouter_credits(utilisateur, montant, type, note=""):
         return transaction_obj
 
 
+def acheter_credits(utilisateur, montant, note=""):
+    montant = int(montant)
+    if montant <= 0:
+        raise ValueError("Le montant de crédit doit être positif.")
+    return ajouter_credits(
+        utilisateur,
+        montant,
+        JournalCredits.Type.ACHAT_MANUEL,
+        note or f"Achat de {montant} crédits",
+    )
+
+
 def debiter_pour_analyse(utilisateur, analyse, cout):
     if cout is None:
         configuration = analyse.configurations.first()

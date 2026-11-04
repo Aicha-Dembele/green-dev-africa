@@ -28,7 +28,7 @@
     </div>
   </div>
 
-  {% if analyse.statut == 'en_attente' or analyse.statut == 'en_cours' %}
+  {% if analyse.statut == 'en_attente' or analyse.statut == 'en_cours' or analyse.statut == 'terminee' %}
     <div
       class="etat-analyse"
       data-analyse-suivi
@@ -36,36 +36,45 @@
       data-url="{% url 'analyse_statut' analyse.pk %}"
       role="status"
       aria-live="polite"
-      aria-busy="true"
+      aria-busy="{% if analyse.statut == 'en_attente' or analyse.statut == 'en_cours' %}true{% else %}false{% endif %}"
     >
-      <h2 data-analyse-titre>
-        {% if analyse.statut == 'en_attente' %}Demande enregistrée{% else %}Analyse en cours{% endif %}
-      </h2>
-      <p data-analyse-message>
-        {% if analyse.statut == 'en_attente' %}
-          Ta demande est enregistrée et attend le démarrage. Tu peux quitter cette page et revenir plus tard.
-        {% else %}
-          Le site est en cours de mesure. Les résultats apparaîtront ici automatiquement lorsqu'ils seront prêts.
-        {% endif %}
-      </p>
-      <ol>
-        <li data-etape="en_attente" {% if analyse.statut == 'en_attente' %}aria-current="step"{% endif %}>
+      <div class="etat-analyse-en-tete">
+        <span class="etat-analyse-loader" aria-hidden="true"><span></span></span>
+        <div>
+          <h2 data-analyse-titre>
+            {% if analyse.statut == 'en_attente' %}Demande enregistrée{% elif analyse.statut == 'en_cours' %}Analyse en cours{% else %}Analyse terminée{% endif %}
+          </h2>
+          <p data-analyse-message>
+            {% if analyse.statut == 'en_attente' %}
+              L’analyse est enregistrée et démarre automatiquement. Tu peux quitter cette page ; elle se mettra à jour quand les résultats seront prêts.
+            {% elif analyse.statut == 'en_cours' %}
+              Le site est en cours de mesure. Les résultats apparaîtront automatiquement ici dès qu’ils seront disponibles.
+            {% else %}
+              Le rapport est prêt et les résultats sont disponibles ci-dessous.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      <ol class="etat-analyse-etapes">
+        <li data-etape="en_attente" {% if analyse.statut == 'en_attente' %}aria-current="step"{% elif analyse.statut == 'en_cours' or analyse.statut == 'terminee' %}class="est-terminee"{% endif %}>
           <span data-icone aria-hidden="true">{% if analyse.statut == 'en_attente' %}→{% else %}✓{% endif %}</span>
           Demande reçue
         </li>
-        <li data-etape="en_cours" {% if analyse.statut == 'en_cours' %}aria-current="step"{% endif %}>
-          <span data-icone aria-hidden="true">{% if analyse.statut == 'en_cours' %}→{% else %}○{% endif %}</span>
+        <li data-etape="en_cours" {% if analyse.statut == 'en_cours' %}aria-current="step"{% elif analyse.statut == 'terminee' %}class="est-terminee"{% endif %}>
+          <span data-icone aria-hidden="true">{% if analyse.statut == 'en_cours' %}→{% elif analyse.statut == 'terminee' %}✓{% else %}○{% endif %}</span>
           Analyse du site
         </li>
-        <li data-etape="terminee">
-          <span data-icone aria-hidden="true">○</span>
+        <li data-etape="terminee" {% if analyse.statut == 'terminee' %}aria-current="step" class="est-terminee"{% endif %}>
+          <span data-icone aria-hidden="true">{% if analyse.statut == 'terminee' %}→{% else %}○{% endif %}</span>
           Résultats prêts
         </li>
       </ol>
+      {% if analyse.statut != 'terminee' %}
       <p class="discret">
         Cette page se met à jour automatiquement.
         <a href="{% url 'analyse_detail' analyse.pk %}">Actualiser le statut</a>
       </p>
+      {% endif %}
       <noscript>
         <p class="discret">JavaScript est désactivé : actualise cette page pour voir le nouveau statut.</p>
       </noscript>
@@ -83,6 +92,7 @@
   <div class="grille grille-2">
     <div class="carte">
       <h3>Green Score</h3>
+      <p class="discret">Green Score {{ analyse.score_global|score_decimal }}/100</p>
       {% include "partiels/score.html" with score=analyse.score_global %}
       <p class="discret">
       Plus le score est proche de 100, moins les règles actives détectent de problèmes. C’est un indicateur de suivi, pas un calcul d’empreinte carbone.

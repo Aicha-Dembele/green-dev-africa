@@ -3,7 +3,9 @@
 Correspond aux classes Utilisateur et Notification du diagramme de classes.
 """
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 
@@ -94,9 +96,30 @@ class Notification(models.Model):
     # --- opérations du diagramme ---
 
     @classmethod
-    def envoyer(cls, utilisateur, message, type=Type.INFORMATION):
-        """envoyer() : crée et enregistre la notification pour l'utilisateur."""
-        return cls.objects.create(utilisateur=utilisateur, message=message, type=type)
+    def envoyer(cls, utilisateur, message, type=Type.INFORMATION, *, envoyer_email=True):
+        """envoyer() : crée une notification et, si possible, un e-mail."""
+        notification = cls.objects.create(
+            utilisateur=utilisateur,
+            message=message,
+            type=type,
+        )
+
+        if envoyer_email and utilisateur.email:
+            sujet = f"[Green Dev Africa] {notification.get_type_display()}"
+            try:
+                send_mail(
+                    sujet,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [utilisateur.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                # L'envoi doit rester non bloquant : la notification interne est
+                # la source de vérité, même si l'e-mail ne peut pas être livré.
+                pass
+
+        return notification
 
     def marquer_comme_lue(self):
         """marquerCommeLue() : la cloche ne doit plus la compter."""

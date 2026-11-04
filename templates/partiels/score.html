@@ -1,3 +1,4 @@
+{% load greendev %}
 {% comment %}
   La note sur 100 et sa jauge. À inclure avec :
       {% include "partiels/score.html" with score=analyse.score_global %}
@@ -9,8 +10,7 @@
 
 {% if score is not None %}
   <div class="score {% if score >= 70 %}score-bon{% elif score >= 40 %}score-moyen{% else %}score-mauvais{% endif %}">
-    <span class="note">{{ score|floatformat:0 }}</span>
-    <span class="sur">/ 100</span>
+    <span class="note">{{ score|score_decimal }}</span><span class="sur">/100</span>
   </div>
   <div class="jauge {% if score >= 70 %}jauge-bon{% elif score >= 40 %}jauge-moyen{% else %}jauge-mauvais{% endif %}">
     <span style="width: {{ score|floatformat:'0u' }}%"></span>

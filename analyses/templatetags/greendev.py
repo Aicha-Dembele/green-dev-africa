@@ -28,6 +28,14 @@ def unite(code):
 
 
 @register.filter
+def score_decimal(valeur):
+    """Affiche une note de manière stable, même en environnement localisé."""
+    if valeur is None:
+        return ""
+    return format(float(valeur), ".1f").replace(",", ".")
+
+
+@register.filter
 def widget_accessible(champ):
     """Relie un champ invalide à ses erreurs pour les technologies d'assistance."""
     if not champ.errors:

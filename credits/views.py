@@ -1,9 +1,10 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
-from credits.config import QUOTA_GRATUIT_MENSUEL
+from credits.config import OFFRES_CREDITS, QUOTA_GRATUIT_MENSUEL
 from credits.models import SoldeCredits
-from credits.services import compter_analyses_gratuites_du_mois
+from credits.services import acheter_credits as acheter_credits_service, compter_analyses_gratuites_du_mois
 
 
 def _libelle_transaction(transaction):
@@ -59,5 +60,33 @@ def mes_credits(request):
             "credits_recus": credits_recus,
             "depenses": depenses,
             "dernier_mouvement": historique[0] if historique else None,
+        },
+    )
+
+
+@login_required
+def acheter_credits(request):
+    if request.method == "POST":
+        try:
+            montant = int(request.POST.get("montant", "0"))
+        except (TypeError, ValueError):
+            montant = 0
+
+        if montant <= 0:
+            messages.error(request, "Choisis un pack de crédits valide.")
+            return redirect("acheter_credits")
+
+        acheter_credits_service(request.user, montant, f"Achat de {montant} crédits")
+        messages.success(request, f"Tu as acheté {montant} crédits. Ton solde a été mis à jour.")
+        return redirect("mes_credits")
+
+    solde, _ = SoldeCredits.objects.get_or_create(utilisateur=request.user)
+    solde.recalculer()
+    return render(
+        request,
+        "credits/acheter_credits.html",
+        {
+            "solde": solde.solde,
+            "offres": OFFRES_CREDITS,
         },
     )

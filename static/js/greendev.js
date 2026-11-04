@@ -55,6 +55,7 @@
       form.addEventListener("submit", function () {
         var bouton = form.querySelector("[data-analyse-submit]");
         var statut = form.querySelector("[data-analyse-chargement]");
+        var carteCout = document.querySelector("[data-cout-analyse]");
         if (bouton && statut) {
           bouton.disabled = true;
           bouton.textContent = "Envoi de la demande…";
@@ -62,8 +63,42 @@
           statut.textContent = "Enregistrement de ta demande d'analyse…";
           form.setAttribute("aria-busy", "true");
         }
+        if (carteCout) {
+          carteCout.classList.add("is-loading");
+        }
       });
     });
+
+    var cartes = document.querySelectorAll("[data-reveal]");
+    cartes.forEach(function (carte, index) {
+      carte.style.transitionDelay = (index * 120) + "ms";
+    });
+
+    if ("IntersectionObserver" in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.2 });
+
+      cartes.forEach(function (carte) {
+        observer.observe(carte);
+      });
+    } else {
+      cartes.forEach(function (carte) {
+        carte.classList.add("is-visible");
+      });
+    }
+
+    var loader = document.querySelector(".accueil-loader");
+    if (loader) {
+      window.setTimeout(function () {
+        loader.style.opacity = "0.7";
+      }, 450);
+    }
 
     var carteCout = document.querySelector("[data-cout-analyse]");
     if (carteCout) {
@@ -102,6 +137,11 @@
           }
         }
 
+        var bouton = document.querySelector("[data-analyse-submit]");
+        if (bouton) {
+          bouton.disabled = (cout > 0 && solde < cout) || (document.querySelector("[data-analyse-form]") && document.querySelector("[data-analyse-form]").getAttribute("aria-busy") === "true");
+        }
+
         if (erreur) {
           erreur.hidden = cout === 0 || solde >= cout;
         }
@@ -132,12 +172,15 @@
           if (indexEtape < indexActuel) {
             icone.textContent = "✓";
             etape.removeAttribute("aria-current");
+            etape.classList.add("est-terminee");
           } else if (indexEtape === indexActuel) {
             icone.textContent = "→";
             etape.setAttribute("aria-current", "step");
+            etape.classList.remove("est-terminee");
           } else {
             icone.textContent = "○";
             etape.removeAttribute("aria-current");
+            etape.classList.remove("est-terminee");
           }
         });
       }
@@ -155,24 +198,31 @@
           })
           .then(function (donnees) {
             if (donnees.statut === "terminee" || donnees.statut === "echouee") {
+              suivi.setAttribute("data-statut", donnees.statut);
+              suivi.setAttribute("aria-busy", "false");
               window.location.reload();
               return;
             }
 
             suivi.setAttribute("data-statut", donnees.statut);
-            afficherEtapes(donnees.statut);
+            suivi.setAttribute("aria-busy", "true");
+            suivi.classList.remove("etat-analyse-attente", "etat-analyse-en-cours", "etat-analyse-terminee");
             if (donnees.statut === "en_attente") {
+              suivi.classList.add("etat-analyse-attente");
               titre.textContent = "Demande enregistrée — en attente";
-              message.textContent =
-                "Ta demande est bien enregistrée. L'analyse démarrera dès que le service la prendra en charge.";
             } else {
+              suivi.classList.add("etat-analyse-en-cours");
               titre.textContent = "Analyse en cours";
-              message.textContent =
-                "Le site est en cours de mesure. Les résultats apparaîtront ici automatiquement lorsqu'ils seront prêts.";
             }
+            afficherEtapes(donnees.statut);
+            message.textContent = donnees.message ||
+              (donnees.statut === "en_attente"
+                ? "Ta demande est bien enregistrée. L'analyse démarrera dès que le service la prendra en charge."
+                : "Le site est en cours de mesure. Les résultats apparaîtront ici automatiquement lorsqu'ils seront prêts.");
             window.setTimeout(actualiserStatut, 2500);
           })
           .catch(function () {
+            suivi.classList.add("etat-analyse-attente");
             message.textContent =
               "Le suivi est momentanément indisponible. Ta demande reste enregistrée ; nouvelle vérification dans quelques instants.";
             window.setTimeout(actualiserStatut, 5000);

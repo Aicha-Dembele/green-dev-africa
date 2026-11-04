@@ -39,10 +39,10 @@ class BaseAnalyseVueTest(TestCase):
             username="fanta", email="fanta@example.com", password=MOT_DE_PASSE, nom="Fanta"
         )
         cls.projet = Projet.objects.create(
-            utilisateur=cls.aicha, nom="Mon site", url="https://exemple.ml"
+            utilisateur=cls.aicha, nom="Mon site", url="https://example.com"
         )
         cls.projet_fanta = Projet.objects.create(
-            utilisateur=cls.fanta, nom="Son site", url="https://autre.ml"
+            utilisateur=cls.fanta, nom="Son site", url="https://example.org"
         )
 
     def setUp(self):
@@ -145,7 +145,44 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         )
         self.assertEqual(self.projet.analyses.count(), 1)
 
-    def test_lancer_une_analyse_complete(self):
+    def test_un_formulaire_invalide_affiche_une_erreur_claire(self):
+        reponse = self.client.post(
+            reverse("lancer_analyse", args=[self.projet.pk]),
+            {**self.donnees_formulaire(), "mesure_poids_total": "abc"},
+        )
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Saisissez un nombre valide")
+        self.assertFalse(Analyse.objects.filter(projet=self.projet).exists())
+
+    def test_une_url_invalide_est_refusee_avant_le_lancement(self):
+        url_initial = self.projet.url
+        try:
+            Projet.objects.filter(pk=self.projet.pk).update(url="pas-une-adresse")
+            self.projet.refresh_from_db()
+
+            reponse = self.client.post(
+                reverse("lancer_analyse", args=[self.projet.pk]),
+                self.donnees_formulaire(),
+            )
+
+            self.assertEqual(reponse.status_code, 200)
+            self.assertContains(reponse, "Cette adresse n&#x27;est pas valide.")
+            self.assertFalse(Analyse.objects.filter(projet=self.projet).exists())
+        finally:
+            Projet.objects.filter(pk=self.projet.pk).update(url=url_initial)
+            self.projet.refresh_from_db()
+
+    def test_ouvrir_le_detail_d_une_analyse_en_attente_le_traite_automatiquement(self):
+        analyse = self.projet.lancer_analyse()
+
+        reponse = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
+
+        self.assertEqual(reponse.status_code, 200)
+        analyse.refresh_from_db()
+        self.assertNotEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
+
+    def test_parcours_utilisateur_complet_depuis_lancement_jusqu_au_detail(self):
         reponse = self.client.post(
             reverse("lancer_analyse", args=[self.projet.pk]),
             self.donnees_formulaire(),
@@ -153,23 +190,19 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
 
         analyse = Analyse.objects.get(projet=self.projet)
         self.assertRedirects(reponse, reverse("analyse_detail", args=[analyse.pk]))
-        self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
-        self.assertFalse(Rapport.objects.filter(analyse=analyse).exists())
+
+        statut_json = self.client.get(reverse("analyse_statut", args=[analyse.pk]))
+        self.assertEqual(statut_json.status_code, 200)
+        self.assertEqual(statut_json.json()["statut"], "terminee")
+
         suivi = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
-        self.assertContains(suivi, "Demande enregistrée")
-        self.assertContains(suivi, "data-analyse-suivi")
-        self.assertNotContains(suivi, "Problèmes détectés")
-
-        call_command("traiter_analyses", once=True, stdout=StringIO())
         analyse.refresh_from_db()
-
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
-        self.assertEqual(
-            self.client.get(reverse("analyse_statut", args=[analyse.pk])).json()[
-                "statut"
-            ],
-            "terminee",
-        )
+        self.assertContains(suivi, "Green Score 80.0/100")
+        self.assertContains(suivi, "data-analyse-suivi")
+        self.assertContains(suivi, "Problèmes détectés")
+        self.assertContains(suivi, "Voir le rapport")
+        self.assertContains(suivi, "80")
         self.assertEqual(analyse.score_global, 80.0)
         self.assertEqual(analyse.indicateurs.count(), 1)
         self.assertEqual(analyse.problemes.count(), 1)
@@ -182,9 +215,12 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         analyse = self.projet.lancer_analyse()
 
         reponse = self.client.get(reverse("analyse_statut", args=[analyse.pk]))
+        donnees = reponse.json()
 
         self.assertEqual(reponse.status_code, 200)
-        self.assertEqual(reponse.json()["statut"], "en_attente")
+        self.assertIn(donnees["statut"], ["echouee", "terminee"])
+        self.assertIn("message", donnees)
+        self.assertTrue(donnees["message"])
         analyse_autre = self.projet_fanta.lancer_analyse()
         reponse_autre = self.client.get(
             reverse("analyse_statut", args=[analyse_autre.pk])

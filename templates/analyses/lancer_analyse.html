@@ -70,7 +70,8 @@
     </div>
     {% if solde < cout_analyse and cout_analyse > 0 %}
       <p class="erreur-simple" data-analyse-solde-insuffisant>
-        Tu n'as pas assez de crédits pour lancer cette analyse. Pour obtenir plus de crédits, contacte l'administrateur.
+        Tu n'as pas assez de crédits pour lancer cette analyse.
+        <a href="{% url 'acheter_credits' %}">Acheter des crédits</a> pour continuer.
       </p>
     {% endif %}
   </div>
@@ -140,7 +141,10 @@
     </details>
 
     <div class="actions">
-      <button type="submit" data-analyse-submit {% if analyse_en_cours %}disabled{% endif %}>Lancer l'analyse</button>
+      <button type="submit" data-analyse-submit
+              {% if analyse_en_cours or solde_insuffisant %}disabled{% endif %}>
+        Lancer l'analyse
+      </button>
       <a class="bouton bouton-secondaire" href="{% url 'projet_detail' projet.pk %}">Annuler</a>
     </div>
     <p class="analyse-chargement" data-analyse-chargement role="status" aria-live="polite" hidden>

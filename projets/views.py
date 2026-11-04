@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Case, Count, IntegerField, OuterRef, Q, Subquery, When
 from django.shortcuts import get_object_or_404, redirect, render
 
+from analyses.management.commands.traiter_analyses import traiter_une_analyse_en_attente
 from analyses.models import Analyse, ProblemeDetecte
 
 from .forms import ObjectifForm, ProjetForm
@@ -29,6 +30,8 @@ def tableau_de_bord(request):
     chercher la dernière analyse de chaque projet sans refaire un appel à la
     base par ligne affichée.
     """
+    traiter_une_analyse_en_attente(request.user if request.user.is_authenticated else None)
+
     if not request.user.is_authenticated:
         return render(request, "accueil.html")
 

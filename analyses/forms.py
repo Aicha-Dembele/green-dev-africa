@@ -96,6 +96,7 @@ class LancerAnalyseForm(forms.Form):
                 help_text=aide,
                 required=False,
                 min_value=0,
+                error_messages={"invalid": "Saisissez un nombre valide"},
                 widget=forms.NumberInput(
                     attrs={
                         "placeholder": exemples_mesures.get(regle.code, "Ex. 10"),
