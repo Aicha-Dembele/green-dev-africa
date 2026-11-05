@@ -185,3 +185,17 @@ DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", "noreply@green-
 
 if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend" and not EMAIL_HOST:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Mot de passe oublié : le lien envoyé par e-mail reste valable 24 heures
+# (Django en propose 72 par défaut) et ne sert qu'une seule fois.
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
+
+# Réglages propres à UN ordinateur, dans config/local_settings.py. Ce fichier
+# n'est jamais envoyé sur GitHub (voir .gitignore) : c'est là qu'on met, par
+# exemple, le mot de passe d'application Gmail qui envoie les vrais e-mails.
+# Chargé en dernier, il remplace les valeurs ci-dessus. Sans lui, tout marche
+# quand même : les e-mails s'affichent dans le terminal du serveur.
+try:
+    from .local_settings import *  # noqa: F401,F403
+except ImportError:
+    pass

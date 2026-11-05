@@ -1,0 +1,15 @@
+{% autoescape off %}Bonjour {{ user.nom|default:user.get_username }},
+
+Tu as demandé à changer le mot de passe de ton compte Green Dev Africa.
+Pour en choisir un nouveau, ouvre ce lien :
+
+{{ protocol }}://{{ domain }}{% url 'mot_de_passe_nouveau' uidb64=uid token=token %}
+
+Ton identifiant de connexion : {{ user.get_username }}
+
+Ce lien reste valable {{ validite_heures }} heures et ne sert qu'une fois.
+Si tu n'as rien demandé, ignore simplement ce message : ton mot de passe
+ne change pas.
+
+L'équipe Green Dev Africa
+{% endautoescape %}

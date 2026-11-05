@@ -846,6 +846,10 @@ legend {
 .connexion-carte .champ input { min-height: 2.9rem; }
 .connexion-carte .actions { justify-content: space-between; }
 .connexion-carte .actions a { padding: 0.45rem 0; }
+/* « Mot de passe oublié ? », juste sous le champ du mot de passe, à droite. */
+.lien-oubli { margin: -0.55rem 0 1.15rem; text-align: right; font-size: 0.87rem; }
+/* Une carte qui commence par du texte : pas d'espace en trop au-dessus. */
+.page-auth .carte > p:first-child { margin-top: 0; }
 
 .rassurance {
   margin-top: 1.5rem;

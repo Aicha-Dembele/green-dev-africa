@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% comment %}
+  Mot de passe oublié, étape 1 sur 4 : la personne tape l'adresse e-mail de
+  son compte. Vue : PasswordResetView de Django (voir comptes/urls.py).
+{% endcomment %}
+
+{% block titre %}Mot de passe oublié — Green Dev Africa{% endblock %}
+{% block classe_page %}page-auth{% endblock %}
+
+{% block contenu %}
+  <header class="auth-entete">
+    <span class="auth-icone" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" focusable="false">
+        <rect x="3.5" y="5.5" width="17" height="13" rx="2"></rect>
+        <path d="M4.5 7.5l7.5 5.5 7.5-5.5"></path>
+      </svg>
+    </span>
+    <h1>Mot de passe oublié</h1>
+    <p class="chapeau">
+      Tape l'adresse e-mail de ton compte : tu recevras un lien pour choisir
+      un nouveau mot de passe.
+    </p>
+  </header>
+
+  <div class="carte connexion-carte">
+    <form method="post">
+      {% csrf_token %}
+      {% include "partiels/champs.html" with formulaire=form %}
+      <div class="actions">
+        <button type="submit">Recevoir le lien</button>
+        <a class="discret" href="{% url 'connexion' %}">Retour à la connexion</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

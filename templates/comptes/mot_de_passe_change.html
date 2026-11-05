@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% comment %}
+  Mot de passe oublié, étape 4 sur 4 : c'est fait. Django fournit
+  `login_url`, l'adresse de la page de connexion (LOGIN_URL dans settings.py).
+{% endcomment %}
+
+{% block titre %}Mot de passe changé — Green Dev Africa{% endblock %}
+{% block classe_page %}page-auth{% endblock %}
+
+{% block contenu %}
+  <header class="auth-entete">
+    <span class="auth-icone" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" focusable="false">
+        <path d="M5 12.5l4.5 4.5L19 7.5"></path>
+      </svg>
+    </span>
+    <h1>Mot de passe changé</h1>
+    <p class="chapeau">Tu peux te connecter avec ton nouveau mot de passe.</p>
+  </header>
+
+  <div class="carte">
+    <p>
+      L'ancien mot de passe ne marche plus. Si ton navigateur l'avait
+      enregistré, pense à le remplacer par le nouveau.
+    </p>
+    <div class="actions">
+      <a class="bouton" href="{{ login_url }}">Se connecter</a>
+    </div>
+  </div>
+{% endblock %}
