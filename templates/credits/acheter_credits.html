@@ -32,7 +32,7 @@
             <span class="valeur">{{ offre.montant }}</span>
             <span class="intitule">crédits</span>
           </div>
-          <p class="chapeau">{{ offre.prix|floatformat:2 }} €</p>
+          <p class="chapeau">{{ offre.prix }} FCFA</p>
           <form method="post">
             {% csrf_token %}
             <input type="hidden" name="montant" value="{{ offre.montant }}">

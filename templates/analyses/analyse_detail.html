@@ -30,7 +30,7 @@
 
   {% if analyse.statut == 'en_attente' or analyse.statut == 'en_cours' or analyse.statut == 'terminee' %}
     <div
-      class="etat-analyse"
+      class="etat-analyse {% if analyse.statut == 'en_attente' %}etat-analyse-attente{% elif analyse.statut == 'en_cours' %}etat-analyse-en-cours{% elif analyse.statut == 'terminee' %}etat-analyse-terminee{% endif %}"
       data-analyse-suivi
       data-statut="{{ analyse.statut }}"
       data-url="{% url 'analyse_statut' analyse.pk %}"

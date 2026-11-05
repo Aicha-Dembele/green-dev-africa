@@ -148,6 +148,12 @@ Les règles de mot de passe sont volontairement réduites à deux (8 caractères
 minimum, pas uniquement des chiffres) : voir le commentaire dans
 `config/settings.py` pour remettre les deux autres avant la mise en ligne.
 
+## Tarifs
+
+Les tarifs de crédits sont gérés dans `credits/config.py` : `PACKS_CREDITS`, `CREDITS_BIENVENUE`, `QUOTA_GRATUIT_MENSUEL`, `COUT_PAGE_HORS_QUOTA`, `COUT_SITE_COMPLET_RAPIDE`, `COUT_SITE_COMPLET_APPROFONDI` et `TEXTE_OBTENIR_CREDITS`.
+
+Pour modifier un prix, il suffit de changer la valeur dans ce fichier et la page `Tarifs` se mettra à jour automatiquement. Ce projet n'implémente pas encore le paiement mobile money, l'expiration des crédits et la confirmation d'e-mail.
+
 ## Lancer les tests
 
 ```bash

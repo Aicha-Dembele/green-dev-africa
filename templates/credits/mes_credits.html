@@ -49,8 +49,28 @@
       </article>
       <article class="carte mini-stat">
         <span class="mini-stat-libelle">Quota gratuit</span>
-        <strong class="mini-stat-valeur">{{ gratuites_restantes }}/5</strong>
+        <strong class="mini-stat-valeur">{{ gratuites_restantes }}/{{ quota_gratuit_mensuel }}</strong>
       </article>
+    </section>
+
+    <section class="carte" aria-labelledby="obtenir-credits-titre">
+      <div class="entre-deux">
+        <h2 id="obtenir-credits-titre">Obtenir des crédits</h2>
+      </div>
+      <p>{{ texte_obtenir_credits|safe }}</p>
+      <div class="grille grille-2" aria-label="Packs de crédits">
+        {% for pack in packs_credits %}
+          <article class="carte">
+            <h3>{{ pack.label }}</h3>
+            <div class="chiffre">
+              <span class="valeur">{{ pack.credits }}</span>
+              <span class="intitule">crédits</span>
+            </div>
+            <p class="chapeau">{{ pack.prix }} FCFA</p>
+            <p class="discret">{{ pack.prix_par_credit|stringformat:".2f" }} FCFA / crédit</p>
+          </article>
+        {% endfor %}
+      </div>
     </section>
 
     <section class="carte" aria-labelledby="historique-credits-titre">

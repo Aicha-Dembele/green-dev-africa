@@ -10,7 +10,9 @@ from analyses.models import Analyse, ConfigurationAnalyse
 from credits.config import (
     COUT_PAGE_HORS_QUOTA,
     CREDITS_BIENVENUE,
+    PACKS_CREDITS,
     QUOTA_GRATUIT_MENSUEL,
+    TEXTE_OBTENIR_CREDITS,
     TYPE_AUDIT_PAGE_UNIQUE,
 )
 from credits.models import JournalCredits, SoldeCredits
@@ -345,3 +347,39 @@ class CreditsMetierTest(TestCase):
         )
         self.assertEqual(remboursement.montant, 5)
         self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, 30)
+
+    def test_tarifs_public_sont_accessibles_sans_compte(self):
+        response = self.client.get(reverse("tarifs"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Tarifs")
+        self.assertContains(response, str(QUOTA_GRATUIT_MENSUEL))
+        self.assertContains(response, str(CREDITS_BIENVENUE))
+        self.assertContains(response, TEXTE_OBTENIR_CREDITS)
+
+    def test_tarifs_affichent_les_packs_et_prix_par_credit_calcules(self):
+        response = self.client.get(reverse("tarifs"))
+
+        self.assertEqual(response.status_code, 200)
+        for pack in PACKS_CREDITS:
+            self.assertContains(response, pack["label"])
+            self.assertContains(response, str(pack["prix"]))
+            self.assertContains(response, str(pack["credits"]))
+            self.assertContains(response, f"{pack['prix_par_credit']:.2f} FCFA / crédit")
+
+    def test_section_obtenir_des_credits_apparait_sur_mes_credits(self):
+        utilisateur = Utilisateur.objects.create_user(
+            username="nina",
+            email="nina@example.com",
+            password="Motdepasse123",
+            nom="Nina",
+        )
+        self.client.force_login(utilisateur)
+
+        response = self.client.get(reverse("mes_credits"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Obtenir des crédits")
+        self.assertContains(response, TEXTE_OBTENIR_CREDITS)
+        self.assertContains(response, PACKS_CREDITS[0]["label"])
+        self.assertContains(response, PACKS_CREDITS[1]["label"])

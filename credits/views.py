@@ -2,7 +2,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from credits.config import OFFRES_CREDITS, QUOTA_GRATUIT_MENSUEL
+from credits.config import (
+    COUT_PAGE_HORS_QUOTA,
+    COUT_SITE_COMPLET_APPROFONDI,
+    COUT_SITE_COMPLET_RAPIDE,
+    CREDITS_BIENVENUE,
+    PACKS_CREDITS,
+    QUOTA_GRATUIT_MENSUEL,
+    TEXTE_OBTENIR_CREDITS,
+)
 from credits.models import SoldeCredits
 from credits.services import acheter_credits as acheter_credits_service, compter_analyses_gratuites_du_mois
 
@@ -16,6 +24,39 @@ def _libelle_transaction(transaction):
         "ajustement_admin": "Ajustement administratif",
     }
     return libelles.get(transaction.type, transaction.get_type_display())
+
+
+def tarifs(request):
+    prix_credit_reference = PACKS_CREDITS[0]["prix_par_credit"]
+    couts_tarifs = [
+        {
+            "libelle": "Audit d'une page au-delà du quota",
+            "credits": COUT_PAGE_HORS_QUOTA,
+            "fcfa": COUT_PAGE_HORS_QUOTA * prix_credit_reference,
+        },
+        {
+            "libelle": "Site complet rapide",
+            "credits": COUT_SITE_COMPLET_RAPIDE,
+            "fcfa": COUT_SITE_COMPLET_RAPIDE * prix_credit_reference,
+        },
+        {
+            "libelle": "Site complet approfondi",
+            "credits": COUT_SITE_COMPLET_APPROFONDI,
+            "fcfa": COUT_SITE_COMPLET_APPROFONDI * prix_credit_reference,
+        },
+    ]
+    return render(
+        request,
+        "credits/tarifs.html",
+        {
+            "packs_credits": PACKS_CREDITS,
+            "couts_tarifs": couts_tarifs,
+            "prix_credit_reference": prix_credit_reference,
+            "credits_bienvenue": CREDITS_BIENVENUE,
+            "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
+            "texte_obtenir_credits": TEXTE_OBTENIR_CREDITS,
+        },
+    )
 
 
 @login_required
@@ -60,6 +101,9 @@ def mes_credits(request):
             "credits_recus": credits_recus,
             "depenses": depenses,
             "dernier_mouvement": historique[0] if historique else None,
+            "packs_credits": PACKS_CREDITS,
+            "texte_obtenir_credits": TEXTE_OBTENIR_CREDITS,
+            "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
         },
     )
 
@@ -87,6 +131,6 @@ def acheter_credits(request):
         "credits/acheter_credits.html",
         {
             "solde": solde.solde,
-            "offres": OFFRES_CREDITS,
+            "offres": PACKS_CREDITS,
         },
     )

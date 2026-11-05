@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block titre %}Tarifs — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <div class="page-credits">
+    <p class="fil">
+      <a href="{% url 'tableau_de_bord' %}">Accueil</a> › Tarifs
+    </p>
+
+    <header class="credit-entete">
+      <h1>Tarifs</h1>
+      <p class="chapeau">Des crédits simples à comprendre pour lancer des audits sans surprise.</p>
+    </header>
+
+    <section class="carte" aria-labelledby="gratuit-tarifs-titre">
+      <h2 id="gratuit-tarifs-titre">Ce qui est gratuit</h2>
+      <p>
+        {{ quota_gratuit_mensuel }} audits d'une page par mois, plus {{ credits_bienvenue }} crédits offerts à l'inscription (une seule fois).
+      </p>
+    </section>
+
+    <section class="carte" aria-labelledby="couts-tarifs-titre">
+      <div class="entre-deux">
+        <h2 id="couts-tarifs-titre">Coût des analyses</h2>
+      </div>
+      <p class="discret">1 crédit du pack Essai = {{ prix_credit_reference|floatformat:0 }} FCFA.</p>
+      <div class="tableau-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Analyse</th>
+              <th>Coût</th>
+              <th>Équivalent en FCFA</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cout in couts_tarifs %}
+              <tr>
+                <td>{{ cout.libelle }}</td>
+                <td>{{ cout.credits }} crédit{{ cout.credits|pluralize }}</td>
+                <td>{{ cout.fcfa|floatformat:0 }} FCFA</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="packs-tarifs-titre">
+      <div class="entre-deux">
+        <h2 id="packs-tarifs-titre">Packs de crédits</h2>
+      </div>
+      <div class="grille grille-2">
+        {% for pack in packs_credits %}
+          <article class="carte">
+            <h3>{{ pack.label }}</h3>
+            <div class="chiffre">
+              <span class="valeur">{{ pack.prix }}</span>
+              <span class="intitule">FCFA</span>
+            </div>
+            <p class="chapeau">{{ pack.credits }} crédits</p>
+            <p class="discret">{{ pack.prix_par_credit|stringformat:".2f" }} FCFA / crédit</p>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="carte" aria-labelledby="tarifs-remarques-titre">
+      <h2 id="tarifs-remarques-titre">À retenir</h2>
+      <ul>
+        <li>Les crédits n'expirent jamais. Seul le quota gratuit se remet à zéro chaque mois.</li>
+        <li>Si une analyse échoue, vos crédits vous sont rendus automatiquement.</li>
+      </ul>
+      <p>{{ texte_obtenir_credits|safe }}</p>
+    </section>
+
+    <div class="actions">
+      {% if user.is_authenticated %}
+        <a class="bouton bouton-grand" href="{% url 'tableau_de_bord' %}">Lancer une analyse</a>
+      {% else %}
+        <a class="bouton bouton-grand" href="{% url 'inscription' %}">Créer un compte</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
