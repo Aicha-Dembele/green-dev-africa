@@ -197,13 +197,19 @@ class TableauDeBordTest(BaseProjetTest):
                 nom=f"Projet {numero}",
                 url=f"https://exemple{numero}.ml",
             )
-            Analyse.objects.create(projet=projet, score_global=50)
+            # Des analyses déjà terminées, puisqu'elles ont un score. Depuis le
+            # 04/11, le tableau de bord traite lui-même une analyse « en
+            # attente » (le statut par défaut) : laissée en attente, elle
+            # partirait mesurer le site sur Internet pendant le test.
+            Analyse.objects.create(
+                projet=projet, score_global=50, statut=Analyse.Statut.TERMINEE
+            )
         self.connecter_aicha()
 
-        with self.assertNumQueries(6):
-            # 1 session + 1 utilisateur + 1 projets + 1 agrégat problèmes
-            # + 1 liste priorisée + 1 pastille des notifications.
-            # Pas de requête par ligne.
+        with self.assertNumQueries(7):
+            # 1 session + 1 utilisateur + 1 recherche d'analyse en attente
+            # + 1 projets + 1 agrégat problèmes + 1 liste priorisée
+            # + 1 pastille des notifications. Pas de requête par ligne.
             self.client.get(reverse("tableau_de_bord"))
 
 

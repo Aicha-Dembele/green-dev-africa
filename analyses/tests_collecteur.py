@@ -657,50 +657,81 @@ class LancementDepuisLaPageTest(TestCase):
             # aucune mesure : c'est le cas qui posait problème
         }
 
-    def test_formulaire_sans_mesure_declenche_la_mesure_automatique(self):
-        from io import StringIO
+    # Depuis le 04/11, la page de lancement fait deux choses de plus :
+    # 1. elle vérifie l'adresse (recherche DNS) avant de créer l'analyse ;
+    # 2. elle traite l'analyse tout de suite, sans attendre le service
+    #    `traiter_analyses`.
+    # Les tests remplacent la vérification DNS par `patch(...)` : sans ça,
+    # ils interrogeraient le vrai Internet (exemple.ml n'existe pas).
+    MESURES = {
+        "url_finale": "https://exemple.ml/",
+        "mesures": {"poids_total": 1850, "nombre_requetes": 62, "temps_chargement": 4.2},
+        "ressources": [],
+    }
 
-        with patch(
-            "analyses.collecteur.collecter",
-            return_value={
-                "url_finale": "https://exemple.ml/",
-                "mesures": {"poids_total": 1850, "nombre_requetes": 62, "temps_chargement": 4.2},
-                "ressources": [],
-            },
+    def test_formulaire_sans_mesure_declenche_la_mesure_automatique(self):
+        with patch("analyses.views.verifier_adresse"), patch(
+            "analyses.collecteur.collecter", return_value=self.MESURES
         ):
             reponse = self.client.post(
                 reverse_lancer(self.projet.pk), self.formulaire_vide()
             )
-            analyse = Analyse.objects.get(projet=self.projet)
-            self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
-            call_command("traiter_analyses", once=True, stdout=StringIO())
 
-        self.assertEqual(reponse.status_code, 302)
-        analyse.refresh_from_db()
-
+        analyse = Analyse.objects.get(projet=self.projet)
+        self.assertRedirects(
+            reponse,
+            reverse("analyse_detail", args=[analyse.pk]),
+            fetch_redirect_response=False,
+        )
+        # Traitée pendant le clic : terminée dès qu'on arrive sur le résultat.
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
         self.assertEqual(analyse.rapport.poids_total, 1850)
         self.assertEqual(analyse.rapport.nombre_requetes, 62)
 
     def test_message_clair_si_le_site_ne_repond_pas(self):
-        from io import StringIO
-
-        with patch(
+        with patch("analyses.views.verifier_adresse"), patch(
             "analyses.collecteur.collecter",
             side_effect=ErreurCollecte("Le domaine « exemple.ml » est introuvable."),
         ):
             reponse = self.client.post(
                 reverse_lancer(self.projet.pk), self.formulaire_vide()
             )
-            call_command("traiter_analyses", once=True, stdout=StringIO())
 
         analyse = Analyse.objects.get(projet=self.projet)
         self.assertEqual(reponse.status_code, 302)
-        analyse.refresh_from_db()
         self.assertEqual(analyse.statut, Analyse.Statut.ECHOUEE)
         detail = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, "Le domaine « exemple.ml » est introuvable.")
+
+    def test_une_adresse_introuvable_est_refusee_avant_de_creer_l_analyse(self):
+        """La vérification DNS refuse tout de suite une adresse qui n'existe
+        pas : aucune analyse n'est créée, donc aucun crédit n'est dépensé."""
+        with patch(
+            "analyses.views.verifier_adresse",
+            side_effect=ErreurCollecte("Le domaine « exemple.ml » est introuvable."),
+        ):
+            reponse = self.client.post(
+                reverse_lancer(self.projet.pk), self.formulaire_vide()
+            )
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Le domaine « exemple.ml » est introuvable.")
+        self.assertFalse(Analyse.objects.filter(projet=self.projet).exists())
+
+    def test_le_service_traiter_analyses_termine_une_analyse_en_attente(self):
+        """`python manage.py traiter_analyses` traite une analyse restée en attente."""
+        from io import StringIO
+
+        analyse = self.projet.lancer_analyse(configuration={"type_audit": "page_unique"})
+        self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
+
+        with patch("analyses.collecteur.collecter", return_value=self.MESURES):
+            call_command("traiter_analyses", once=True, stdout=StringIO(), stderr=StringIO())
+
+        analyse.refresh_from_db()
+        self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
+        self.assertEqual(analyse.rapport.poids_total, 1850)
 
 
 def reverse_lancer(pk):
