@@ -22,6 +22,7 @@
       {% include "partiels/champs.html" with formulaire=form %}
       <div class="actions">
         <button type="submit">Se connecter</button>
+        <a class="discret" href="{% url 'mot_de_passe_oublie' %}">Mot de passe oublié ?</a>
         <a class="discret" href="{% url 'inscription' %}">Pas encore de compte ?</a>
       </div>
     </form>
