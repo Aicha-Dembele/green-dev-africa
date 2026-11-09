@@ -7,13 +7,17 @@ from django.test import TestCase
 from django.urls import reverse
 
 from analyses.models import Analyse, ConfigurationAnalyse
+from credits import config as credits_config
 from credits.config import (
     COUT_PAGE_HORS_QUOTA,
     CREDITS_BIENVENUE,
-    PACKS_CREDITS,
+    MONTANTS_SUGGERES,
+    PRIX_CREDIT_FCFA,
     QUOTA_GRATUIT_MENSUEL,
     TEXTE_OBTENIR_CREDITS,
     TYPE_AUDIT_PAGE_UNIQUE,
+    credits_pour_montant,
+    montant_pour_credits,
 )
 from credits.models import JournalCredits, SoldeCredits
 from credits.services import (
@@ -355,17 +359,94 @@ class CreditsMetierTest(TestCase):
         self.assertContains(response, "Tarifs")
         self.assertContains(response, str(QUOTA_GRATUIT_MENSUEL))
         self.assertContains(response, str(CREDITS_BIENVENUE))
-        self.assertContains(response, TEXTE_OBTENIR_CREDITS)
+        self.assertEqual(response.context["texte_obtenir_credits"], TEXTE_OBTENIR_CREDITS)
+        self.assertContains(response, "Le paiement en ligne arrive bientôt.")
+        self.assertContains(response, "contactez-nous pour recharger vos crédits")
 
-    def test_tarifs_affichent_les_packs_et_prix_par_credit_calcules(self):
+    def test_conversion_montant_fcfa_vers_credits_et_inverse(self):
+        conversions_attendues = {
+            1000: 20,
+            2500: 50,
+            5000: 100,
+        }
+        for montant, credits in conversions_attendues.items():
+            with self.subTest(montant=montant):
+                self.assertEqual(credits_pour_montant(montant), credits)
+                self.assertEqual(montant_pour_credits(credits), montant)
+
+    def test_conversion_refuse_les_montants_invalides_avec_un_message_lisible(self):
+        montants_invalides = (999, 50500, 1250)
+        for montant in montants_invalides:
+            with self.subTest(montant=montant):
+                with self.assertRaises(ValueError) as contexte:
+                    credits_pour_montant(montant)
+                self.assertTrue(str(contexte.exception))
+                self.assertIn("montant", str(contexte.exception).lower())
+
+    def test_calculateur_tarifs_affiche_les_credits_et_audits(self):
+        response = self.client.get(reverse("tarifs"), {"montant": 2500})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["resultat_calcul"],
+            {"credits": 50, "audits_rapides": 10, "audits_approfondis": 5},
+        )
+        self.assertContains(response, "Combien voulez-vous ajouter ?")
+        self.assertContains(response, "50 crédits")
+        self.assertContains(response, "10 audits site complet rapides")
+        self.assertContains(response, "5 audits site complet approfondis")
+
+    def test_calculateur_tarifs_affiche_les_erreurs_en_francais(self):
+        response = self.client.get(reverse("tarifs"), {"montant": 999})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Le montant minimum est de 1000 FCFA.")
+        self.assertIsNone(response.context["resultat_calcul"])
+
+    def test_tarifs_suivent_le_prix_configure(self):
+        with patch.object(credits_config, "PRIX_CREDIT_FCFA", 100):
+            response = self.client.get(reverse("tarifs"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f"Un crédit coûte {response.context['prix_credit_fcfa']} FCFA.",
+        )
+        self.assertEqual(response.context["prix_credit_fcfa"], 100)
+        self.assertEqual(response.context["montants_suggeres"][0]["credits"], 10)
+
+    def test_tarifs_affichent_les_montants_suggeres_et_audits(self):
         response = self.client.get(reverse("tarifs"))
 
         self.assertEqual(response.status_code, 200)
-        for pack in PACKS_CREDITS:
-            self.assertContains(response, pack["label"])
-            self.assertContains(response, str(pack["prix"]))
-            self.assertContains(response, str(pack["credits"]))
-            self.assertContains(response, f"{pack['prix_par_credit']:.2f} FCFA / crédit")
+        self.assertEqual(
+            response.context["montants_suggeres"],
+            [
+                {
+                    "montant": 1000,
+                    "credits": 20,
+                    "audits_rapides": 4,
+                    "audits_approfondis": 2,
+                },
+                {
+                    "montant": 2500,
+                    "credits": 50,
+                    "audits_rapides": 10,
+                    "audits_approfondis": 5,
+                },
+                {
+                    "montant": 5000,
+                    "credits": 100,
+                    "audits_rapides": 20,
+                    "audits_approfondis": 10,
+                },
+            ],
+        )
+        self.assertEqual(response.context["prix_credit_fcfa"], PRIX_CREDIT_FCFA)
+        self.assertEqual(
+            [exemple["montant"] for exemple in response.context["montants_suggeres"]],
+            MONTANTS_SUGGERES,
+        )
 
     def test_section_obtenir_des_credits_apparait_sur_mes_credits(self):
         utilisateur = Utilisateur.objects.create_user(
@@ -380,6 +461,10 @@ class CreditsMetierTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Obtenir des crédits")
-        self.assertContains(response, TEXTE_OBTENIR_CREDITS)
-        self.assertContains(response, PACKS_CREDITS[0]["label"])
-        self.assertContains(response, PACKS_CREDITS[1]["label"])
+        self.assertEqual(response.context["texte_obtenir_credits"], TEXTE_OBTENIR_CREDITS)
+        self.assertContains(response, "Le paiement en ligne arrive bientôt.")
+        self.assertContains(response, f"{PRIX_CREDIT_FCFA} FCFA par crédit")
+        self.assertContains(response, "1000 FCFA")
+        self.assertContains(response, "2500 FCFA")
+        self.assertContains(response, "5000 FCFA")
+        self.assertContains(response, reverse("tarifs"))

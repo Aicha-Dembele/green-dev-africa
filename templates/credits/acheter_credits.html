@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block titre %}Acheter des crédits — Green Dev Africa{% endblock %}
+{% block titre %}Ajouter des crédits — Green Dev Africa{% endblock %}
 
 {% block contenu %}
   <div class="page-credits">
     <p class="fil">
       <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
-      <a href="{% url 'mes_credits' %}">Mes crédits</a> › Acheter
+      <a href="{% url 'mes_credits' %}">Mes crédits</a> › Ajouter
     </p>
 
     <header class="credit-entete">
-      <h1>Acheter des crédits</h1>
-      <p class="chapeau">Complète ton solde pour lancer de nouvelles analyses sans attendre.</p>
+      <h1>Ajouter des crédits</h1>
+      <p class="chapeau">Pour connaître le montant et le nombre de crédits correspondants, consulte les tarifs.</p>
     </header>
 
     <section class="carte" aria-labelledby="credit-solde-actuel">
@@ -19,27 +19,8 @@
         <h2 id="credit-solde-actuel">Solde actuel</h2>
         <span class="etiquette etiquette-ok">{{ solde }} crédits</span>
       </div>
-      <p class="discret">
-        Le paiement est simulé ici pour le prototype. Le crédit est ajouté immédiatement au compte de l'utilisateur.
-      </p>
-    </section>
-
-    <section class="grille grille-2" aria-label="Offres de crédits">
-      {% for offre in offres %}
-        <article class="carte">
-          <h2>{{ offre.label }}</h2>
-          <div class="chiffre">
-            <span class="valeur">{{ offre.montant }}</span>
-            <span class="intitule">crédits</span>
-          </div>
-          <p class="chapeau">{{ offre.prix }} FCFA</p>
-          <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="montant" value="{{ offre.montant }}">
-            <button type="submit" class="bouton">Choisir ce pack</button>
-          </form>
-        </article>
-      {% endfor %}
+      <p>{{ texte_obtenir_credits }}</p>
+      <a class="bouton" href="{% url 'tarifs' %}">Voir les tarifs</a>
     </section>
   </div>
 {% endblock %}

@@ -2,12 +2,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
+from credits import config as credits_config
 from credits.config import (
     COUT_PAGE_HORS_QUOTA,
     COUT_SITE_COMPLET_APPROFONDI,
     COUT_SITE_COMPLET_RAPIDE,
     CREDITS_BIENVENUE,
-    PACKS_CREDITS,
     QUOTA_GRATUIT_MENSUEL,
     TEXTE_OBTENIR_CREDITS,
 )
@@ -27,31 +27,67 @@ def _libelle_transaction(transaction):
 
 
 def tarifs(request):
-    prix_credit_reference = PACKS_CREDITS[0]["prix_par_credit"]
+    montants_suggeres = []
+    for montant in credits_config.MONTANTS_SUGGERES:
+        credits = credits_config.credits_pour_montant(montant)
+        montants_suggeres.append(
+            {
+                "montant": montant,
+                "credits": credits,
+                "audits_rapides": credits // COUT_SITE_COMPLET_RAPIDE,
+                "audits_approfondis": credits // COUT_SITE_COMPLET_APPROFONDI,
+            }
+        )
     couts_tarifs = [
         {
             "libelle": "Audit d'une page au-delà du quota",
             "credits": COUT_PAGE_HORS_QUOTA,
-            "fcfa": COUT_PAGE_HORS_QUOTA * prix_credit_reference,
+            "fcfa": credits_config.montant_pour_credits(COUT_PAGE_HORS_QUOTA),
         },
         {
             "libelle": "Site complet rapide",
             "credits": COUT_SITE_COMPLET_RAPIDE,
-            "fcfa": COUT_SITE_COMPLET_RAPIDE * prix_credit_reference,
+            "fcfa": credits_config.montant_pour_credits(COUT_SITE_COMPLET_RAPIDE),
         },
         {
             "libelle": "Site complet approfondi",
             "credits": COUT_SITE_COMPLET_APPROFONDI,
-            "fcfa": COUT_SITE_COMPLET_APPROFONDI * prix_credit_reference,
+            "fcfa": credits_config.montant_pour_credits(COUT_SITE_COMPLET_APPROFONDI),
         },
     ]
+    montant_saisi = request.GET.get("montant", "")
+    resultat_calcul = None
+    erreur_calcul = ""
+    if montant_saisi:
+        try:
+            montant = int(montant_saisi)
+        except (TypeError, ValueError):
+            erreur_calcul = "Saisis un montant entier en FCFA."
+        else:
+            try:
+                credits = credits_config.credits_pour_montant(montant)
+            except ValueError as erreur:
+                erreur_calcul = str(erreur)
+            else:
+                resultat_calcul = {
+                    "credits": credits,
+                    "audits_rapides": credits // COUT_SITE_COMPLET_RAPIDE,
+                    "audits_approfondis": credits // COUT_SITE_COMPLET_APPROFONDI,
+                }
+
     return render(
         request,
         "credits/tarifs.html",
         {
-            "packs_credits": PACKS_CREDITS,
             "couts_tarifs": couts_tarifs,
-            "prix_credit_reference": prix_credit_reference,
+            "prix_credit_fcfa": credits_config.PRIX_CREDIT_FCFA,
+            "achat_minimum_fcfa": credits_config.ACHAT_MINIMUM_FCFA,
+            "achat_pas_fcfa": credits_config.ACHAT_PAS_FCFA,
+            "achat_maximum_fcfa": credits_config.ACHAT_MAXIMUM_FCFA,
+            "montants_suggeres": montants_suggeres,
+            "montant_saisi": montant_saisi,
+            "resultat_calcul": resultat_calcul,
+            "erreur_calcul": erreur_calcul,
             "credits_bienvenue": CREDITS_BIENVENUE,
             "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
             "texte_obtenir_credits": TEXTE_OBTENIR_CREDITS,
@@ -101,7 +137,8 @@ def mes_credits(request):
             "credits_recus": credits_recus,
             "depenses": depenses,
             "dernier_mouvement": historique[0] if historique else None,
-            "packs_credits": PACKS_CREDITS,
+            "prix_credit_fcfa": credits_config.PRIX_CREDIT_FCFA,
+            "montants_suggeres": credits_config.MONTANTS_SUGGERES,
             "texte_obtenir_credits": TEXTE_OBTENIR_CREDITS,
             "quota_gratuit_mensuel": QUOTA_GRATUIT_MENSUEL,
         },
@@ -117,7 +154,7 @@ def acheter_credits(request):
             montant = 0
 
         if montant <= 0:
-            messages.error(request, "Choisis un pack de crédits valide.")
+            messages.error(request, "Choisis un montant de crédits valide.")
             return redirect("acheter_credits")
 
         acheter_credits_service(request.user, montant, f"Achat de {montant} crédits")
@@ -131,6 +168,6 @@ def acheter_credits(request):
         "credits/acheter_credits.html",
         {
             "solde": solde.solde,
-            "offres": PACKS_CREDITS,
+            "texte_obtenir_credits": TEXTE_OBTENIR_CREDITS,
         },
     )

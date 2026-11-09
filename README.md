@@ -150,9 +150,11 @@ minimum, pas uniquement des chiffres) : voir le commentaire dans
 
 ## Tarifs
 
-Les tarifs de crédits sont gérés dans `credits/config.py` : `PACKS_CREDITS`, `CREDITS_BIENVENUE`, `QUOTA_GRATUIT_MENSUEL`, `COUT_PAGE_HORS_QUOTA`, `COUT_SITE_COMPLET_RAPIDE`, `COUT_SITE_COMPLET_APPROFONDI` et `TEXTE_OBTENIR_CREDITS`.
+Le prix est de 50 FCFA par crédit. Le montant libre doit être au moins de 1 000 FCFA et avancer par pas de 500 FCFA, jusqu'à 50 000 FCFA. Le nombre de crédits est calculé par `montant FCFA / PRIX_CREDIT_FCFA`.
 
-Pour modifier un prix, il suffit de changer la valeur dans ce fichier et la page `Tarifs` se mettra à jour automatiquement. Ce projet n'implémente pas encore le paiement mobile money, l'expiration des crédits et la confirmation d'e-mail.
+Les valeurs sont centralisées dans `credits/config.py` : `PRIX_CREDIT_FCFA`, `ACHAT_MINIMUM_FCFA`, `ACHAT_PAS_FCFA`, `ACHAT_MAXIMUM_FCFA`, `MONTANTS_SUGGERES` et `TEXTE_OBTENIR_CREDITS`. Les coûts des analyses, les crédits de bienvenue et le quota gratuit y sont également définis. La page `Tarifs` et son calculateur utilisent ces valeurs.
+
+Aucun paiement mobile money n'est intégré. Il n'y a pas de bonus de volume ni d'expiration des crédits.
 
 ## Lancer les tests
 
@@ -173,7 +175,7 @@ Le système de crédits est un journal comptable par utilisateur. Chaque utilisa
 - Le quota gratuit est calculé par mois calendaire (`date_analyse__year`, `date_analyse__month`) ; il se réinitialise au 1er jour du mois. Il ne s'agit pas d'un quota glissant sur 30 jours.
 - Les coûts sont configurés dans `credits/config.py` : `COUT_PAGE_HORS_QUOTA`, `COUT_SITE_COMPLET_RAPIDE`, `COUT_SITE_COMPLET_APPROFONDI`, `QUOTA_GRATUIT_MENSUEL` et les constantes de type d'audit.
 - L'interface utilisateur expose le solde, le quota gratuit restant et l'historique des mouvements.
-- La page « Mes crédits » propose un parcours d'achat de packs de crédits, avec validation immédiate en prototype et ajout automatique dans le journal de transactions.
+- La page « Mes crédits » affiche le prix du crédit, les montants suggérés et le lien vers les tarifs. La page Tarifs calcule les crédits et les audits correspondants, sans lancer de paiement.
 - La page d'administration permet de voir le solde et les mouvements de chaque utilisateur et d'ajouter des crédits via une action dédiée, sans modifier directement le `solde` de la table.
 
 Ce qui n'est pas encore implémenté : paiement mobile money, confirmation d'e-mail avant attribution, et les mécanismes de rate limiting pour bloquer la création de comptes en série.

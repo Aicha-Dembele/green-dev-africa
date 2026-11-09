@@ -24,7 +24,9 @@
       <div class="entre-deux">
         <h2 id="couts-tarifs-titre">Coût des analyses</h2>
       </div>
-      <p class="discret">1 crédit du pack Essai = {{ prix_credit_reference|floatformat:0 }} FCFA.</p>
+      <p class="discret">
+        Un crédit coûte {{ prix_credit_fcfa }} FCFA.
+      </p>
       <div class="tableau-responsive">
         <table>
           <thead>
@@ -47,23 +49,62 @@
       </div>
     </section>
 
-    <section aria-labelledby="packs-tarifs-titre">
+    <section class="carte" aria-labelledby="montants-tarifs-titre">
       <div class="entre-deux">
-        <h2 id="packs-tarifs-titre">Packs de crédits</h2>
+        <h2 id="montants-tarifs-titre">Montant libre</h2>
       </div>
-      <div class="grille grille-2">
-        {% for pack in packs_credits %}
-          <article class="carte">
-            <h3>{{ pack.label }}</h3>
-            <div class="chiffre">
-              <span class="valeur">{{ pack.prix }}</span>
-              <span class="intitule">FCFA</span>
-            </div>
-            <p class="chapeau">{{ pack.credits }} crédits</p>
-            <p class="discret">{{ pack.prix_par_credit|stringformat:".2f" }} FCFA / crédit</p>
-          </article>
-        {% endfor %}
+      <p>
+        Minimum : {{ achat_minimum_fcfa }} FCFA. Les montants augmentent par pas de
+        {{ achat_pas_fcfa }} FCFA (maximum : {{ achat_maximum_fcfa }} FCFA).
+      </p>
+      <div class="tableau-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Montant</th>
+              <th>Crédits obtenus</th>
+              <th>Audits site complet rapides</th>
+              <th>Audits site complet approfondis</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for exemple in montants_suggeres %}
+              <tr>
+                <td>{{ exemple.montant }} FCFA</td>
+                <td>{{ exemple.credits }}</td>
+                <td>{{ exemple.audits_rapides }}</td>
+                <td>{{ exemple.audits_approfondis }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
+    </section>
+
+    <section class="carte" aria-labelledby="calcul-tarifs-titre">
+      <h2 id="calcul-tarifs-titre">Combien voulez-vous ajouter ?</h2>
+      <form method="get" action="{% url 'tarifs' %}">
+        <label for="montant">Montant en FCFA</label>
+        <input
+          id="montant"
+          name="montant"
+          type="number"
+          min="{{ achat_minimum_fcfa }}"
+          max="{{ achat_maximum_fcfa }}"
+          step="{{ achat_pas_fcfa }}"
+          value="{{ montant_saisi }}"
+        >
+        <button type="submit" class="bouton">Calculer</button>
+      </form>
+      {% if erreur_calcul %}
+        <p role="alert">{{ erreur_calcul }}</p>
+      {% elif resultat_calcul %}
+        <p>{{ resultat_calcul.credits }} crédits, soit :</p>
+        <ul>
+          <li>{{ resultat_calcul.audits_rapides }} audits site complet rapides</li>
+          <li>{{ resultat_calcul.audits_approfondis }} audits site complet approfondis</li>
+        </ul>
+      {% endif %}
     </section>
 
     <section class="carte" aria-labelledby="tarifs-remarques-titre">
@@ -72,7 +113,7 @@
         <li>Les crédits n'expirent jamais. Seul le quota gratuit se remet à zéro chaque mois.</li>
         <li>Si une analyse échoue, vos crédits vous sont rendus automatiquement.</li>
       </ul>
-      <p>{{ texte_obtenir_credits|safe }}</p>
+      <p>{{ texte_obtenir_credits }}</p>
     </section>
 
     <div class="actions">

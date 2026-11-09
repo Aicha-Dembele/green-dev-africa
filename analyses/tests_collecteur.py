@@ -11,7 +11,6 @@ from unittest.mock import patch
 
 import requests
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
@@ -658,9 +657,7 @@ class LancementDepuisLaPageTest(TestCase):
         }
 
     def test_formulaire_sans_mesure_declenche_la_mesure_automatique(self):
-        from io import StringIO
-
-        with patch(
+        with patch("analyses.views.verifier_adresse"), patch(
             "analyses.collecteur.collecter",
             return_value={
                 "url_finale": "https://exemple.ml/",
@@ -672,8 +669,7 @@ class LancementDepuisLaPageTest(TestCase):
                 reverse_lancer(self.projet.pk), self.formulaire_vide()
             )
             analyse = Analyse.objects.get(projet=self.projet)
-            self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
-            call_command("traiter_analyses", once=True, stdout=StringIO())
+            self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
 
         self.assertEqual(reponse.status_code, 302)
         analyse.refresh_from_db()
@@ -683,16 +679,13 @@ class LancementDepuisLaPageTest(TestCase):
         self.assertEqual(analyse.rapport.nombre_requetes, 62)
 
     def test_message_clair_si_le_site_ne_repond_pas(self):
-        from io import StringIO
-
-        with patch(
+        with patch("analyses.views.verifier_adresse"), patch(
             "analyses.collecteur.collecter",
             side_effect=ErreurCollecte("Le domaine « exemple.ml » est introuvable."),
         ):
             reponse = self.client.post(
                 reverse_lancer(self.projet.pk), self.formulaire_vide()
             )
-            call_command("traiter_analyses", once=True, stdout=StringIO())
 
         analyse = Analyse.objects.get(projet=self.projet)
         self.assertEqual(reponse.status_code, 302)

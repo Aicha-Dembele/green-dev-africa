@@ -12,7 +12,7 @@
       <h1>Mes crédits</h1>
       <p class="chapeau">Voici ton solde actuel et l’historique de tes mouvements.</p>
       <div class="actions">
-        <a class="bouton" href="{% url 'acheter_credits' %}">Acheter des crédits</a>
+        <a class="bouton" href="{% url 'tarifs' %}">Voir les tarifs</a>
       </div>
     </header>
 
@@ -57,20 +57,15 @@
       <div class="entre-deux">
         <h2 id="obtenir-credits-titre">Obtenir des crédits</h2>
       </div>
-      <p>{{ texte_obtenir_credits|safe }}</p>
-      <div class="grille grille-2" aria-label="Packs de crédits">
-        {% for pack in packs_credits %}
-          <article class="carte">
-            <h3>{{ pack.label }}</h3>
-            <div class="chiffre">
-              <span class="valeur">{{ pack.credits }}</span>
-              <span class="intitule">crédits</span>
-            </div>
-            <p class="chapeau">{{ pack.prix }} FCFA</p>
-            <p class="discret">{{ pack.prix_par_credit|stringformat:".2f" }} FCFA / crédit</p>
-          </article>
+      <p>{{ prix_credit_fcfa }} FCFA par crédit.</p>
+      <p>{{ texte_obtenir_credits }}</p>
+      <p>Montants suggérés :</p>
+      <ul>
+        {% for montant in montants_suggeres %}
+          <li>{{ montant }} FCFA</li>
         {% endfor %}
-      </div>
+      </ul>
+      <a class="bouton" href="{% url 'tarifs' %}">Voir les tarifs et calculer un montant</a>
     </section>
 
     <section class="carte" aria-labelledby="historique-credits-titre">
