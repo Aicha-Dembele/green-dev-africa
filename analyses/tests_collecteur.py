@@ -661,11 +661,15 @@ class LancementDepuisLaPageTest(TestCase):
     # 1. elle vérifie l'adresse (recherche DNS) avant de créer l'analyse ;
     # 2. elle traite l'analyse tout de suite, sans attendre le service
     #    `traiter_analyses`.
-    # Les tests remplacent la vérification DNS par `patch(...)` : sans ça,
-    # ils interrogeraient le vrai Internet (exemple.ml n'existe pas).
+    # Les tests remplacent la vérification DNS par `patch(...)` pour éviter
+    # d'interroger Internet : exemple.ml n'existe pas.
     MESURES = {
         "url_finale": "https://exemple.ml/",
-        "mesures": {"poids_total": 1850, "nombre_requetes": 62, "temps_chargement": 4.2},
+        "mesures": {
+            "poids_total": 1850,
+            "nombre_requetes": 62,
+            "temps_chargement": 4.2,
+        },
         "ressources": [],
     }
 
@@ -723,11 +727,18 @@ class LancementDepuisLaPageTest(TestCase):
         """`python manage.py traiter_analyses` traite une analyse restée en attente."""
         from io import StringIO
 
-        analyse = self.projet.lancer_analyse(configuration={"type_audit": "page_unique"})
+        analyse = self.projet.lancer_analyse(
+            configuration={"type_audit": "page_unique"}
+        )
         self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
 
         with patch("analyses.collecteur.collecter", return_value=self.MESURES):
-            call_command("traiter_analyses", once=True, stdout=StringIO(), stderr=StringIO())
+            call_command(
+                "traiter_analyses",
+                once=True,
+                stdout=StringIO(),
+                stderr=StringIO(),
+            )
 
         analyse.refresh_from_db()
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)

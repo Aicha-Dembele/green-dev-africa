@@ -1,45 +1,122 @@
 {% extends "base.html" %}
 
-{% block titre %}Acheter des crédits — Green Dev Africa{% endblock %}
+{% block titre %}Recharger mon solde — Green Dev Africa{% endblock %}
 
 {% block contenu %}
   <div class="page-credits">
     <p class="fil">
       <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
-      <a href="{% url 'mes_credits' %}">Mes crédits</a> › Acheter
+      <a href="{% url 'mes_credits' %}">Mes crédits</a> › Recharger
     </p>
 
     <header class="credit-entete">
-      <h1>Acheter des crédits</h1>
-      <p class="chapeau">Complète ton solde pour lancer de nouvelles analyses sans attendre.</p>
+      <h1>Recharger mon solde</h1>
+      <p class="chapeau">
+        Choisis un montant, vérifie les crédits correspondants, puis règle ton achat
+        quand le paiement en ligne sera disponible.
+      </p>
     </header>
 
-    <section class="carte" aria-labelledby="credit-solde-actuel">
-      <div class="entre-deux">
-        <h2 id="credit-solde-actuel">Solde actuel</h2>
-        <span class="etiquette etiquette-ok">{{ solde }} crédits</span>
-      </div>
-      <p class="discret">
-        Le paiement est simulé ici pour le prototype. Le crédit est ajouté immédiatement au compte de l'utilisateur.
-      </p>
+    <section class="carte credit-solde-achat" aria-label="Solde actuel">
+      <span>Ton solde actuel</span>
+      <strong>{{ solde }} crédits</strong>
+      <a href="{% url 'mes_credits' %}">Voir l’historique</a>
     </section>
 
-    <section class="grille grille-2" aria-label="Offres de crédits">
-      {% for offre in offres %}
-        <article class="carte">
-          <h2>{{ offre.label }}</h2>
-          <div class="chiffre">
-            <span class="valeur">{{ offre.montant }}</span>
-            <span class="intitule">crédits</span>
-          </div>
-          <p class="chapeau">{{ offre.prix|floatformat:2 }} €</p>
-          <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="montant" value="{{ offre.montant }}">
-            <button type="submit" class="bouton">Choisir ce pack</button>
-          </form>
-        </article>
-      {% endfor %}
+    <section class="carte" id="choisir-montant" aria-labelledby="choisir-montant-titre">
+      <div class="credit-etape">
+        <span class="credit-etape-numero" aria-hidden="true">1</span>
+        <div>
+          <h2 id="choisir-montant-titre">Choisis un montant</h2>
+          <p class="discret">Un crédit coûte {{ prix_credit_fcfa }} FCFA.</p>
+        </div>
+      </div>
+
+      {% if erreur_achat %}
+        <p class="credit-erreur" role="alert">{{ erreur_achat }}</p>
+      {% endif %}
+
+      <div class="grille grille-3 credit-offres">
+        {% for offre in montants_suggeres %}
+          <article class="carte credit-offre{% if offre.selectionne %} credit-offre-selectionnee{% endif %}">
+            <p class="credit-offre-libelle">Offre</p>
+            <h3>{{ offre.montant }} FCFA</h3>
+            <p class="credit-offre-credits">{{ offre.credits }} crédits</p>
+            <form method="post">
+              {% csrf_token %}
+              <button type="submit" name="montant" value="{{ offre.montant }}">
+                {% if offre.selectionne %}Montant sélectionné{% else %}Choisir{% endif %}
+              </button>
+            </form>
+          </article>
+        {% endfor %}
+      </div>
+
+      <form method="post" class="credit-montant-libre">
+        {% csrf_token %}
+        <div class="champ">
+          <label for="montant-personnalise">Ou saisis un autre montant en FCFA</label>
+          <input
+            id="montant-personnalise"
+            name="montant_personnalise"
+            type="number"
+            min="{{ achat_minimum_fcfa }}"
+            max="{{ achat_maximum_fcfa }}"
+            step="{{ achat_pas_fcfa }}"
+            value="{{ montant_saisi }}"
+            placeholder="{{ achat_minimum_fcfa }}"
+            aria-describedby="aide-montant-personnalise"
+            required
+          >
+          <small id="aide-montant-personnalise">
+            De {{ achat_minimum_fcfa }} à {{ achat_maximum_fcfa }} FCFA, par pas de
+            {{ achat_pas_fcfa }} FCFA.
+          </small>
+        </div>
+        <button type="submit" name="action" value="verifier">Vérifier ce montant</button>
+      </form>
     </section>
+
+    {% if commande %}
+      <section class="carte credit-recapitulatif" aria-labelledby="recapitulatif-titre" aria-live="polite">
+        <div class="credit-etape">
+          <span class="credit-etape-numero" aria-hidden="true">2</span>
+          <div>
+            <h2 id="recapitulatif-titre">Récapitulatif de ta commande</h2>
+            <p class="discret">Vérifie le montant et les crédits avant de confirmer.</p>
+          </div>
+        </div>
+
+        <dl class="credit-recapitulatif-liste">
+          <div><dt>Montant à payer</dt><dd>{{ commande.montant }} FCFA</dd></div>
+          <div><dt>Crédits prévus</dt><dd>{{ commande.credits }} crédits</dd></div>
+          <div><dt>Audits complets rapides possibles</dt><dd>{{ commande.audits_rapides }}</dd></div>
+          <div><dt>Audits complets approfondis possibles</dt><dd>{{ commande.audits_approfondis }}</dd></div>
+        </dl>
+
+        <div class="credit-paiement-indisponible" role="status">
+          <strong>Étape 3 — Simulation sans paiement réel</strong>
+          <p>
+            En confirmant, tu ajoutes ces crédits à ton solde. Aucun argent ne sera débité.
+          </p>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="montant" value="{{ commande.montant }}">
+          <button class="credit-paiement-bouton" type="submit" name="action" value="simuler_paiement">
+            Confirmer la simulation et ajouter {{ commande.credits }} crédits
+          </button>
+        </form>
+      </section>
+    {% else %}
+      <section class="carte credit-paiement-indisponible" aria-label="Simulation du paiement">
+        <strong>Recharge simulée, sans paiement réel</strong>
+        <p>{{ texte_obtenir_credits }}</p>
+      </section>
+    {% endif %}
+
+    <p class="credit-lien-tarifs">
+      <a href="{% url 'tarifs' %}">Consulter le détail des tarifs</a>
+    </p>
   </div>
 {% endblock %}

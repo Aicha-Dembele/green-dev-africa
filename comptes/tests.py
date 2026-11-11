@@ -184,6 +184,23 @@ class MotDePasseTest(TestCase):
 
         self.assertContains(reponse, 'placeholder="Ton identifiant"')
         self.assertContains(reponse, 'placeholder="Ton mot de passe"')
+        self.assertContains(reponse, "Mot de passe oublié ?")
+        self.assertContains(reponse, reverse("mot_de_passe_oublie"))
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_demande_de_reinitialisation_redirige_vers_la_page_envoyee(self):
+        Utilisateur.objects.create_user(
+            username="aicha",
+            email="aicha@example.com",
+            password="motdepasse-de-test",
+        )
+
+        reponse = self.client.post(
+            reverse("mot_de_passe_oublie"),
+            {"email": "aicha@example.com"},
+        )
+
+        self.assertRedirects(reponse, reverse("mot_de_passe_oublie_envoye"))
 
     def test_le_petit_oeil_est_charge_sur_les_pages_de_mot_de_passe(self):
         for adresse in (reverse("inscription"), reverse("connexion")):

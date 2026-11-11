@@ -78,7 +78,7 @@ class BaseAnalyseVueTest(TestCase):
 
 
 class LancerAnalyseVueTest(BaseAnalyseVueTest):
-    def test_les_reglages_sont_visibles_et_la_saisie_manuelle_reste_repliee(self):
+    def test_les_reglages_sont_visibles_par_defaut_et_la_saisie_manuelle_reste_repliee(self):
         reponse = self.client.get(reverse("lancer_analyse", args=[self.projet.pk]))
         contenu = " ".join(reponse.content.decode().split())
 
@@ -86,7 +86,7 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
             reponse.context["formulaire"].fields["type_audit"].initial,
             "site_complet",
         )
-        self.assertIn('<details class="options-avancees">', contenu)
+        self.assertIn('<details class="options-avancees" open>', contenu)
         self.assertIn(
             '<details class="options-avancees mesures-avancees" ',
             contenu,
@@ -200,6 +200,7 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
         self.assertContains(suivi, "Green Score 80.0/100")
         self.assertContains(suivi, "data-analyse-suivi")
+        self.assertContains(suivi, 'class="etat-analyse etat-analyse-terminee"')
         self.assertContains(suivi, "Problèmes détectés")
         self.assertContains(suivi, "Voir le rapport")
         self.assertContains(suivi, "80")

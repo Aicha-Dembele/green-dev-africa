@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block titre %}Tarifs — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <div class="page-credits">
+    <p class="fil">
+      <a href="{% url 'tableau_de_bord' %}">Accueil</a> › Tarifs
+    </p>
+
+    <header class="credit-entete">
+      <h1>Tarifs</h1>
+      <p class="chapeau">Des crédits simples à comprendre pour lancer des audits sans surprise.</p>
+    </header>
+
+    <section class="carte" aria-labelledby="gratuit-tarifs-titre">
+      <h2 id="gratuit-tarifs-titre">Ce qui est gratuit</h2>
+      <p>
+        {{ quota_gratuit_mensuel }} audits d'une page par mois, plus {{ credits_bienvenue }} crédits offerts à l'inscription (une seule fois).
+      </p>
+    </section>
+
+    <section class="carte" aria-labelledby="couts-tarifs-titre">
+      <div class="entre-deux">
+        <h2 id="couts-tarifs-titre">Coût des analyses</h2>
+      </div>
+      <p class="discret">
+        Un crédit coûte {{ prix_credit_fcfa }} FCFA.
+      </p>
+      <div class="tableau-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Analyse</th>
+              <th>Coût</th>
+              <th>Équivalent en FCFA</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cout in couts_tarifs %}
+              <tr>
+                <td>{{ cout.libelle }}</td>
+                <td>{{ cout.credits }} crédit{{ cout.credits|pluralize }}</td>
+                <td>{{ cout.fcfa|floatformat:0 }} FCFA</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="carte" aria-labelledby="montants-tarifs-titre">
+      <div class="entre-deux">
+        <h2 id="montants-tarifs-titre">Montant libre</h2>
+      </div>
+      <p>
+        Minimum : {{ achat_minimum_fcfa }} FCFA. Les montants augmentent par pas de
+        {{ achat_pas_fcfa }} FCFA (maximum : {{ achat_maximum_fcfa }} FCFA).
+      </p>
+      <div class="tableau-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Montant</th>
+              <th>Crédits obtenus</th>
+              <th>Audits site complet rapides</th>
+              <th>Audits site complet approfondis</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for exemple in montants_suggeres %}
+              <tr>
+                <td>{{ exemple.montant }} FCFA</td>
+                <td>{{ exemple.credits }}</td>
+                <td>{{ exemple.audits_rapides }}</td>
+                <td>{{ exemple.audits_approfondis }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="carte" aria-labelledby="calcul-tarifs-titre">
+      <h2 id="calcul-tarifs-titre">Combien voulez-vous ajouter ?</h2>
+      <form method="get" action="{% url 'tarifs' %}">
+        <label for="montant">Montant en FCFA</label>
+        <input
+          id="montant"
+          name="montant"
+          type="number"
+          min="{{ achat_minimum_fcfa }}"
+          max="{{ achat_maximum_fcfa }}"
+          step="{{ achat_pas_fcfa }}"
+          value="{{ montant_saisi }}"
+        >
+        <button type="submit" class="bouton">Calculer</button>
+      </form>
+      {% if erreur_calcul %}
+        <p role="alert">{{ erreur_calcul }}</p>
+      {% elif resultat_calcul %}
+        <p>{{ resultat_calcul.credits }} crédits, soit :</p>
+        <ul>
+          <li>{{ resultat_calcul.audits_rapides }} audits site complet rapides</li>
+          <li>{{ resultat_calcul.audits_approfondis }} audits site complet approfondis</li>
+        </ul>
+      {% endif %}
+    </section>
+
+    <section class="carte" aria-labelledby="tarifs-remarques-titre">
+      <h2 id="tarifs-remarques-titre">À retenir</h2>
+      <ul>
+        <li>Les crédits n'expirent jamais. Seul le quota gratuit se remet à zéro chaque mois.</li>
+        <li>Si une analyse échoue, vos crédits vous sont rendus automatiquement.</li>
+      </ul>
+      <p>{{ texte_obtenir_credits }}</p>
+    </section>
+
+    <div class="actions">
+      {% if user.is_authenticated %}
+        <a class="bouton bouton-secondaire" href="{% url 'acheter_credits' %}">Choisir un montant</a>
+        <a class="bouton bouton-grand" href="{% url 'tableau_de_bord' %}">Lancer une analyse</a>
+      {% else %}
+        <a class="bouton bouton-grand" href="{% url 'inscription' %}">Créer un compte</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

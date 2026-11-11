@@ -30,7 +30,9 @@ def tableau_de_bord(request):
     chercher la dernière analyse de chaque projet sans refaire un appel à la
     base par ligne affichée.
     """
-    traiter_une_analyse_en_attente(request.user if request.user.is_authenticated else None)
+    traiter_une_analyse_en_attente(
+        request.user if request.user.is_authenticated else None
+    )
 
     if not request.user.is_authenticated:
         return render(request, "accueil.html")

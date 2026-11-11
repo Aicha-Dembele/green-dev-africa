@@ -12,7 +12,7 @@
       <h1>Mes crédits</h1>
       <p class="chapeau">Voici ton solde actuel et l’historique de tes mouvements.</p>
       <div class="actions">
-        <a class="bouton" href="{% url 'acheter_credits' %}">Acheter des crédits</a>
+        <a class="bouton" href="{% url 'tarifs' %}">Voir les tarifs</a>
       </div>
     </header>
 
@@ -49,8 +49,20 @@
       </article>
       <article class="carte mini-stat">
         <span class="mini-stat-libelle">Quota gratuit</span>
-        <strong class="mini-stat-valeur">{{ gratuites_restantes }}/5</strong>
+        <strong class="mini-stat-valeur">{{ gratuites_restantes }}/{{ quota_gratuit_mensuel }}</strong>
       </article>
+    </section>
+
+    <section class="carte" aria-labelledby="obtenir-credits-titre">
+      <div class="entre-deux">
+        <h2 id="obtenir-credits-titre">Obtenir des crédits</h2>
+      </div>
+      <p>{{ prix_credit_fcfa }} FCFA par crédit.</p>
+      <p>{{ texte_obtenir_credits }}</p>
+      <div class="actions">
+        <a class="bouton" href="{% url 'acheter_credits' %}">Choisir un montant</a>
+        <a class="bouton bouton-secondaire" href="{% url 'tarifs' %}">Voir le détail des tarifs</a>
+      </div>
     </section>
 
     <section class="carte" aria-labelledby="historique-credits-titre">

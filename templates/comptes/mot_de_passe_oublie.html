@@ -5,7 +5,7 @@
 {% endcomment %}
 
 {% block titre %}Mot de passe oublié — Green Dev Africa{% endblock %}
-{% block classe_page %}page-auth{% endblock %}
+{% block classe_page %}page-auth page-connexion{% endblock %}
 
 {% block contenu %}
   <header class="auth-entete">
@@ -27,7 +27,7 @@
       {% csrf_token %}
       {% include "partiels/champs.html" with formulaire=form %}
       <div class="actions">
-        <button type="submit">Recevoir le lien</button>
+        <button type="submit">Envoyer le lien</button>
         <a class="discret" href="{% url 'connexion' %}">Retour à la connexion</a>
       </div>
     </form>

@@ -265,6 +265,90 @@ h3:first-child { margin-top: 0; }
   color: var(--texte-doux);
   font-size: 0.9rem;
 }
+.page-credits .credit-solde-achat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+}
+.page-credits .credit-solde-achat strong { color: var(--turquoise); }
+.page-credits .credit-solde-achat a { margin-left: auto; }
+.page-credits .credit-etape {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+.page-credits .credit-etape h2 { margin: 0; color: var(--texte); font-size: 1.1rem; text-transform: none; letter-spacing: -0.02em; }
+.page-credits .credit-etape p { margin: 0.2rem 0 0; }
+.page-credits .credit-etape-numero {
+  display: grid;
+  flex: 0 0 2.25rem;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--turquoise-voile);
+  color: var(--turquoise);
+  font-weight: 750;
+}
+.page-credits .credit-offres { margin: 1.1rem 0 1.5rem; }
+.page-credits .credit-offre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 1.1rem;
+  border-color: var(--bord-vif);
+}
+.page-credits .credit-offre-selectionnee { border-color: var(--turquoise); box-shadow: 0 0 0 2px var(--turquoise-voile); }
+.page-credits .credit-offre-libelle { margin: 0; color: var(--texte-faible); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.page-credits .credit-offre h3 { margin: 0; font-size: 1.35rem; }
+.page-credits .credit-offre-credits { margin: 0 0 0.4rem; color: var(--turquoise); font-weight: 700; }
+.page-credits .credit-offre form { margin-top: auto; }
+.page-credits .credit-offre button { width: 100%; }
+.page-credits .credit-montant-libre {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+  max-width: 42rem;
+}
+.page-credits .credit-montant-libre .champ { flex: 1; margin: 0; }
+.page-credits .credit-montant-libre small { display: block; margin-top: 0.35rem; color: var(--texte-faible); }
+.page-credits .credit-erreur {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--critique);
+  border-radius: 0 8px 8px 0;
+  background: rgba(255, 107, 129, 0.08);
+  color: var(--texte);
+}
+.page-credits .credit-recapitulatif { border-color: var(--turquoise); }
+.page-credits .credit-recapitulatif-liste { margin: 1rem 0 1.25rem; }
+.page-credits .credit-recapitulatif-liste > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--bord);
+}
+.page-credits .credit-recapitulatif-liste dt { color: var(--texte-doux); }
+.page-credits .credit-recapitulatif-liste dd { margin: 0; font-weight: 700; text-align: right; }
+.page-credits .credit-paiement-indisponible {
+  padding: 1rem;
+  border: 1px solid rgba(242, 193, 78, 0.45);
+  border-radius: 9px;
+  background: rgba(242, 193, 78, 0.08);
+}
+.page-credits .credit-paiement-indisponible strong { color: var(--moyenne); }
+.page-credits .credit-paiement-indisponible p { margin: 0.35rem 0 0; color: var(--texte-doux); }
+.page-credits .credit-paiement-bouton { margin-top: 1rem; }
+.page-credits .credit-lien-tarifs { margin-top: 1.25rem; }
+@media (max-width: 640px) {
+  .page-credits .credit-montant-libre { align-items: stretch; flex-direction: column; }
+  .page-credits .credit-montant-libre button { width: 100%; }
+  .page-credits .credit-recapitulatif-liste > div { align-items: flex-start; }
+}
 .page-credits .mini-stat {
   display: flex;
   flex-direction: column;
@@ -516,6 +600,11 @@ td.nombre, th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
 .etat-analyse-erreur { border-color: rgba(255, 107, 129, 0.35); background: rgba(255, 107, 129, 0.08); }
 .etat-analyse-attente { border-color: rgba(111, 182, 216, 0.45); background: rgba(111, 182, 216, 0.07); }
 .etat-analyse-en-cours { border-color: rgba(45, 212, 167, 0.45); background: rgba(45, 212, 167, 0.07); }
+.etat-analyse-terminee { border-color: rgba(45, 212, 167, 0.45); background: rgba(45, 212, 167, 0.07); }
+.etat-analyse-terminee .etat-analyse-loader,
+.etat-analyse-erreur .etat-analyse-loader {
+  display: none;
+}
 .analyse-chargement { margin: 0.9rem 0 0; padding: 0.8rem 1rem; border-left: 3px solid var(--turquoise); background: var(--turquoise-voile); color: var(--texte-doux); }
 .analyse-chargement[hidden] { display: none; }
 .analyse-cout-carte { margin-bottom: 1.5rem; }

@@ -50,6 +50,15 @@ urlpatterns = [
         ),
         name="mot_de_passe_envoye",
     ),
+    # Ancien nom conservé pour les liens internes déjà générés.
+    path(
+        "mot-de-passe-oublie/envoye/",
+        vues_auth.PasswordResetDoneView.as_view(
+            template_name="comptes/mot_de_passe_envoye.html",
+            extra_context=VALIDITE_LIEN,
+        ),
+        name="mot_de_passe_oublie_envoye",
+    ),
     # 3. Le lien reçu par e-mail ouvre cette page : on choisit le nouveau mot de passe.
     path(
         "nouveau-mot-de-passe/<uidb64>/<token>/",
@@ -68,6 +77,23 @@ urlpatterns = [
             template_name="comptes/mot_de_passe_change.html",
         ),
         name="mot_de_passe_change",
+    ),
+    # Les e-mails émis par l'ancien parcours restent utilisables jusqu'à
+    # expiration de leur jeton.
+    path(
+        "reinitialiser/<uidb64>/<token>/",
+        vues_auth.PasswordResetConfirmView.as_view(
+            template_name="comptes/mot_de_passe_reinitialiser.html",
+            success_url=reverse_lazy("mot_de_passe_reinitialisee"),
+        ),
+        name="mot_de_passe_reinitialiser",
+    ),
+    path(
+        "reinitialiser/terminee/",
+        vues_auth.PasswordResetCompleteView.as_view(
+            template_name="comptes/mot_de_passe_reinitialisee.html"
+        ),
+        name="mot_de_passe_reinitialisee",
     ),
     path("inscription/", views.inscription, name="inscription"),
     path("profil/", views.profil, name="profil"),
