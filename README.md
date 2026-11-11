@@ -66,6 +66,14 @@ cookies sécurisés sont imposés automatiquement hors mode debug. Ne règle
 `DJANGO_BEHIND_PROXY=True` qu'après avoir vérifié que le proxy de confiance
 remplace lui-même l'en-tête `X-Forwarded-Proto`.
 
+### Déploiement avec Docker
+
+Le `Dockerfile` du dépôt définit le délai d'attente de pip à 120 secondes et
+jusqu'à 10 tentatives pour les téléchargements de dépendances, afin de mieux
+résister aux connexions lentes ou interrompues. Configure dans l'environnement
+du service les variables Django de production décrites dans `.env.example`,
+ainsi que `PORT` si la plateforme ne le fournit pas automatiquement.
+
 **Enfin, prépare la base et lance le serveur :**
 
 ```bash
