@@ -154,7 +154,7 @@ Le prix est de 50 FCFA par crédit. Le montant libre doit être au moins de 1 00
 
 Les valeurs sont centralisées dans `credits/config.py` : `PRIX_CREDIT_FCFA`, `ACHAT_MINIMUM_FCFA`, `ACHAT_PAS_FCFA`, `ACHAT_MAXIMUM_FCFA`, `MONTANTS_SUGGERES` et `TEXTE_OBTENIR_CREDITS`. Les coûts des analyses, les crédits de bienvenue et le quota gratuit y sont également définis. La page `Tarifs` et son calculateur utilisent ces valeurs.
 
-Aucun paiement mobile money n'est intégré. Il n'y a pas de bonus de volume ni d'expiration des crédits.
+Le parcours d'achat utilise actuellement une simulation gratuite : après vérification du montant, l'utilisateur peut confirmer et recevoir les crédits sans débit d'argent. Ce comportement est explicitement signalé dans l'interface et le journal des crédits. Aucun prestataire de paiement réel n'est intégré. Il n'y a pas de bonus de volume ni d'expiration des crédits.
 
 ## Lancer les tests
 
@@ -175,10 +175,10 @@ Le système de crédits est un journal comptable par utilisateur. Chaque utilisa
 - Le quota gratuit est calculé par mois calendaire (`date_analyse__year`, `date_analyse__month`) ; il se réinitialise au 1er jour du mois. Il ne s'agit pas d'un quota glissant sur 30 jours.
 - Les coûts sont configurés dans `credits/config.py` : `COUT_PAGE_HORS_QUOTA`, `COUT_SITE_COMPLET_RAPIDE`, `COUT_SITE_COMPLET_APPROFONDI`, `QUOTA_GRATUIT_MENSUEL` et les constantes de type d'audit.
 - L'interface utilisateur expose le solde, le quota gratuit restant et l'historique des mouvements.
-- La page « Mes crédits » affiche le prix du crédit, les montants suggérés et le lien vers les tarifs. La page Tarifs calcule les crédits et les audits correspondants, sans lancer de paiement.
+- Les pages « Mes crédits » et « Tarifs » mènent au parcours d'achat, qui affiche un récapitulatif et permet de confirmer une simulation gratuite. Pour passer à un paiement réel, remplacer cette confirmation par l'intégration d'un prestataire et n'ajouter les crédits qu'après confirmation de son paiement.
 - La page d'administration permet de voir le solde et les mouvements de chaque utilisateur et d'ajouter des crédits via une action dédiée, sans modifier directement le `solde` de la table.
 
-Ce qui n'est pas encore implémenté : paiement mobile money, confirmation d'e-mail avant attribution, et les mécanismes de rate limiting pour bloquer la création de comptes en série.
+Ce qui n'est pas encore implémenté : intégration d'un prestataire de paiement réel, confirmation d'e-mail avant attribution, et les mécanismes de rate limiting pour bloquer la création de comptes en série.
 
 ## Comment une analyse se déroule
 

@@ -12,8 +12,8 @@ COUT_SITE_COMPLET_RAPIDE = 5
 COUT_SITE_COMPLET_APPROFONDI = 10
 
 TEXTE_OBTENIR_CREDITS = (
-    "Le paiement en ligne arrive bientôt. Pour l'instant, contactez-nous pour "
-    "recharger vos crédits : [TON MOYEN DE CONTACT]."
+    "Le paiement est simulé : aucun montant ne sera prélevé. Les crédits sont ajoutés "
+    "à ton solde après ta confirmation."
 )
 
 TYPE_AUDIT_PAGE_UNIQUE = "page_unique"

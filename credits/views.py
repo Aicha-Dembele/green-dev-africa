@@ -12,10 +12,18 @@ from credits.config import (
     TEXTE_OBTENIR_CREDITS,
 )
 from credits.models import SoldeCredits
-from credits.services import acheter_credits as acheter_credits_service, compter_analyses_gratuites_du_mois
+from credits.services import (
+    acheter_credits as acheter_credits_service,
+    compter_analyses_gratuites_du_mois,
+)
 
 
 def _libelle_transaction(transaction):
+    if transaction.type == "achat_manuel" and transaction.note.startswith(
+        "Simulation gratuite de paiement"
+    ):
+        return "Recharge simulée gratuite"
+
     libelles = {
         "bienvenue": "Crédits de bienvenue",
         "achat_manuel": "Achat manuel",
@@ -147,27 +155,72 @@ def mes_credits(request):
 
 @login_required
 def acheter_credits(request):
-    if request.method == "POST":
-        try:
-            montant = int(request.POST.get("montant", "0"))
-        except (TypeError, ValueError):
-            montant = 0
-
-        if montant <= 0:
-            messages.error(request, "Choisis un montant de crédits valide.")
-            return redirect("acheter_credits")
-
-        acheter_credits_service(request.user, montant, f"Achat de {montant} crédits")
-        messages.success(request, f"Tu as acheté {montant} crédits. Ton solde a été mis à jour.")
-        return redirect("mes_credits")
-
     solde, _ = SoldeCredits.objects.get_or_create(utilisateur=request.user)
     solde.recalculer()
+    montant_saisi = ""
+    erreur_achat = ""
+    commande = None
+
+    if request.method == "POST":
+        montant_saisi = request.POST.get("montant") or request.POST.get(
+            "montant_personnalise", ""
+        )
+        try:
+            montant = int(montant_saisi)
+        except (TypeError, ValueError):
+            erreur_achat = "Saisis un montant entier en FCFA."
+        else:
+            try:
+                credits = credits_config.credits_pour_montant(montant)
+            except ValueError as erreur:
+                erreur_achat = str(erreur)
+            else:
+                if request.POST.get("action") == "simuler_paiement":
+                    acheter_credits_service(
+                        request.user,
+                        credits,
+                        (
+                            f"Simulation gratuite de paiement : {montant} FCFA "
+                            f"pour {credits} crédits (aucun débit)."
+                        ),
+                    )
+                    messages.success(
+                        request,
+                        (
+                            f"Simulation réussie : {credits} crédits ont été ajoutés "
+                            "à ton solde. Aucun paiement réel n’a été effectué."
+                        ),
+                    )
+                    return redirect("mes_credits")
+
+                commande = {
+                    "montant": montant,
+                    "credits": credits,
+                    "audits_rapides": credits // COUT_SITE_COMPLET_RAPIDE,
+                    "audits_approfondis": credits // COUT_SITE_COMPLET_APPROFONDI,
+                }
+
+    montants_suggeres = [
+        {
+            "montant": montant,
+            "credits": credits_config.credits_pour_montant(montant),
+            "selectionne": montant_saisi == str(montant),
+        }
+        for montant in credits_config.MONTANTS_SUGGERES
+    ]
     return render(
         request,
         "credits/acheter_credits.html",
         {
             "solde": solde.solde,
+            "prix_credit_fcfa": credits_config.PRIX_CREDIT_FCFA,
+            "achat_minimum_fcfa": credits_config.ACHAT_MINIMUM_FCFA,
+            "achat_pas_fcfa": credits_config.ACHAT_PAS_FCFA,
+            "achat_maximum_fcfa": credits_config.ACHAT_MAXIMUM_FCFA,
+            "montants_suggeres": montants_suggeres,
+            "montant_saisi": montant_saisi,
+            "erreur_achat": erreur_achat,
+            "commande": commande,
             "texte_obtenir_credits": TEXTE_OBTENIR_CREDITS,
         },
     )

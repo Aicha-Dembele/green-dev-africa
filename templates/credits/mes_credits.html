@@ -59,13 +59,10 @@
       </div>
       <p>{{ prix_credit_fcfa }} FCFA par crédit.</p>
       <p>{{ texte_obtenir_credits }}</p>
-      <p>Montants suggérés :</p>
-      <ul>
-        {% for montant in montants_suggeres %}
-          <li>{{ montant }} FCFA</li>
-        {% endfor %}
-      </ul>
-      <a class="bouton" href="{% url 'tarifs' %}">Voir les tarifs et calculer un montant</a>
+      <div class="actions">
+        <a class="bouton" href="{% url 'acheter_credits' %}">Choisir un montant</a>
+        <a class="bouton bouton-secondaire" href="{% url 'tarifs' %}">Voir le détail des tarifs</a>
+      </div>
     </section>
 
     <section class="carte" aria-labelledby="historique-credits-titre">
