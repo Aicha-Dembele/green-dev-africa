@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 import requests
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
@@ -656,24 +657,36 @@ class LancementDepuisLaPageTest(TestCase):
             # aucune mesure : c'est le cas qui posait problème
         }
 
+    # Depuis le 04/11, la page de lancement fait deux choses de plus :
+    # 1. elle vérifie l'adresse (recherche DNS) avant de créer l'analyse ;
+    # 2. elle traite l'analyse tout de suite, sans attendre le service
+    #    `traiter_analyses`.
+    # Les tests remplacent la vérification DNS par `patch(...)` pour éviter
+    # d'interroger Internet : exemple.ml n'existe pas.
+    MESURES = {
+        "url_finale": "https://exemple.ml/",
+        "mesures": {
+            "poids_total": 1850,
+            "nombre_requetes": 62,
+            "temps_chargement": 4.2,
+        },
+        "ressources": [],
+    }
+
     def test_formulaire_sans_mesure_declenche_la_mesure_automatique(self):
         with patch("analyses.views.verifier_adresse"), patch(
-            "analyses.collecteur.collecter",
-            return_value={
-                "url_finale": "https://exemple.ml/",
-                "mesures": {"poids_total": 1850, "nombre_requetes": 62, "temps_chargement": 4.2},
-                "ressources": [],
-            },
+            "analyses.collecteur.collecter", return_value=self.MESURES
         ):
             reponse = self.client.post(
                 reverse_lancer(self.projet.pk), self.formulaire_vide()
             )
-            analyse = Analyse.objects.get(projet=self.projet)
-            self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
 
-        self.assertEqual(reponse.status_code, 302)
-        analyse.refresh_from_db()
-
+        analyse = Analyse.objects.get(projet=self.projet)
+        self.assertRedirects(
+            reponse,
+            reverse("analyse_detail", args=[analyse.pk]),
+            fetch_redirect_response=False,
+        )
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
         self.assertEqual(analyse.rapport.poids_total, 1850)
         self.assertEqual(analyse.rapport.nombre_requetes, 62)
@@ -694,6 +707,41 @@ class LancementDepuisLaPageTest(TestCase):
         detail = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, "Le domaine « exemple.ml » est introuvable.")
+
+    def test_une_adresse_introuvable_est_refusee_avant_de_creer_l_analyse(self):
+        """Aucune analyse ni dépense n'est créée si la vérification DNS échoue."""
+        with patch(
+            "analyses.views.verifier_adresse",
+            side_effect=ErreurCollecte("Le domaine « exemple.ml » est introuvable."),
+        ):
+            reponse = self.client.post(
+                reverse_lancer(self.projet.pk), self.formulaire_vide()
+            )
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Le domaine « exemple.ml » est introuvable.")
+        self.assertFalse(Analyse.objects.filter(projet=self.projet).exists())
+
+    def test_le_service_traiter_analyses_termine_une_analyse_en_attente(self):
+        """Le service traite également une analyse créée en attente."""
+        from io import StringIO
+
+        analyse = self.projet.lancer_analyse(
+            configuration={"type_audit": "page_unique"}
+        )
+        self.assertEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
+
+        with patch("analyses.collecteur.collecter", return_value=self.MESURES):
+            call_command(
+                "traiter_analyses",
+                once=True,
+                stdout=StringIO(),
+                stderr=StringIO(),
+            )
+
+        analyse.refresh_from_db()
+        self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
+        self.assertEqual(analyse.rapport.poids_total, 1850)
 
 
 def reverse_lancer(pk):
