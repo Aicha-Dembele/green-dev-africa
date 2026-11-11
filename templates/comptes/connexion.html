@@ -20,6 +20,7 @@
     <form method="post">
       {% csrf_token %}
       {% include "partiels/champs.html" with formulaire=form %}
+      <p class="lien-oubli"><a href="{% url 'mot_de_passe_oublie' %}">Mot de passe oublié ?</a></p>
       <div class="actions">
         <button type="submit">Se connecter</button>
         <a class="discret" href="{% url 'mot_de_passe_oublie' %}">Mot de passe oublié ?</a>

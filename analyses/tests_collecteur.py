@@ -687,6 +687,7 @@ class LancementDepuisLaPageTest(TestCase):
             reverse("analyse_detail", args=[analyse.pk]),
             fetch_redirect_response=False,
         )
+        # Traitée pendant le clic : terminée dès qu'on arrive sur le résultat.
         self.assertEqual(analyse.statut, Analyse.Statut.TERMINEE)
         self.assertEqual(analyse.rapport.poids_total, 1850)
         self.assertEqual(analyse.rapport.nombre_requetes, 62)
@@ -702,14 +703,14 @@ class LancementDepuisLaPageTest(TestCase):
 
         analyse = Analyse.objects.get(projet=self.projet)
         self.assertEqual(reponse.status_code, 302)
-        analyse.refresh_from_db()
         self.assertEqual(analyse.statut, Analyse.Statut.ECHOUEE)
         detail = self.client.get(reverse("analyse_detail", args=[analyse.pk]))
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, "Le domaine « exemple.ml » est introuvable.")
 
     def test_une_adresse_introuvable_est_refusee_avant_de_creer_l_analyse(self):
-        """Aucune analyse ni dépense n'est créée si la vérification DNS échoue."""
+        """La vérification DNS refuse tout de suite une adresse qui n'existe
+        pas : aucune analyse n'est créée, donc aucun crédit n'est dépensé."""
         with patch(
             "analyses.views.verifier_adresse",
             side_effect=ErreurCollecte("Le domaine « exemple.ml » est introuvable."),
@@ -723,7 +724,7 @@ class LancementDepuisLaPageTest(TestCase):
         self.assertFalse(Analyse.objects.filter(projet=self.projet).exists())
 
     def test_le_service_traiter_analyses_termine_une_analyse_en_attente(self):
-        """Le service traite également une analyse créée en attente."""
+        """`python manage.py traiter_analyses` traite une analyse restée en attente."""
         from io import StringIO
 
         analyse = self.projet.lancer_analyse(

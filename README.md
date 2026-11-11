@@ -110,6 +110,31 @@ Dans un second terminal, relance aussi le traitement des analyses :
 python manage.py traiter_analyses
 ```
 
+## Envoyer de vrais e-mails (mot de passe oublié, notifications)
+
+Par défaut, aucun e-mail ne part : Django les affiche dans le terminal du
+serveur. C'est pratique pour tester : le lien « mot de passe oublié » s'y
+lit directement.
+
+Pour les envoyer vraiment avec Gmail, crée `config/local_settings.py`. Ce
+fichier est ignoré par git et ne doit jamais être publié. Il est chargé en
+dernier et remplace les réglages de `settings.py` :
+
+```python
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "ton.adresse@gmail.com"
+EMAIL_HOST_PASSWORD = "..."  # mot de passe d'APPLICATION Gmail, pas le mot de passe du compte
+DEFAULT_FROM_EMAIL = "Green Dev Africa <ton.adresse@gmail.com>"
+```
+
+Le mot de passe d'application se crée sur
+<https://myaccount.google.com/apppasswords>, avec la validation en deux
+étapes activée. Sur un hébergeur, mets plutôt ces valeurs dans les variables
+`DJANGO_EMAIL_*` de [`.env.example`](./.env.example).
+
 ## Les pages du site
 
 | Adresse | Page | Cas d'utilisation |
@@ -117,6 +142,7 @@ python manage.py traiter_analyses
 | `/` | Présentation (visiteurs) / tableau de bord (membres connectés) | Découvrir Green Dev Africa / Consulter le tableau de bord |
 | `/comptes/inscription/` | Créer un compte | Créer un compte |
 | `/comptes/connexion/` | Se connecter | Se connecter |
+| `/comptes/mot-de-passe-oublie/` | Mot de passe oublié : on tape son adresse e-mail, le lien reçu ouvre `/comptes/nouveau-mot-de-passe/…` (valable 24 h, une seule fois) | Réinitialiser son mot de passe |
 | `/projets/nouveau/` | Nouveau projet | Créer un projet |
 | `/projets/<id>/` | Fiche projet : historique + objectifs | — |
 | `/projets/<id>/analyser/` | Lancer une analyse | Lancer une analyse, choisir le profil réseau et l'appareil |

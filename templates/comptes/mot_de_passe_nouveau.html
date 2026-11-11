@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% comment %}
+  Mot de passe oublié, étape 3 sur 4 : la page qu'ouvre le lien reçu par
+  e-mail. Django vérifie le lien lui-même et dit ce qu'il en pense avec
+  `validlink` : vrai = on montre le formulaire ; faux = lien déjà utilisé,
+  expiré ou abîmé.
+{% endcomment %}
+
+{% block titre %}Nouveau mot de passe — Green Dev Africa{% endblock %}
+{% block classe_page %}page-auth{% endblock %}
+
+{% block contenu %}
+  {% if validlink %}
+    <header class="auth-entete">
+      <span class="auth-icone" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" focusable="false">
+          <rect x="4.5" y="10" width="15" height="11" rx="2"></rect>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+          <circle cx="12" cy="15" r="1"></circle>
+        </svg>
+      </span>
+      <h1>Nouveau mot de passe</h1>
+      <p class="chapeau">Choisis le mot de passe que tu utiliseras désormais.</p>
+    </header>
+
+    <div class="carte connexion-carte">
+      <form method="post">
+        {% csrf_token %}
+        {% include "partiels/champs.html" with formulaire=form %}
+        <div class="actions">
+          <button type="submit">Enregistrer le mot de passe</button>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <header class="auth-entete">
+      <span class="auth-icone" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" focusable="false">
+          <path d="M12 4.5l8.5 15h-17z"></path>
+          <path d="M12 10v4"></path>
+          <circle cx="12" cy="16.6" r="0.9"></circle>
+        </svg>
+      </span>
+      <h1>Ce lien ne marche plus</h1>
+      <p class="chapeau">Il a déjà servi, il a expiré ou il est incomplet.</p>
+    </header>
+
+    <div class="carte">
+      <p>
+        Pour ta sécurité, un lien ne sert qu'une fois et reste valable
+        {{ validite_heures }} heures. Demande simplement un nouveau lien.
+      </p>
+      <div class="actions">
+        <a class="bouton" href="{% url 'mot_de_passe_oublie' %}">Demander un nouveau lien</a>
+        <a class="discret" href="{% url 'connexion' %}">Retour à la connexion</a>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

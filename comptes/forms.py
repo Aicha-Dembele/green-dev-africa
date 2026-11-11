@@ -1,7 +1,12 @@
-"""Formulaires des comptes : inscription et modification du profil."""
+"""Formulaires des comptes : inscription, connexion et mot de passe oublié."""
 
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    PasswordResetForm,
+    SetPasswordForm,
+    UserCreationForm,
+)
 
 from .models import Utilisateur
 
@@ -44,3 +49,39 @@ class ConnexionForm(AuthenticationForm):
         super().__init__(*args, **kwargs)
         self.fields["username"].widget.attrs["placeholder"] = "Ton identifiant"
         self.fields["password"].widget.attrs["placeholder"] = "Ton mot de passe"
+
+
+class MotDePasseOublieForm(PasswordResetForm):
+    """Étape 1 du « Mot de passe oublié » : la personne tape son adresse e-mail.
+
+    Django fait déjà le plus important, on ne le refait pas :
+    - il cherche le compte ACTIF qui porte cette adresse, majuscules ou non ;
+    - il envoie le lien à l'adresse ENREGISTRÉE sur le compte, jamais ailleurs ;
+    - si aucun compte n'a cette adresse, il n'envoie rien et ne le dit pas.
+      Sinon, n'importe qui pourrait tester quelles adresses ont un compte.
+    On change seulement l'intitulé et l'exemple affichés.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        champ = self.fields["email"]
+        champ.label = "Adresse e-mail de ton compte"
+        champ.widget.attrs.update({"placeholder": "Ex. aicha@exemple.com", "autofocus": True})
+
+
+class NouveauMotDePasseForm(SetPasswordForm):
+    """Étape 3 : la personne a cliqué sur le lien et choisit son nouveau mot de passe.
+
+    Les règles sont les mêmes qu'à l'inscription (8 caractères, pas
+    seulement des chiffres) ; on remplace juste le pavé d'aide de Django
+    par les mêmes phrases courtes.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["new_password1"].help_text = "Au moins 8 caractères."
+        self.fields["new_password2"].help_text = "Recopie-le pour éviter une faute de frappe."
+        self.fields["new_password1"].widget.attrs.update(
+            {"placeholder": "8 caractères minimum", "autofocus": True}
+        )
+        self.fields["new_password2"].widget.attrs["placeholder"] = "Répète ton mot de passe"

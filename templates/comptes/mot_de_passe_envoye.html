@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% comment %}
+  Mot de passe oublié, étape 2 sur 4 : « regarde ta boîte e-mail ».
+  Cette page s'affiche même si l'adresse tapée n'a pas de compte : sinon,
+  n'importe qui pourrait s'en servir pour savoir qui est inscrit.
+{% endcomment %}
+
+{% block titre %}Regarde ta boîte e-mail — Green Dev Africa{% endblock %}
+{% block classe_page %}page-auth{% endblock %}
+
+{% block contenu %}
+  <header class="auth-entete">
+    <span class="auth-icone" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" focusable="false">
+        <rect x="3.5" y="5.5" width="17" height="13" rx="2"></rect>
+        <path d="M4.5 7.5l7.5 5.5 7.5-5.5"></path>
+      </svg>
+    </span>
+    <h1>Regarde ta boîte e-mail</h1>
+    <p class="chapeau">Si un compte utilise cette adresse, un lien vient de partir.</p>
+  </header>
+
+  <div class="carte">
+    <p>
+      Ouvre l'e-mail de Green Dev Africa et clique sur le lien pour choisir
+      ton nouveau mot de passe. Le lien reste valable {{ validite_heures }} heures
+      et ne sert qu'une fois.
+    </p>
+    <p class="discret">
+      Rien reçu après quelques minutes ? Regarde dans les courriers
+      indésirables (spam), puis vérifie que tu as tapé l'adresse enregistrée
+      sur ton compte.
+    </p>
+    <div class="actions">
+      <a class="bouton" href="{% url 'connexion' %}">Retour à la connexion</a>
+      <a class="discret" href="{% url 'mot_de_passe_oublie' %}">Refaire une demande</a>
+    </div>
+  </div>
+{% endblock %}
