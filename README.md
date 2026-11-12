@@ -51,9 +51,12 @@ notamment de signer les sessions.
 Pour le déploiement Systalink, configure au minimum `DJANGO_DEBUG=False`,
 une `DJANGO_SECRET_KEY` générée aléatoirement, et
 `DJANGO_ALLOWED_HOSTS=green-dev-africa-92575681.platform-systalink.com`.
-Configure également `DATABASE_URL` avec l'URL de la base persistante fournie
-par Systalink. Sans cette variable, l'application utilise SQLite dans le
-conteneur, dont les données peuvent disparaître lors d'un redéploiement.
+Pour la bêta, tu peux conserver SQLite à condition de créer un volume disque
+persistant dans Systalink, de le monter sur `/data`, puis de configurer
+`SQLITE_PATH=/data/db.sqlite3`. Sans volume persistant, les données SQLite
+(comptes, projets et analyses) peuvent disparaître lors d'un redémarrage ou
+d'un redéploiement. À terme, configure plutôt `DATABASE_URL` avec l'URL d'une
+base PostgreSQL persistante.
 Si Systalink termine HTTPS devant un proxy qui transmet et remplace
 `X-Forwarded-Proto`, configure `DJANGO_BEHIND_PROXY=True` pour éviter une
 boucle de redirection HTTPS.
@@ -85,6 +88,12 @@ migrations, charge le référentiel d'analyse, collecte les fichiers statiques,
 puis démarre Gunicorn. Configure dans l'environnement du service les variables
 de production décrites dans `.env.example`, ainsi que `PORT` si la plateforme
 ne le fournit pas automatiquement.
+
+Pour la bêta avec SQLite, configure un volume persistant Systalink monté sur
+`/data` et ajoute `SQLITE_PATH=/data/db.sqlite3` dans les variables du service.
+Le fichier de base est alors conservé entre les redémarrages et les nouveaux
+déploiements de l'application. N'utilise pas le volume pour remplacer le code
+de l'application : il doit uniquement servir aux données persistantes.
 
 **Enfin, prépare la base et lance le serveur :**
 
