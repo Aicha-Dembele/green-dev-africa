@@ -48,6 +48,16 @@ d'hébergement ou ton terminal ; Django ne charge pas automatiquement un
 fichier `.env`. Ne publie jamais la vraie `DJANGO_SECRET_KEY` : elle permet
 notamment de signer les sessions.
 
+Pour le déploiement Systalink, configure au minimum `DJANGO_DEBUG=False`,
+une `DJANGO_SECRET_KEY` générée aléatoirement, et
+`DJANGO_ALLOWED_HOSTS=green-dev-africa-92575681.platform-systalink.com`.
+Configure également `DATABASE_URL` avec l'URL de la base persistante fournie
+par Systalink. Sans cette variable, l'application utilise SQLite dans le
+conteneur, dont les données peuvent disparaître lors d'un redéploiement.
+Si Systalink termine HTTPS devant un proxy qui transmet et remplace
+`X-Forwarded-Proto`, configure `DJANGO_BEHIND_PROXY=True` pour éviter une
+boucle de redirection HTTPS.
+
 ```bash
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
@@ -70,9 +80,11 @@ remplace lui-même l'en-tête `X-Forwarded-Proto`.
 
 Le `Dockerfile` du dépôt définit le délai d'attente de pip à 120 secondes et
 jusqu'à 10 tentatives pour les téléchargements de dépendances, afin de mieux
-résister aux connexions lentes ou interrompues. Configure dans l'environnement
-du service les variables Django de production décrites dans `.env.example`,
-ainsi que `PORT` si la plateforme ne le fournit pas automatiquement.
+résister aux connexions lentes ou interrompues. Au démarrage, il applique les
+migrations, charge le référentiel d'analyse, collecte les fichiers statiques,
+puis démarre Gunicorn. Configure dans l'environnement du service les variables
+de production décrites dans `.env.example`, ainsi que `PORT` si la plateforme
+ne le fournit pas automatiquement.
 
 **Enfin, prépare la base et lance le serveur :**
 
@@ -82,6 +94,11 @@ python manage.py charger_referentiel
 python manage.py createsuperuser
 python manage.py runserver
 ```
+
+Sur une plateforme qui n'utilise pas le `Dockerfile`, exécute avant de démarrer
+Gunicorn les commandes `python manage.py migrate --noinput`,
+`python manage.py charger_referentiel` et
+`python manage.py collectstatic --noinput`.
 
 Dans un second terminal, démarre aussi le service qui traite les analyses :
 
@@ -122,7 +139,9 @@ python manage.py traiter_analyses
 
 Par défaut, aucun e-mail ne part : Django les affiche dans le terminal du
 serveur. C'est pratique pour tester : le lien « mot de passe oublié » s'y
-lit directement.
+lit directement. `config/local_settings.py` n'est chargé qu'en mode
+développement ; les réglages de production doivent être configurés via les
+variables d'environnement de l'hébergeur.
 
 Pour les envoyer vraiment avec Gmail, crée `config/local_settings.py`. Ce
 fichier est ignoré par git et ne doit jamais être publié. Il est chargé en

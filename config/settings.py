@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -59,6 +60,16 @@ if not DEBUG:
         # sinon un client pourrait le falsifier et contourner la détection HTTPS.
         SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Depuis Django 4, les requêtes POST (connexion, formulaires...) sont
+# refusées avec une erreur CSRF si l'origine HTTPS exacte du site n'est pas
+# listée ici. Dérivé de DJANGO_ALLOWED_HOSTS pour éviter de le configurer
+# deux fois.
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{hote}"
+    for hote in ALLOWED_HOSTS
+    if hote not in ("127.0.0.1", "localhost", "testserver")
+]
+
 
 # Application definition
 
@@ -82,6 +93,7 @@ AUTH_USER_MODEL = 'comptes.Utilisateur'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -115,12 +127,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -158,7 +180,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -190,12 +212,36 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend" and not EMAIL_
 # (Django en propose 72 par défaut) et ne sert qu'une seule fois.
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 
-# Réglages propres à UN ordinateur, dans config/local_settings.py. Ce fichier
-# n'est jamais envoyé sur GitHub (voir .gitignore) : c'est là qu'on met, par
-# exemple, le mot de passe d'application Gmail qui envoie les vrais e-mails.
-# Chargé en dernier, il remplace les valeurs ci-dessus. Sans lui, tout marche
-# quand même : les e-mails s'affichent dans le terminal du serveur.
-try:
-    from .local_settings import *  # noqa: F401,F403
-except ImportError:
-    pass
+# Sans ceci, Django hors mode debug envoie les erreurs serveur (500) par
+# e-mail aux ADMINS au lieu de les écrire quelque part : avec un hébergeur qui
+# ne lit que la sortie du conteneur (logs), une erreur reste invisible sans
+# cette configuration.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
+
+# Réglages propres à un ordinateur, dans config/local_settings.py. Ne les
+# charger qu'en développement : en production, les variables d'environnement
+# doivent rester la source de vérité.
+if DEBUG:
+    try:
+        from .local_settings import *  # noqa: F401,F403
+    except ImportError:
+        pass

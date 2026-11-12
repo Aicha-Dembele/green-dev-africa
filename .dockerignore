@@ -4,5 +4,6 @@ venv
 __pycache__
 *.py[cod]
 .env
+config/local_settings.py
 db.sqlite3
 staticfiles

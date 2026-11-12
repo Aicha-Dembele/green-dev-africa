@@ -6,6 +6,8 @@ visiteur qui change le numéro dans l'adresse obtient une page 404, pas le
 projet de quelqu'un d'autre.
 """
 
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, Count, IntegerField, OuterRef, Q, Subquery, When
@@ -16,6 +18,8 @@ from analyses.models import Analyse, ProblemeDetecte
 
 from .forms import ObjectifForm, ProjetForm
 from .models import Projet
+
+journal = logging.getLogger(__name__)
 
 
 def politique_confidentialite(request):
@@ -30,9 +34,16 @@ def tableau_de_bord(request):
     chercher la dernière analyse de chaque projet sans refaire un appel à la
     base par ligne affichée.
     """
-    traiter_une_analyse_en_attente(
-        request.user if request.user.is_authenticated else None
-    )
+    # Traitement « opportuniste » d'une analyse en attente, en plus du
+    # processus `traiter_analyses` dédié. Une panne ici (base, réseau,
+    # site distant injoignable) ne doit jamais faire tomber le tableau de
+    # bord de tout le monde : on journalise et on continue d'afficher la page.
+    try:
+        traiter_une_analyse_en_attente(
+            request.user if request.user.is_authenticated else None
+        )
+    except Exception:
+        journal.exception("Échec du traitement opportuniste d'une analyse")
 
     if not request.user.is_authenticated:
         return render(request, "accueil.html")
