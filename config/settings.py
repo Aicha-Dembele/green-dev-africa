@@ -136,6 +136,11 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
+elif not DEBUG:
+    raise ImproperlyConfigured(
+        "DATABASE_URL doit être définie en production. "
+        "Utilisez une base PostgreSQL persistante."
+    )
 else:
     SQLITE_PATH = os.environ.get("SQLITE_PATH", "db.sqlite3")
     sqlite_name = Path(SQLITE_PATH)

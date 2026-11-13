@@ -30,7 +30,8 @@ Fichiers à connaître :
 - `analyses/tests.py` (moteur), `analyses/tests_vues.py`, `projets/tests.py`,
   `comptes/tests.py` — 90 tests : la chaîne d'analyse, les pages, et le
   cloisonnement des données entre utilisateurs.
-- `config/settings.py` — réglages du projet (SQLite, français, `AUTH_USER_MODEL`).
+- `config/settings.py` — réglages du projet (PostgreSQL en production, SQLite
+  en local, français, `AUTH_USER_MODEL`).
 
 ## Installer le projet sur une nouvelle machine
 
@@ -51,12 +52,11 @@ notamment de signer les sessions.
 Pour le déploiement Systalink, configure au minimum `DJANGO_DEBUG=False`,
 une `DJANGO_SECRET_KEY` générée aléatoirement, et
 `DJANGO_ALLOWED_HOSTS=green-dev-africa-92575681.platform-systalink.com`.
-Pour la bêta, tu peux conserver SQLite à condition de créer un volume disque
-persistant dans Systalink, de le monter sur `/data`, puis de configurer
-`SQLITE_PATH=/data/db.sqlite3`. Sans volume persistant, les données SQLite
-(comptes, projets et analyses) peuvent disparaître lors d'un redémarrage ou
-d'un redéploiement. À terme, configure plutôt `DATABASE_URL` avec l'URL d'une
-base PostgreSQL persistante.
+En production, configure `DATABASE_URL` avec l'URL de la base PostgreSQL
+persistante fournie par Systalink. L'application refuse volontairement de
+démarrer hors du mode debug si cette variable est absente, afin d'éviter de
+perdre les comptes, projets et analyses dans un fichier SQLite du conteneur.
+En local, sans `DATABASE_URL`, SQLite reste utilisé automatiquement.
 Si Systalink termine HTTPS devant un proxy qui transmet et remplace
 `X-Forwarded-Proto`, configure `DJANGO_BEHIND_PROXY=True` pour éviter une
 boucle de redirection HTTPS.
@@ -89,11 +89,31 @@ puis démarre Gunicorn. Configure dans l'environnement du service les variables
 de production décrites dans `.env.example`, ainsi que `PORT` si la plateforme
 ne le fournit pas automatiquement.
 
-Pour la bêta avec SQLite, configure un volume persistant Systalink monté sur
-`/data` et ajoute `SQLITE_PATH=/data/db.sqlite3` dans les variables du service.
-Le fichier de base est alors conservé entre les redémarrages et les nouveaux
-déploiements de l'application. N'utilise pas le volume pour remplacer le code
-de l'application : il doit uniquement servir aux données persistantes.
+### Variables Systalink
+
+Configure dans l'environnement du service :
+
+```text
+DJANGO_DEBUG=False
+DJANGO_SECRET_KEY=<clé aléatoire générée>
+DJANGO_ALLOWED_HOSTS=green-dev-africa-92575681.platform-systalink.com
+DJANGO_BEHIND_PROXY=True
+DATABASE_URL=postgresql://<utilisateur>:<mot-de-passe>@<hôte>:5432/<base>
+```
+
+Ne mets jamais la vraie clé secrète ou le mot de passe PostgreSQL dans Git.
+`DATABASE_URL` est prioritaire sur SQLite ; `SQLITE_PATH` ne sert qu'au
+développement local.
+
+Dans Systalink, définis la commande de pré-déploiement suivante :
+
+```bash
+python manage.py migrate --noinput
+```
+
+Le démarrage du conteneur applique aussi les migrations de manière idempotente
+en secours, charge le référentiel d'analyse, collecte les fichiers statiques,
+puis démarre Gunicorn.
 
 **Enfin, prépare la base et lance le serveur :**
 
