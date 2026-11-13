@@ -1,11 +1,4 @@
-/* Green Dev Africa — le seul JavaScript du site.
- *
- * Il ajoute le petit œil qui montre ou cache le mot de passe. Rien d'autre :
- * quelques Ko, contre des dizaines de Ko pour une bibliothèque qui ferait
- * la même chose.
- * Les pages restent utilisables si ce fichier ne charge pas — le champ reste
- * simplement masqué, comme avant.
- */
+/* Green Dev Africa — comportements légers, sans dépendance externe. */
 (function () {
   "use strict";
 
@@ -18,6 +11,83 @@
     '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>' +
     '<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>' +
     '<path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  function conteneurToasts() {
+    var conteneur = document.querySelector("[data-toast-stack]");
+    if (!conteneur) {
+      conteneur = document.createElement("ul");
+      conteneur.className = "messages toast-stack";
+      conteneur.setAttribute("data-toast-stack", "");
+      conteneur.setAttribute("aria-label", "Notifications récentes");
+      document.body.appendChild(conteneur);
+    }
+    return conteneur;
+  }
+
+  function fermerToast(toast) {
+    if (!toast) return;
+    toast.classList.add("toast-sortant");
+    window.setTimeout(function () { toast.remove(); }, 180);
+  }
+
+  function afficherToast(texte, type) {
+    var toast = document.createElement("li");
+    toast.className = type || "success";
+    toast.setAttribute("role", type === "error" ? "alert" : "status");
+    toast.setAttribute("aria-live", type === "error" ? "assertive" : "polite");
+    toast.setAttribute("data-toast", "");
+
+    var message = document.createElement("span");
+    message.textContent = texte;
+    var fermer = document.createElement("button");
+    fermer.type = "button";
+    fermer.className = "toast-fermer";
+    fermer.setAttribute("aria-label", "Fermer la notification");
+    fermer.textContent = "×";
+    fermer.addEventListener("click", function () { fermerToast(toast); });
+    toast.append(message, fermer);
+    conteneurToasts().appendChild(toast);
+    window.setTimeout(function () { fermerToast(toast); }, 5000);
+    return toast;
+  }
+
+  function preparerToast(toast) {
+    var bouton = document.createElement("button");
+    bouton.type = "button";
+    bouton.className = "toast-fermer";
+    bouton.setAttribute("aria-label", "Fermer la notification");
+    bouton.textContent = "×";
+    bouton.addEventListener("click", function () { fermerToast(toast); });
+    toast.appendChild(bouton);
+    window.setTimeout(function () { fermerToast(toast); }, 5000);
+  }
+
+  function activerChargement(form, bouton) {
+    if (bouton && bouton.name && bouton.value) {
+      var champCache = document.createElement("input");
+      champCache.type = "hidden";
+      champCache.name = bouton.name;
+      champCache.value = bouton.value;
+      champCache.setAttribute("data-submit-preserve", "");
+      form.appendChild(champCache);
+    }
+
+    form.dataset.submitting = "true";
+    form.setAttribute("aria-busy", "true");
+    var boutons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+    boutons.forEach(function (element) {
+      element.disabled = true;
+      if (element === bouton && element.tagName === "BUTTON") {
+        var libelle = element.dataset.loadingLabel || (element.textContent.trim() + "…");
+        var spinner = document.createElement("span");
+        spinner.className = "ui-spinner";
+        spinner.setAttribute("aria-hidden", "true");
+        var texte = document.createElement("span");
+        texte.textContent = libelle;
+        element.replaceChildren(spinner, texte);
+      }
+    });
+  }
 
   function equiper(champ) {
     var enveloppe = document.createElement("div");
@@ -46,6 +116,72 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-toast]").forEach(preparerToast);
+
+    var confirmationDialog = document.querySelector("[data-confirm-dialog]");
+    var pendingForm = null;
+    var pendingSubmitter = null;
+    var titreConfirmation = confirmationDialog && confirmationDialog.querySelector("[data-confirm-title]");
+    var texteConfirmation = confirmationDialog && confirmationDialog.querySelector("[data-confirm-message]");
+    var boutonConfirmation = confirmationDialog && confirmationDialog.querySelector("[data-confirm-accept]");
+
+    if (confirmationDialog && boutonConfirmation) {
+      confirmationDialog.querySelector("[data-confirm-cancel]").addEventListener("click", function () {
+        confirmationDialog.close("cancel");
+      });
+      confirmationDialog.addEventListener("close", function () {
+        if (pendingSubmitter && pendingSubmitter.isConnected) pendingSubmitter.focus();
+        pendingForm = null;
+        pendingSubmitter = null;
+      });
+      boutonConfirmation.addEventListener("click", function () {
+        var form = pendingForm;
+        var submitter = pendingSubmitter;
+        if (!form) return;
+        form.dataset.confirmed = "true";
+        confirmationDialog.close("confirm");
+        if (typeof form.requestSubmit === "function") {
+          if (submitter) form.requestSubmit(submitter);
+          else form.requestSubmit();
+        } else {
+          activerChargement(form, submitter);
+          form.submit();
+        }
+      });
+    }
+
+    document.querySelectorAll('form[method="post"], form[data-loading]').forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        if (form.dataset.submitting === "true") {
+          event.preventDefault();
+          return;
+        }
+
+        var submitter = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+        if (form.hasAttribute("data-confirm-message") && form.dataset.confirmed !== "true") {
+          event.preventDefault();
+          if (!confirmationDialog || typeof confirmationDialog.showModal !== "function") {
+            if (!window.confirm(form.dataset.confirmMessage)) return;
+          } else {
+            pendingForm = form;
+            pendingSubmitter = submitter;
+            titreConfirmation.textContent = form.dataset.confirmTitle || "Confirmer cette action";
+            texteConfirmation.textContent = form.dataset.confirmMessage;
+            boutonConfirmation.textContent = form.dataset.confirmLabel || "Confirmer";
+            confirmationDialog.showModal();
+            boutonConfirmation.focus();
+            return;
+          }
+          form.dataset.confirmed = "true";
+          if (submitter) form.requestSubmit(submitter);
+          else form.requestSubmit();
+          return;
+        }
+
+        activerChargement(form, submitter);
+      });
+    });
+
     var champs = document.querySelectorAll('input[type="password"]');
     for (var i = 0; i < champs.length; i++) {
       equiper(champs[i]);
@@ -57,8 +193,6 @@
         var statut = form.querySelector("[data-analyse-chargement]");
         var carteCout = document.querySelector("[data-cout-analyse]");
         if (bouton && statut) {
-          bouton.disabled = true;
-          bouton.textContent = "Envoi de la demande…";
           statut.hidden = false;
           statut.textContent = "Enregistrement de ta demande d'analyse…";
           form.setAttribute("aria-busy", "true");
@@ -131,9 +265,9 @@
 
         if (message) {
           if (cout === 0) {
-            message.textContent = "Gratuite : il vous reste " + restantes + " analyses gratuites ce mois-ci.";
+            message.textContent = "Gratuite : il vous reste " + restantes + " analyse" + (restantes === 1 ? "" : "s") + " gratuite" + (restantes === 1 ? "" : "s") + " ce mois-ci.";
           } else {
-            message.textContent = "Cette analyse coûte " + cout + " crédits. Il vous en reste " + solde + ".";
+            message.textContent = "Cette analyse coûte " + cout + " crédit" + (cout === 1 ? "" : "s") + ". Il vous en reste " + solde + " crédit" + (solde === 1 ? "" : "s") + ".";
           }
         }
 
@@ -244,6 +378,7 @@
         try {
           await navigator.clipboard.writeText(lien.href);
           statut.textContent = "Lien copié dans le presse-papiers.";
+          afficherToast("Lien de partage copié.", "success");
         } catch {
           lien.focus();
           var selection = window.getSelection();
@@ -254,6 +389,7 @@
             selection.addRange(plage);
           }
           statut.textContent = "Copie automatique indisponible. Le lien est sélectionné : copie-le manuellement.";
+          afficherToast("Copie automatique indisponible. Le lien est sélectionné pour une copie manuelle.", "error");
         }
       });
     });

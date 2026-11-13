@@ -17,6 +17,7 @@ from django.urls import reverse
 
 from analyses.collecteur import (
     ErreurCollecte,
+    _AdaptateurIPVerrouille,
     collecter,
     collecter_site,
     verifier_adresse,
@@ -123,6 +124,21 @@ SITE = {
     "https://exemple.ml/logo.png": b"x" * 51200,       # 50 Ko
     "https://exemple.ml/banniere.jpg": b"x" * 204800,  # 200 Ko
 }
+
+
+class AdaptateurIPVerrouilleTest(TestCase):
+    def test_cree_les_pools_http_et_https_avec_l_ip_verifiee(self):
+        ip_verifiee = "93.184.216.34"
+        adaptateur = _AdaptateurIPVerrouille(ip_verifiee)
+        self.addCleanup(adaptateur.close)
+
+        for schema in ("http", "https"):
+            with self.subTest(schema=schema):
+                pool = adaptateur.poolmanager.connection_from_url(
+                    f"{schema}://exemple.ml/"
+                )
+
+                self.assertEqual(pool.conn_kw["ip_verifiee"], ip_verifiee)
 
 
 class CollecteurTest(TestCase):

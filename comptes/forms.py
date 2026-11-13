@@ -36,9 +36,9 @@ class InscriptionForm(UserCreationForm):
         # Par défaut, Django affiche ici la liste complète des règles de mot
         # de passe, sous forme de pavé. Une phrase courte suffit : les règles
         # restantes sont vérifiées de toute façon à l'envoi du formulaire.
-        self.fields["password1"].help_text = "Au moins 8 caractères."
+        self.fields["password1"].help_text = "Au moins 12 caractères."
         self.fields["password2"].help_text = "Recopie-le pour éviter une faute de frappe."
-        self.fields["password1"].widget.attrs["placeholder"] = "8 caractères minimum"
+        self.fields["password1"].widget.attrs["placeholder"] = "12 caractères minimum"
         self.fields["password2"].widget.attrs["placeholder"] = "Répète ton mot de passe"
 
 
@@ -72,16 +72,16 @@ class MotDePasseOublieForm(PasswordResetForm):
 class NouveauMotDePasseForm(SetPasswordForm):
     """Étape 3 : la personne a cliqué sur le lien et choisit son nouveau mot de passe.
 
-    Les règles sont les mêmes qu'à l'inscription (8 caractères, pas
+    Les règles sont les mêmes qu'à l'inscription (12 caractères, pas
     seulement des chiffres) ; on remplace juste le pavé d'aide de Django
     par les mêmes phrases courtes.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["new_password1"].help_text = "Au moins 8 caractères."
+        self.fields["new_password1"].help_text = "Au moins 12 caractères."
         self.fields["new_password2"].help_text = "Recopie-le pour éviter une faute de frappe."
         self.fields["new_password1"].widget.attrs.update(
-            {"placeholder": "8 caractères minimum", "autofocus": True}
+            {"placeholder": "12 caractères minimum", "autofocus": True}
         )
         self.fields["new_password2"].widget.attrs["placeholder"] = "Répète ton mot de passe"

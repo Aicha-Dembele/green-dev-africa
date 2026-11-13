@@ -157,20 +157,17 @@ else:
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
+BETA_SIMULATED_PAYMENTS = DEBUG and os.environ.get("BETA_SIMULATED_PAYMENTS", "True") == "True"
+
+
 AUTH_PASSWORD_VALIDATORS = [
-    # Deux règles seulement, et faciles à satisfaire. Django en propose
-    # quatre par défaut ; les deux autres (« mot de passe trop courant » et
-    # « trop proche de votre identifiant ») rejetaient des mots de passe
-    # raisonnables et affichaient un pavé d'explications au moment de
-    # l'inscription. On peut les remettre en deux lignes avant la mise en
-    # ligne définitive si l'équipe le souhaite.
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 8},
+        "OPTIONS": {"min_length": 12},
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 

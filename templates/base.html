@@ -3,19 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="light">
   <meta name="description" content="{% block description %}Green Dev Africa aide à mesurer la sobriété numérique d’un site et à prioriser des améliorations concrètes.{% endblock %}">
   <title>{% block titre %}Green Dev Africa{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'css/greendev.css' %}">
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/green-dev-africa.svg' %}">
+  <link rel="stylesheet" href="{% static 'css/greendev.css' %}?v=20261114-beta1">
   {# defer : le script attend la page, il ne retarde pas son affichage. #}
-  <script src="{% static 'js/greendev.js' %}" defer></script>
+  <script src="{% static 'js/greendev.js' %}?v=20261113-feedback2" defer></script>
 </head>
 <body class="{% block classe_page %}{% endblock %}">
 
 <a class="lien-evitement" href="#contenu-principal">Aller au contenu principal</a>
 
 <header class="barre">
-  <a class="marque" href="{% url 'tableau_de_bord' %}">Green<span>Dev</span> Africa</a>
+  <a class="marque" href="{% url 'tableau_de_bord' %}" aria-label="Green Dev Africa, accueil">
+    <img src="{% static 'img/green-dev-africa.svg' %}" alt="" width="36" height="36">
+    <span class="marque-nom">Green<span>Dev</span> Africa</span>
+    <span class="badge-beta">Bêta</span>
+  </a>
 
   <nav class="{% if not user.is_authenticated %}nav-visiteur{% endif %}" aria-label="Navigation principale">
     {% if user.is_authenticated %}
@@ -43,13 +48,37 @@
       <a class="nav-inscription" href="{% url 'inscription' %}">Créer un compte</a>
     {% endif %}
   </nav>
+
+  <details class="menu-mobile">
+    <summary aria-label="Ouvrir le menu de navigation"><span class="menu-mobile-icone" aria-hidden="true"></span><span>Menu</span></summary>
+    <nav aria-label="Navigation mobile">
+      {% if user.is_authenticated %}
+        <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a>
+        <a href="{% url 'projet_creer' %}">Nouveau projet</a>
+        <a href="{% url 'tarifs' %}">Tarifs</a>
+        <a href="{% url 'mes_credits' %}">Mes crédits</a>
+        {% if user.is_superuser or user.est_administrateur %}<a href="{% url 'regles_seuils' %}">Règles d'analyse</a>{% endif %}
+        <a href="{% url 'notifications' %}">Notifications{% if notifications_non_lues %} ({{ notifications_non_lues }}){% endif %}</a>
+        <a href="{% url 'profil' %}">Mon compte</a>
+      {% else %}
+        <a href="{% url 'tarifs' %}">Tarifs</a>
+        <a href="{% url 'connexion' %}">Se connecter</a>
+        <a href="{% url 'inscription' %}">Créer un compte</a>
+      {% endif %}
+    </nav>
+  </details>
 </header>
+
+<aside class="bandeau-beta" aria-label="Information sur la version bêta">
+  <p><strong>Green Dev Africa est en bêta.</strong> Les mesures peuvent évoluer. Les crédits sont des unités de test : aucune recharge ne débite d’argent.</p>
+  <a href="mailto:sadoudev223@gmail.com?subject=Retour%20sur%20Green%20Dev%20Africa%20(b%C3%AAta)">Donner mon avis <span aria-hidden="true">→</span></a>
+</aside>
 
 <main id="contenu-principal" tabindex="-1">
   {% if messages %}
-    <ul class="messages">
+    <ul class="messages" data-toast-stack aria-label="Notifications récentes">
       {% for message in messages %}
-        <li class="{{ message.tags }}"{% if "error" in message.tags %} role="alert" aria-live="assertive"{% else %} role="status" aria-live="polite"{% endif %}>{{ message }}</li>
+        <li class="{{ message.tags }}" data-toast{% if "error" in message.tags %} role="alert" aria-live="assertive"{% else %} role="status" aria-live="polite"{% endif %}>{{ message }}</li>
       {% endfor %}
     </ul>
   {% endif %}
@@ -58,8 +87,23 @@
 </main>
 
 <footer class="pied-page">
-  <a href="{% url 'politique_confidentialite' %}">Politique de confidentialité</a>
+  <a href="{% url 'politique_confidentialite' %}">Confidentialité</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sadoudev223@gmail.com">Nous contacter</a>
 </footer>
+
+<dialog class="confirmation-modale" data-confirm-dialog aria-labelledby="confirmation-titre" aria-describedby="confirmation-message">
+  <form method="dialog" class="confirmation-modale__fermeture">
+    <button class="confirmation-modale__croix" value="cancel" aria-label="Fermer cette fenêtre">×</button>
+  </form>
+  <span class="confirmation-modale__icone" aria-hidden="true">?</span>
+  <h2 id="confirmation-titre" data-confirm-title>Confirmer cette action</h2>
+  <p id="confirmation-message" data-confirm-message>Vérifiez les détails avant de continuer.</p>
+  <div class="confirmation-modale__actions">
+    <button type="button" class="bouton bouton-secondaire" data-confirm-cancel>Annuler</button>
+    <button type="button" class="bouton" data-confirm-accept>Confirmer</button>
+  </div>
+</dialog>
 
 </body>
 </html>

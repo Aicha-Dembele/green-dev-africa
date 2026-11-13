@@ -123,7 +123,7 @@
                   </td>
                   <td data-label="Action">
                     {% if partage.actif %}
-                      <form method="post" action="{% url 'partage_revoquer' partage.pk %}">
+                      <form method="post" action="{% url 'partage_revoquer' partage.pk %}" data-confirm-title="Révoquer ce lien ?" data-confirm-message="Toute personne qui utilise ce lien perdra l’accès public à ce rapport.">
                         {% csrf_token %}
                         <button type="submit" class="bouton-discret">Révoquer</button>
                       </form>

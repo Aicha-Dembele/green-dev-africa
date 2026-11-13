@@ -4,6 +4,7 @@ Pour les lancer :  python manage.py test analyses.tests_vues
 """
 
 import json
+from unittest.mock import patch
 from io import StringIO
 
 from django.contrib.auth import get_user_model
@@ -183,10 +184,11 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         self.assertNotEqual(analyse.statut, Analyse.Statut.EN_ATTENTE)
 
     def test_parcours_utilisateur_complet_depuis_lancement_jusqu_au_detail(self):
-        reponse = self.client.post(
-            reverse("lancer_analyse", args=[self.projet.pk]),
-            self.donnees_formulaire(),
-        )
+        with patch("analyses.views.verifier_adresse"):
+            reponse = self.client.post(
+                reverse("lancer_analyse", args=[self.projet.pk]),
+                self.donnees_formulaire(),
+            )
 
         analyse = Analyse.objects.get(projet=self.projet)
         self.assertRedirects(reponse, reverse("analyse_detail", args=[analyse.pk]))
@@ -234,9 +236,9 @@ class LancerAnalyseVueTest(BaseAnalyseVueTest):
         Le cas inverse — tout laisser vide pour déclencher la mesure
         automatique — est couvert dans `analyses/tests_collecteur.py`.
         """
-        from unittest.mock import patch
-
-        with patch("analyses.collecteur.collecter") as faux_collecteur:
+        with patch("analyses.views.verifier_adresse"), patch(
+            "analyses.collecteur.collecter"
+        ) as faux_collecteur:
             self.client.post(
                 reverse("lancer_analyse", args=[self.projet.pk]),
                 self.donnees_formulaire(),

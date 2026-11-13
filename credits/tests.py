@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from analyses.models import Analyse, ConfigurationAnalyse
@@ -94,9 +94,10 @@ class CreditsMetierTest(TestCase):
                 type=JournalCredits.Type.ACHAT_MANUEL,
             ).exists()
         )
-        self.assertContains(response, "Simulation sans paiement réel")
+        self.assertContains(response, "aucun paiement réel")
         self.assertContains(response, "Confirmer la simulation et ajouter 20 crédits")
 
+    @override_settings(BETA_SIMULATED_PAYMENTS=True)
     def test_confirmation_simulee_ajoute_les_credits_sans_paiement_reel(self):
         utilisateur = Utilisateur.objects.create_user(
             username="bintou_simulation",

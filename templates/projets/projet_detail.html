@@ -97,7 +97,7 @@
                     <td data-label="Action">
                       <details>
                         <summary class="bouton bouton-discret">Retirer</summary>
-                        <form method="post" action="{% url 'objectif_supprimer' projet.pk objectif.pk %}">
+                        <form method="post" action="{% url 'objectif_supprimer' projet.pk objectif.pk %}" data-confirm-title="Retirer cet objectif ?" data-confirm-message="L’objectif sera supprimé de ce projet. Cette action ne peut pas être annulée.">
                           {% csrf_token %}
                           <p>Retirer cet objectif du projet ?</p>
                           <button type="submit" class="bouton-discret">Confirmer le retrait</button>

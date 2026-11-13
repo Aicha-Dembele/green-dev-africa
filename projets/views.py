@@ -34,19 +34,15 @@ def tableau_de_bord(request):
     chercher la dernière analyse de chaque projet sans refaire un appel à la
     base par ligne affichée.
     """
-    # Traitement « opportuniste » d'une analyse en attente, en plus du
-    # processus `traiter_analyses` dédié. Une panne ici (base, réseau,
-    # site distant injoignable) ne doit jamais faire tomber le tableau de
-    # bord de tout le monde : on journalise et on continue d'afficher la page.
-    try:
-        traiter_une_analyse_en_attente(
-            request.user if request.user.is_authenticated else None
-        )
-    except Exception:
-        journal.exception("Échec du traitement opportuniste d'une analyse")
-
+    # La page d'accueil publique ne doit jamais déclencher de traitement
+    # coûteux. Seul un utilisateur connecté peut traiter sa propre file.
     if not request.user.is_authenticated:
         return render(request, "accueil.html")
+
+    try:
+        traiter_une_analyse_en_attente(request.user)
+    except Exception:
+        journal.exception("Échec du traitement opportuniste d'une analyse")
 
     derniere = Analyse.objects.filter(projet=OuterRef("pk")).order_by("-date_analyse")
 

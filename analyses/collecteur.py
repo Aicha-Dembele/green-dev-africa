@@ -29,6 +29,10 @@ from html.parser import HTMLParser
 from urllib.parse import urldefrag, urljoin, urlparse
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.connection import HTTPConnection, HTTPSConnection
+from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
+from urllib3.poolmanager import PoolManager
 
 from .indicateurs import categorie_de, unite_de
 
@@ -213,6 +217,7 @@ def verifier_adresse(url):
     if not adresses_ip:
         raise ErreurCollecte("Le domaine ne possède aucune adresse IP valide.")
 
+    adresses_publiques = []
     for adresse_ip in adresses_ip:
         if isinstance(adresse_ip, ipaddress.IPv6Address) and adresse_ip.ipv4_mapped:
             adresse_ip = adresse_ip.ipv4_mapped
@@ -228,6 +233,91 @@ def verifier_adresse(url):
             raise ErreurCollecte(
                 "Cette adresse pointe vers un réseau interne : analyse refusée."
             )
+        adresses_publiques.append(str(adresse_ip))
+    return adresses_publiques
+
+
+class _ConnexionHTTPVerrouillee(HTTPConnection):
+    """Connexion TCP vers l'IP déjà vérifiée, sans nouvelle résolution DNS."""
+    def __init__(self, *args, ip_verifiee, **kwargs):
+        self.ip_verifiee = ip_verifiee
+        super().__init__(*args, **kwargs)
+
+    def _new_conn(self):
+        return socket.create_connection(
+            (self.ip_verifiee, self.port), self.timeout,
+            source_address=self.source_address,
+        )
+
+
+class _ConnexionHTTPSVerrouillee(HTTPSConnection):
+    """Épingle l'IP tout en conservant le nom d'hôte pour TLS/SNI."""
+    def __init__(self, *args, ip_verifiee, **kwargs):
+        self.ip_verifiee = ip_verifiee
+        super().__init__(*args, **kwargs)
+
+    def _new_conn(self):
+        return socket.create_connection(
+            (self.ip_verifiee, self.port), self.timeout,
+            source_address=self.source_address,
+        )
+
+
+class _PoolHTTPVerrouille(HTTPConnectionPool):
+    ConnectionCls = _ConnexionHTTPVerrouillee
+
+
+class _PoolHTTPSVerrouille(HTTPSConnectionPool):
+    ConnectionCls = _ConnexionHTTPSVerrouillee
+
+
+class _GestionnaireVerrouille(PoolManager):
+    pool_classes_by_scheme = {"http": _PoolHTTPVerrouille, "https": _PoolHTTPSVerrouille}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for schema, normalisateur in self.key_fn_by_scheme.items():
+            self.key_fn_by_scheme[schema] = (
+                lambda contexte, normalisateur=normalisateur: normalisateur(
+                    {
+                        cle: valeur
+                        for cle, valeur in contexte.items()
+                        if cle != "ip_verifiee"
+                    }
+                )
+            )
+
+
+class _AdaptateurIPVerrouille(HTTPAdapter):
+    def __init__(self, ip_verifiee):
+        self.ip_verifiee = ip_verifiee
+        super().__init__(max_retries=0)
+
+    def init_poolmanager(self, connections, maxsize, block=False, **kwargs):
+        kwargs["ip_verifiee"] = self.ip_verifiee
+        self.poolmanager = _GestionnaireVerrouille(
+            num_pools=connections, maxsize=maxsize, block=block, **kwargs
+        )
+
+
+def _requete_ip_verrouillee(session, adresse, ip_verifiee):
+    """Exécute une requête publique sans laisser requests refaire le DNS."""
+    if not isinstance(session, requests.Session):
+        # Les sessions factices des tests n'ouvrent aucun socket.
+        return session.get(adresse, timeout=DELAI_SECONDES, stream=True, allow_redirects=False)
+    epinglee = requests.Session()
+    epinglee.headers.update(session.headers)
+    epinglee.mount("http://", _AdaptateurIPVerrouille(ip_verifiee))
+    epinglee.mount("https://", _AdaptateurIPVerrouille(ip_verifiee))
+    try:
+        reponse = epinglee.get(
+            adresse, timeout=DELAI_SECONDES, stream=True, allow_redirects=False
+        )
+        reponse._session_epinglee = epinglee
+        return reponse
+    except Exception:
+        epinglee.close()
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -249,13 +339,10 @@ def _telecharger(session, url, types_acceptes):
     adresse = url
 
     for saut in range(MAX_REDIRECTIONS + 1):
-        verifier_adresse(adresse)
+        adresses_verifiees = verifier_adresse(adresse)
         try:
-            reponse = session.get(
-                adresse,
-                timeout=DELAI_SECONDES,
-                stream=True,
-                allow_redirects=False,
+            reponse = _requete_ip_verrouillee(
+                session, adresse, adresses_verifiees[0]
             )
         except requests.Timeout:
             raise ErreurCollecte(
@@ -304,6 +391,9 @@ def _telecharger(session, url, types_acceptes):
             return bytes(contenu), type_mime, adresse
         finally:
             reponse.close()
+            session_epinglee = getattr(reponse, "_session_epinglee", None)
+            if session_epinglee is not None:
+                session_epinglee.close()
 
     raise ErreurCollecte("Le site renvoie trop de redirections.")
 

@@ -1,5 +1,8 @@
 """Formulaires des projets et des objectifs."""
 
+import ipaddress
+from urllib.parse import urlparse
+
 from django import forms
 
 from .models import ObjectifOptimisation, Projet
@@ -24,6 +27,27 @@ class ProjetForm(forms.ModelForm):
             "url": forms.URLInput(attrs={"placeholder": "https://monsite.ml"}),
         }
         help_texts = {"url": "L'adresse de la page qui sera analysée."}
+
+    def clean_url(self):
+        url = self.cleaned_data["url"]
+        decoupe = urlparse(url)
+        if decoupe.scheme.lower() not in {"http", "https"}:
+            raise forms.ValidationError("Utilise une adresse commençant par http:// ou https://.")
+        hote = decoupe.hostname or ""
+        try:
+            ipaddress.ip_address(hote)
+        except ValueError:
+            pass
+        else:
+            raise forms.ValidationError(
+                "Saisis le nom de domaine public du site, pas une adresse IP."
+            )
+        hote = hote.rstrip(".").lower()
+        if hote == "localhost" or hote.endswith((".localhost", ".local", ".internal")):
+            raise forms.ValidationError(
+                "Cette adresse locale ou interne ne peut pas être ajoutée."
+            )
+        return url
 
 
 class ObjectifForm(forms.ModelForm):

@@ -12,12 +12,12 @@
 {% endif %}
 
 {% for champ in champs|default:formulaire %}
-  <div class="champ">
+  <div class="champ{% if champ.errors %} champ-invalide{% endif %}">
     {{ champ.label_tag }}
     {{ champ|widget_accessible }}
     {% if champ.help_text %}<span class="aide">{{ champ.help_text }}</span>{% endif %}
     {% if champ.errors %}
-      <ul class="erreurs-champ" id="{{ champ.auto_id }}_erreurs" role="alert">
+      <ul class="erreurs-champ" id="{{ champ.auto_id }}_erreurs" role="alert" aria-live="assertive">
         {% for erreur in champ.errors %}<li>{{ erreur }}</li>{% endfor %}
       </ul>
     {% endif %}

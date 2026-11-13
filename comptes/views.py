@@ -8,7 +8,8 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_GET
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import InscriptionForm
 from .models import Notification
@@ -49,6 +50,7 @@ def notifications(request):
 
 
 @login_required
+@require_POST
 def notification_lue(request, pk):
     """Marque une notification comme lue, puis revient là d'où on vient.
 
@@ -56,15 +58,19 @@ def notification_lue(request, pk):
     la notification de quelqu'un d'autre, même en devinant son numéro.
     """
     notification = get_object_or_404(Notification, pk=pk, utilisateur=request.user)
-    if request.method == "POST":
-        notification.marquer_comme_lue()
-    return redirect(request.POST.get("retour") or "notifications")
+    notification.marquer_comme_lue()
+    retour = request.POST.get("retour", "")
+    if not url_has_allowed_host_and_scheme(
+        retour, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        retour = ""
+    return redirect(retour or "notifications")
 
 
 @login_required
+@require_POST
 def notifications_toutes_lues(request):
     """Vide la cloche d'un seul coup."""
-    if request.method == "POST":
-        request.user.notifications.filter(lu=False).update(lu=True)
-        messages.success(request, "Toutes les notifications sont marquées comme lues.")
+    request.user.notifications.filter(lu=False).update(lu=True)
+    messages.success(request, "Toutes les notifications sont marquées comme lues.")
     return redirect("notifications")

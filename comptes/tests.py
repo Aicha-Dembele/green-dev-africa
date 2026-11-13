@@ -159,22 +159,20 @@ class MotDePasseTest(TestCase):
         self.assertEqual(reponse.status_code, 200)
         self.assertFalse(Utilisateur.objects.filter(username="nouvelle").exists())
 
-    def test_mot_de_passe_simple_de_huit_caracteres_accepte(self):
-        """« Mot de passe trop courant » ne bloque plus : c'était la règle
-        qui rejetait des mots de passe raisonnables."""
+    def test_mot_de_passe_faible_ou_trop_court_refuse(self):
         reponse = self.creer("bamako2026")
 
-        self.assertRedirects(reponse, reverse("tableau_de_bord"))
-        self.assertTrue(Utilisateur.objects.filter(username="nouvelle").exists())
+        self.assertEqual(reponse.status_code, 200)
+        self.assertFalse(Utilisateur.objects.filter(username="nouvelle").exists())
 
     def test_laide_du_formulaire_tient_en_une_phrase(self):
         reponse = self.client.get(reverse("inscription"))
 
-        self.assertContains(reponse, "Au moins 8 caractères.")
+        self.assertContains(reponse, "Au moins 12 caractères.")
         self.assertContains(reponse, 'placeholder="Ex. aicha-dembele"')
         self.assertContains(reponse, 'placeholder="Ex. Aïcha Dembélé"')
         self.assertContains(reponse, 'placeholder="Ex. aicha@exemple.com"')
-        self.assertContains(reponse, 'placeholder="8 caractères minimum"')
+        self.assertContains(reponse, 'placeholder="12 caractères minimum"')
         self.assertContains(reponse, 'placeholder="Répète ton mot de passe"')
         # Le pavé d'explications de Django a disparu.
         self.assertNotContains(reponse, "Votre mot de passe ne peut pas trop")

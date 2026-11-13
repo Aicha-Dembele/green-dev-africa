@@ -12,8 +12,7 @@
     <header class="credit-entete">
       <h1>Recharger mon solde</h1>
       <p class="chapeau">
-        Choisis un montant, vérifie les crédits correspondants, puis règle ton achat
-        quand le paiement en ligne sera disponible.
+        Cette page sert à tester le fonctionnement des crédits pendant la bêta. Aucun paiement réel n’est disponible.
       </p>
     </header>
 
@@ -28,13 +27,11 @@
         <span class="credit-etape-numero" aria-hidden="true">1</span>
         <div>
           <h2 id="choisir-montant-titre">Choisis un montant</h2>
-          <p class="discret">Un crédit coûte {{ prix_credit_fcfa }} FCFA.</p>
+          <p class="discret">Valeur indicative de test : {{ prix_credit_fcfa }} FCFA par crédit. Aucun prélèvement ne sera effectué.</p>
         </div>
       </div>
 
-      {% if erreur_achat %}
-        <p class="credit-erreur" role="alert">{{ erreur_achat }}</p>
-      {% endif %}
+      {% if erreur_achat %}<p class="credit-erreur" role="alert">{{ erreur_achat }}</p>{% endif %}
 
       <div class="grille grille-3 credit-offres">
         {% for offre in montants_suggeres %}
@@ -65,13 +62,14 @@
             step="{{ achat_pas_fcfa }}"
             value="{{ montant_saisi }}"
             placeholder="{{ achat_minimum_fcfa }}"
-            aria-describedby="aide-montant-personnalise"
+            {% if erreur_achat %}aria-describedby="aide-montant-personnalise erreur-achat" aria-invalid="true"{% else %}aria-describedby="aide-montant-personnalise"{% endif %}
             required
           >
           <small id="aide-montant-personnalise">
             De {{ achat_minimum_fcfa }} à {{ achat_maximum_fcfa }} FCFA, par pas de
             {{ achat_pas_fcfa }} FCFA.
           </small>
+          {% if erreur_achat %}<span id="erreur-achat" class="champ-erreur-inline" role="alert">{{ erreur_achat }}</span>{% endif %}
         </div>
         <button type="submit" name="action" value="verifier">Vérifier ce montant</button>
       </form>
@@ -95,12 +93,12 @@
         </dl>
 
         <div class="credit-paiement-indisponible" role="status">
-          <strong>Étape 3 — Simulation sans paiement réel</strong>
+          <strong>Simulation de bêta — aucun paiement réel</strong>
           <p>
-            En confirmant, tu ajoutes ces crédits à ton solde. Aucun argent ne sera débité.
+            En confirmant, tu ajoutes des crédits de test à ton solde. Ils n’ont pas de valeur monétaire et aucun argent ne sera débité.
           </p>
         </div>
-        <form method="post">
+        <form method="post" data-confirm-title="Confirmer la simulation" data-confirm-message="Cette action ajoute {{ commande.credits }} crédits à ton solde. Aucun paiement réel ne sera effectué." data-confirm-label="Ajouter les crédits">
           {% csrf_token %}
           <input type="hidden" name="montant" value="{{ commande.montant }}">
           <button class="credit-paiement-bouton" type="submit" name="action" value="simuler_paiement">

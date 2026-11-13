@@ -1,149 +1,54 @@
 {% extends "base.html" %}
 
 {% block titre %}Politique de confidentialité — Green Dev Africa{% endblock %}
-{% block description %}Découvrez quelles données Green Dev Africa utilise, pourquoi et comment exercer vos droits.{% endblock %}
+{% block description %}Données utilisées par Green Dev Africa, finalités, hébergement, conservation et moyens de nous contacter.{% endblock %}
 {% block classe_page %}page-politique{% endblock %}
 
 {% block contenu %}
 <article class="politique-contenu">
-  <p class="surtitre">INFORMATIONS SUR VOS DONNÉES</p>
+  <p class="surtitre">VOS DONNÉES, EN TOUTE CLARTÉ</p>
   <h1>Politique de confidentialité</h1>
-  <p class="chapeau">Dernière mise à jour : 20 octobre 2026</p>
+  <p class="chapeau">Mise à jour le 13 novembre 2026</p>
+  <p>Cette politique décrit les données nécessaires au fonctionnement de Green Dev Africa, une plateforme qui analyse les pages web et aide à repérer des pistes d’optimisation. Elle s’applique aux personnes qui créent un compte, utilisent les audits ou consultent un rapport partagé.</p>
 
-  <p>
-    Cette page explique quelles données Green Dev Africa traite lorsque vous
-    utilisez le service, dans quel but et comment demander leur accès ou leur
-    suppression. Green Dev Africa est un outil d'analyse de sobriété numérique
-    de sites web.
-  </p>
+  <h2>1. Qui est responsable du service ?</h2>
+  <p>Le service est édité par <strong>Sadou Sidibé, sous le nom Green Dev Africa</strong>. Pour toute question sur vos données ou pour exercer une demande, écrivez à <a href="mailto:sadoudev223@gmail.com">sadoudev223@gmail.com</a>. Le service ne publie pas d’adresse postale ou de forme juridique distincte à ce jour.</p>
 
-  <h2>1. Responsable du traitement et contact</h2>
-  <p>
-    Le responsable du traitement indiqué pour ce service est l'équipe Green
-    Dev. Pour toute question sur vos données ou pour exercer vos droits,
-    contactez :
-    <a href="mailto:sadoudev223@gmail.com">sadoudev223@gmail.com</a>.
-  </p>
-
-  <h2>2. Données traitées</h2>
+  <h2>2. Quelles données sont utilisées ?</h2>
   <ul>
-    <li>
-      <strong>Compte :</strong> identifiant, nom, adresse e-mail, rôle et mot de
-      passe stocké sous forme protégée par le mécanisme d'authentification de
-      Django. Le mot de passe n'est pas affiché dans le profil.
-    </li>
-    <li>
-      <strong>Projets et objectifs :</strong> nom, description éventuelle, URL
-      du site à analyser, objectifs et statut du projet.
-    </li>
-    <li>
-      <strong>Audits :</strong> options d'analyse et de contexte (appareil,
-      connexion, forfait), mesures, ressources et adresses des fichiers
-      repérés, score, problèmes, recommandations, rapports et comparaisons.
-      Vous pouvez aussi saisir manuellement des mesures.
-    </li>
-    <li>
-      <strong>Notifications :</strong> contenu, date et état de lecture des
-      messages affichés dans votre espace.
-    </li>
-    <li>
-      <strong>Données techniques :</strong> le navigateur envoie les
-      informations nécessaires au fonctionnement d'un site web. L'hébergeur
-      peut notamment traiter des journaux de connexion ; leur contenu et leur
-      durée de conservation dépendent de la configuration effective de
-      l'hébergement.
-    </li>
+    <li><strong>Compte :</strong> nom, identifiant, adresse e-mail et données de connexion. Le mot de passe est enregistré sous forme de hachage par Django; il n’est pas conservé en clair.</li>
+    <li><strong>Projets :</strong> nom, description facultative, URL du site, objectifs et statut.</li>
+    <li><strong>Audits et rapports :</strong> URL demandée, options d’analyse, mesures recueillies, ressources et adresses de fichiers repérées, score, problèmes, conseils, comparaisons et exports. Des mesures peuvent aussi être saisies manuellement.</li>
+    <li><strong>Crédits :</strong> solde, opérations et analyses associées, pour calculer et expliquer le coût d’utilisation. Le paiement est actuellement simulé et aucun montant n’est prélevé par l’application.</li>
+    <li><strong>Notifications :</strong> contenu, date et état de lecture. Des e-mails de service peuvent être envoyés si le serveur de messagerie est configuré.</li>
+    <li><strong>Données techniques :</strong> informations transmises lors d’une connexion web, comme l’adresse IP, les en-têtes du navigateur et les journaux nécessaires au fonctionnement et au diagnostic. Les journaux conservés par les hébergeurs dépendent de leurs réglages et de leurs propres politiques.</li>
   </ul>
 
-  <h2>3. Utilisation des données</h2>
-  <p>Ces données servent à :</p>
-  <ul>
-    <li>créer et sécuriser votre compte et vous permettre de vous connecter ;</li>
-    <li>enregistrer vos projets et réaliser les audits que vous demandez ;</li>
-    <li>calculer et afficher les résultats, recommandations et comparaisons ;</li>
-    <li>produire vos rapports et gérer leurs liens de partage ;</li>
-    <li>afficher les notifications liées à votre activité dans l'application.</li>
-  </ul>
-  <p>
-    L'application peut envoyer une notification par e-mail lorsque le backend
-    de messagerie est configuré pour le service. Les messages de notification
-    liés à une analyse terminée ou à un changement important sont envoyés à
-    l'adresse e-mail du compte, sauf si l'envoi est désactivé par la
-    configuration de l'hébergement.
-  </p>
+  <h2>3. Pourquoi les traiter ?</h2>
+  <p>Ces données servent à créer et sécuriser votre compte, enregistrer vos projets, exécuter les analyses que vous demandez, afficher vos résultats et leur historique, gérer les comparaisons, crédits, notifications et liens de partage, et corriger les incidents. L’application n’intègre actuellement ni publicité ni outil tiers de mesure d’audience.</p>
 
-  <h2>4. Audits de sites web et partage de rapports</h2>
-  <p>
-    Quand vous lancez un audit automatique, le serveur de Green Dev Africa
-    contacte l'adresse du site que vous avez indiquée et certaines ressources
-    qu'il référence. Le site audité peut donc recevoir des requêtes provenant
-    du serveur et voir les informations techniques habituelles de ces
-    requêtes, comme son adresse IP. Les identifiants de votre compte ne sont
-    pas transmis volontairement au site audité. L'outil ne mesure pas les
-    fichiers chargés ultérieurement par JavaScript.
-  </p>
-  <p>
-    Si vous créez un lien de rapport public, toute personne qui possède ce lien
-    peut consulter le rapport jusqu'à son expiration ou sa révocation.
-    Partagez-le uniquement avec les personnes auxquelles vous souhaitez donner
-    accès.
-  </p>
+  <h2>4. Ce qui se passe lors d’un audit</h2>
+  <p>Pour un audit automatique, le serveur Green Dev Africa se connecte à l’adresse fournie et télécharge certaines ressources qu’elle référence, dans les limites du collecteur. Le site analysé reçoit donc des requêtes techniques du serveur, notamment son adresse IP. Les identifiants de votre compte ne lui sont pas transmis volontairement. L’analyse ne reproduit pas toute l’exécution d’un navigateur et ne mesure pas nécessairement les ressources chargées ensuite par JavaScript.</p>
 
-  <h2>5. Cookies et services tiers</h2>
-  <p>
-    Le service utilise les mécanismes techniques nécessaires à la connexion et
-    à la protection des formulaires, notamment une session et une protection
-    contre les requêtes non autorisées. Le code de l'application n'intègre pas
-    de publicité ni d'outil de mesure d'audience tiers. Les éventuels journaux
-    techniques de l'hébergeur restent soumis à la configuration de celui-ci.
-  </p>
+  <h2>5. Rapports partagés</h2>
+  <p>Vous pouvez créer un lien public vers un rapport. Toute personne qui possède ce lien peut consulter le rapport jusqu’à son expiration. La durée est choisie lors du partage et peut aller de 1 à 365 jours; si aucune durée valide n’est fournie, elle est de 30 jours. Le lien peut aussi être révoqué depuis l’application. Évitez d’y inclure ou d’y partager des informations confidentielles.</p>
 
-  <h2>6. Conservation et suppression</h2>
-  <p>
-    Les projets, audits, rapports et notifications sont conservés dans la base
-    de données du service afin de vous permettre de consulter leur historique.
-    L'application ne propose pas actuellement de fonction de suppression de
-    compte depuis le profil et ne définit pas de délai automatique de
-    suppression. Pour demander la suppression de votre compte et des données
-    qui y sont associées, contactez le responsable à l'adresse indiquée
-    ci-dessus. Les liens de rapport sont limités dans le temps et peuvent être
-    révoqués par leur créateur.
-  </p>
+  <h2>6. Cookies et stockage local</h2>
+  <p>Le site utilise les cookies techniques de session et de protection contre les requêtes frauduleuses fournis par Django. Ils sont nécessaires à la connexion et aux formulaires; l’application ne dépose pas de cookie publicitaire ou de suivi d’audience.</p>
 
-  <h2>7. Destinataires et hébergement</h2>
-  <p>
-    Vos données sont accessibles aux personnes autorisées à administrer le
-    service. Les rapports que vous partagez sont aussi accessibles aux
-    détenteurs de leur lien. Le nom de l'hébergeur, le pays d'hébergement et
-    les éventuels sous-traitants doivent être précisés par l'exploitant avant
-    la mise en production ; ils ne peuvent pas être déterminés à partir du code
-    de l'application seul.
-  </p>
+  <h2>7. Hébergement et destinataires</h2>
+  <p>Le service web est hébergé chez <a href="https://systalink.com/fr/mentions-legales" rel="noopener noreferrer">Systalink</a>. La base de données PostgreSQL est fournie par Supabase et son projet est configuré dans la région Europe de l’Ouest (Paris). Les prestataires techniques peuvent traiter les données pour faire fonctionner, protéger ou maintenir le service. La région choisie indique l’emplacement principal de stockage; elle ne garantit pas que toutes les opérations de support, de compte ou de sécurité restent dans cette région. Consultez les informations de <a href="https://supabase.com/docs/guides/platform/regions" rel="noopener noreferrer">Supabase sur les régions</a> et sa <a href="https://supabase.com/legal/privacy-resources/data-residency-and-transfers-faq" rel="noopener noreferrer">FAQ sur la résidence et les transferts de données</a>.</p>
 
-  <h2>8. Sécurité</h2>
-  <p>
-    L'application limite l'accès aux projets et analyses à leur propriétaire,
-    protège les actions de modification par des formulaires sécurisés et
-    s'appuie sur le stockage protégé des mots de passe de Django. Aucun
-    dispositif ne garantissant une sécurité absolue, évitez de saisir dans les
-    projets des informations qui ne sont pas nécessaires à l'audit.
-  </p>
+  <h2>8. Durée de conservation et suppression</h2>
+  <p>Les données de compte, projets, audits, rapports, crédits et notifications restent dans la base tant que le compte est actif; l’application ne configure pas de suppression automatique selon une durée fixe. Il n’existe pas encore de bouton de suppression du compte. Pour demander la suppression de votre compte et des données associées, écrivez à <a href="mailto:sadoudev223@gmail.com">sadoudev223@gmail.com</a>. Nous vous répondrons et traiterons la demande après vérification raisonnable de votre identité. Les sauvegardes et journaux des prestataires peuvent suivre leurs propres durées de conservation, qui ne sont pas pilotées depuis l’application.</p>
 
-  <h2>9. Vos droits</h2>
-  <p>
-    Selon la législation applicable à votre situation, vous pouvez notamment
-    demander l'accès à vos données, leur rectification ou leur suppression,
-    et, lorsque la loi le prévoit, vous opposer à certains traitements ou en
-    demander la limitation. Adressez votre demande au contact indiqué dans
-    cette page. Si le RGPD s'applique à votre situation, vous pouvez également
-    saisir l'autorité de protection des données compétente.
-  </p>
+  <h2>9. Sécurité</h2>
+  <p>L’application utilise l’authentification Django, le hachage des mots de passe, la protection CSRF des formulaires et des contrôles d’accès aux projets. Aucun service en ligne ne peut garantir une sécurité absolue. Ne saisissez que les informations nécessaires à votre audit et protégez l’accès à votre compte.</p>
 
-  <p class="politique-fin">
-    Cette politique décrit le fonctionnement actuel de l'application. Les
-    informations relatives à l'hébergeur, aux éventuels sous-traitants et aux
-    durées de conservation des journaux techniques doivent être confirmées par
-    l'exploitant avant toute mise en production.
-  </p>
+  <h2>10. Vos demandes et vos droits</h2>
+  <p>Selon la législation qui s’applique à votre situation, vous pouvez notamment demander l’accès à vos données, leur correction ou leur suppression, ou vous opposer à certains traitements. Écrivez à <a href="mailto:sadoudev223@gmail.com">sadoudev223@gmail.com</a> en précisant votre demande et l’adresse e-mail du compte. Nous pouvons demander des éléments limités pour vérifier que la demande vient bien de la personne concernée. Si vous estimez que votre demande n’a pas été traitée correctement, vous pouvez contacter l’autorité de protection des données compétente dans votre pays.</p>
+
+  <h2>11. Évolutions de cette politique</h2>
+  <p>Cette page sera mise à jour si les traitements, les prestataires ou les fonctionnalités changent. La date en haut indique la dernière révision. Les nouvelles versions s’appliquent à compter de leur publication.</p>
 </article>
 {% endblock %}

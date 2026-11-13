@@ -31,8 +31,9 @@
        data-quota-gratuit="{{ quota_gratuit_mensuel }}">
     <div class="entre-deux">
       <h2 class="analyse-cout-titre">Coût de l'analyse</h2>
-      <span class="etiquette etiquette-ok">Solde : {{ solde }} crédits</span>
+      <span class="etiquette etiquette-ok">Solde : {{ solde }} crédit{{ solde|pluralize }}</span>
     </div>
+    <p class="analyse-cout-aide">Cette carte indique les crédits utilisés par le type d’audit choisi. Le montant se met à jour si tu changes le type ou le mode. Les crédits sont débités au lancement de l’analyse.</p>
     <p class="analyse-cout-message" data-analyse-cout-message>
       {% if cout_analyse == 0 %}
         Gratuite : il vous reste {{ gratuites_restantes }} analyses gratuites ce mois-ci.
@@ -52,18 +53,18 @@
         <tbody>
           <tr>
             <td>Page unique</td>
-            <td>{{ cout_page_hors_quota }} crédits</td>
-            <td>Gratuit tant qu'il reste des analyses gratuites dans le mois.</td>
+            <td>{{ cout_page_hors_quota }} crédit{{ cout_page_hors_quota|pluralize }}</td>
+            <td>Gratuite dans la limite du quota mensuel; ensuite {{ cout_page_hors_quota }} crédit{{ cout_page_hors_quota|pluralize }}.</td>
           </tr>
           <tr>
             <td>Site complet, rapide</td>
-            <td>{{ cout_site_rapide }} crédits</td>
-            <td>Payant</td>
+            <td>{{ cout_site_rapide }} crédit{{ cout_site_rapide|pluralize }}</td>
+            <td>Toujours payant en crédits</td>
           </tr>
           <tr>
             <td>Site complet, approfondi</td>
-            <td>{{ cout_site_approfondi }} crédits</td>
-            <td>Payant</td>
+            <td>{{ cout_site_approfondi }} crédit{{ cout_site_approfondi|pluralize }}</td>
+            <td>Toujours payant en crédits</td>
           </tr>
         </tbody>
       </table>

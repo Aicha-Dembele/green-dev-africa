@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
@@ -175,7 +176,10 @@ def acheter_credits(request):
             except ValueError as erreur:
                 erreur_achat = str(erreur)
             else:
-                if request.POST.get("action") == "simuler_paiement":
+                if (
+                    request.POST.get("action") == "simuler_paiement"
+                    and getattr(settings, "BETA_SIMULATED_PAYMENTS", False)
+                ):
                     acheter_credits_service(
                         request.user,
                         credits,

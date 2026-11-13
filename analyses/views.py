@@ -88,6 +88,10 @@ def lancer_analyse(request, pk):
     analyse_en_cours = projet.analyses.filter(
         statut__in=[Analyse.Statut.EN_ATTENTE, Analyse.Statut.EN_COURS]
     ).exists()
+    analyses_actives_utilisateur = Analyse.objects.filter(
+        projet__utilisateur=request.user,
+        statut__in=[Analyse.Statut.EN_ATTENTE, Analyse.Statut.EN_COURS],
+    ).count()
 
     solde, _ = SoldeCredits.objects.get_or_create(utilisateur=request.user)
     solde.recalculer()
@@ -155,6 +159,13 @@ def lancer_analyse(request, pk):
 
         cout = calculer_cout(formulaire.configuration(), request.user)
         solde_insuffisant = cout > 0 and solde.solde < cout
+
+        if analyses_actives_utilisateur >= 2 and not analyse_en_cours:
+            messages.error(
+                request,
+                "Deux analyses sont déjà en cours sur ton compte. Patiente avant d'en lancer une autre.",
+            )
+            return redirect("tableau_de_bord")
 
         if analyse_en_cours:
             messages.error(
