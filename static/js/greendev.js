@@ -395,3 +395,172 @@
     });
   });
 })();
+
+/* --- Tarifs et parcours d'achat de crédits ---
+ * Tout fonctionne sans JavaScript (formulaires classiques) ; ce bloc ajoute
+ * le calcul en direct, l'affichage des champs du moyen choisi et l'écran de
+ * traitement du paiement. */
+(function () {
+  "use strict";
+
+  function milliers(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  function verifierMontant(montant, min, max, pas) {
+    if (!montant && montant !== 0) return "Saisis un montant entier en FCFA.";
+    if (montant < min) return "Le montant minimum est de " + milliers(min) + " FCFA.";
+    if (montant > max) return "Le montant maximum est de " + milliers(max) + " FCFA.";
+    if ((montant - min) % pas !== 0) return "Le montant doit avancer par pas de " + pas + " FCFA.";
+    return "";
+  }
+
+  function calculateurTarifs(bloc) {
+    var prix = Number(bloc.dataset.prix);
+    var rapide = Number(bloc.dataset.rapide);
+    var approfondi = Number(bloc.dataset.approfondi);
+    var curseur = bloc.querySelector("[data-calcul-curseur]");
+    var champ = bloc.querySelector("[data-calcul-montant]");
+    var erreur = bloc.querySelector("[data-calcul-erreur]");
+    var chiffres = bloc.querySelector("[data-calcul-chiffres]");
+    var lien = bloc.querySelector("[data-calcul-lien]");
+    var bouton = bloc.querySelector("[data-calcul-bouton]");
+    var min = Number(champ.min), max = Number(champ.max), pas = Number(champ.step);
+
+    curseur.hidden = false;
+    if (bouton) bouton.hidden = true;
+
+    function mettreAJour(source) {
+      var montant = parseInt(source.value, 10);
+      if (source === curseur) champ.value = montant;
+      else if (!isNaN(montant)) curseur.value = montant;
+      var message = verifierMontant(montant, min, max, pas);
+      erreur.hidden = !message;
+      erreur.textContent = message;
+      chiffres.hidden = Boolean(message);
+      lien.setAttribute("aria-disabled", message ? "true" : "false");
+      lien.classList.toggle("bouton-desactive", Boolean(message));
+      if (message) return;
+      var credits = Math.floor(montant / prix);
+      bloc.querySelector("[data-calcul-credits]").textContent = credits;
+      bloc.querySelector("[data-calcul-rapides]").textContent = Math.floor(credits / rapide);
+      bloc.querySelector("[data-calcul-approfondis]").textContent = Math.floor(credits / approfondi);
+      lien.href = lien.href.split("?")[0] + "?montant=" + montant;
+    }
+
+    curseur.addEventListener("input", function () { mettreAJour(curseur); });
+    champ.addEventListener("input", function () { mettreAJour(champ); });
+    lien.addEventListener("click", function (event) {
+      if (lien.getAttribute("aria-disabled") === "true") event.preventDefault();
+    });
+    mettreAJour(champ);
+  }
+
+  function choixMontant(form) {
+    var prix = Number(form.dataset.prix);
+    var rapide = Number(form.dataset.rapide);
+    var min = Number(form.dataset.min), max = Number(form.dataset.max), pas = Number(form.dataset.pas);
+    var radios = form.querySelectorAll('input[name="montant"]');
+    var radioLibre = form.querySelector("[data-montant-libre-choix]");
+    var champLibre = form.querySelector("[data-montant-libre]");
+    var bouton = form.querySelector('button[type="submit"]');
+    var desactiveServeur = bouton.disabled;
+
+    function afficher(id, texte) { form.querySelector("[data-resume-" + id + "]").textContent = texte; }
+
+    function mettreAJour() {
+      radioLibre.value = champLibre.value;
+      var choisi = form.querySelector('input[name="montant"]:checked');
+      var montant = choisi ? parseInt(choisi.value, 10) : NaN;
+      var message = choisi === radioLibre ? verifierMontant(montant, min, max, pas) : (choisi ? "" : "Choisis un montant.");
+      if (message) {
+        ["montant", "credits", "total"].forEach(function (id) { afficher(id, "—"); });
+        afficher("usage", choisi === radioLibre && champLibre.value ? message : "");
+        bouton.disabled = true;
+        return;
+      }
+      var credits = Math.floor(montant / prix);
+      afficher("montant", milliers(montant) + " FCFA");
+      afficher("credits", "+" + credits);
+      afficher("total", milliers(montant) + " FCFA");
+      afficher("usage", "≈ " + Math.floor(credits / rapide) + " audits de site complet rapides.");
+      bouton.disabled = desactiveServeur;
+    }
+
+    radios.forEach(function (radio) { radio.addEventListener("change", mettreAJour); });
+    champLibre.addEventListener("focus", function () { radioLibre.checked = true; mettreAJour(); });
+    champLibre.addEventListener("input", function () { radioLibre.checked = true; mettreAJour(); });
+    mettreAJour();
+  }
+
+  function formulairePaiement(form) {
+    var radios = form.querySelectorAll('input[name="moyen"]');
+    var blocs = form.querySelectorAll("[data-details]");
+
+    function afficherDetails() {
+      var choisi = form.querySelector('input[name="moyen"]:checked');
+      var famille = choisi ? choisi.dataset.famille : "";
+      blocs.forEach(function (bloc) { bloc.hidden = bloc.dataset.details !== famille; });
+    }
+    radios.forEach(function (radio) { radio.addEventListener("change", afficherDetails); });
+    afficherDetails();
+
+    var carte = form.querySelector("[data-numero-carte]");
+    if (carte) {
+      carte.addEventListener("input", function () {
+        var chiffres = carte.value.replace(/\D/g, "").slice(0, 19);
+        carte.value = chiffres.replace(/(\d{4})(?=\d)/g, "$1 ");
+      });
+    }
+    var expiration = form.querySelector("[data-expiration]");
+    if (expiration) {
+      expiration.addEventListener("input", function (event) {
+        var chiffres = expiration.value.replace(/\D/g, "").slice(0, 4);
+        if (chiffres.length > 2 || (chiffres.length === 2 && event.inputType !== "deleteContentBackward")) {
+          chiffres = chiffres.slice(0, 2) + "/" + chiffres.slice(2);
+        }
+        expiration.value = chiffres;
+      });
+    }
+  }
+
+  function ecranTraitement(form) {
+    var voile = document.querySelector("[data-traitement-voile]");
+    if (!voile) return;
+    form.addEventListener("submit", function (event) {
+      if (form.dataset.traitementEnvoye === "true" || event.defaultPrevented) return;
+      event.preventDefault();
+      voile.querySelector("[data-traitement-message]").textContent =
+        form.dataset.traitementTexte || "Traitement du paiement…";
+      voile.hidden = false;
+      form.dataset.traitementEnvoye = "true";
+      // Le délai imite l'aller-retour avec l'opérateur.
+      window.setTimeout(function () { HTMLFormElement.prototype.submit.call(form); }, 1600);
+    });
+  }
+
+  function compteARebours(element) {
+    var fin = new Date(element.dataset.compteARebours).getTime();
+    if (isNaN(fin)) return;
+    function afficher() {
+      var reste = Math.max(0, Math.round((fin - Date.now()) / 1000));
+      var minutes = Math.floor(reste / 60), secondes = reste % 60;
+      element.textContent = reste
+        ? "Cette demande expire dans " + minutes + " min " + (secondes < 10 ? "0" : "") + secondes + " s."
+        : "Cette demande a expiré : recharge la page.";
+      if (reste) window.setTimeout(afficher, 1000);
+    }
+    afficher();
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-calculateur]").forEach(calculateurTarifs);
+    document.querySelectorAll("[data-achat-montant]").forEach(choixMontant);
+    document.querySelectorAll("[data-paiement]").forEach(formulairePaiement);
+    document.querySelectorAll("form[data-traitement]").forEach(ecranTraitement);
+    document.querySelectorAll("[data-compte-a-rebours]").forEach(compteARebours);
+    document.querySelectorAll("[data-imprimer]").forEach(function (bouton) {
+      bouton.addEventListener("click", function () { window.print(); });
+    });
+  });
+})();

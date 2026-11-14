@@ -1,0 +1,7 @@
+{# Barre de progression du parcours d'achat. Attend `etape` (1 à 4). #}
+<ol class="achat-etapes" aria-label="Étapes de la recharge">
+  <li class="{% if etape > 1 %}fait{% elif etape == 1 %}actuelle{% endif %}"{% if etape == 1 %} aria-current="step"{% endif %}><span>1</span>Montant</li>
+  <li class="{% if etape > 2 %}fait{% elif etape == 2 %}actuelle{% endif %}"{% if etape == 2 %} aria-current="step"{% endif %}><span>2</span>Paiement</li>
+  <li class="{% if etape > 3 %}fait{% elif etape == 3 %}actuelle{% endif %}"{% if etape == 3 %} aria-current="step"{% endif %}><span>3</span>Confirmation</li>
+  <li class="{% if etape == 4 %}actuelle fait{% endif %}"{% if etape == 4 %} aria-current="step"{% endif %}><span>4</span>Reçu</li>
+</ol>

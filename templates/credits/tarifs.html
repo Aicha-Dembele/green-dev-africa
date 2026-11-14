@@ -1,133 +1,163 @@
 {% extends "base.html" %}
+{% load credits_format %}
 
 {% block titre %}Tarifs — Green Dev Africa{% endblock %}
+{% block description %}Des crédits sans abonnement pour analyser la sobriété de vos sites : audits d'une page gratuits chaque mois, recharges dès {{ achat_minimum_fcfa|fcfa }}.{% endblock %}
+{% block classe_page %}page-tarifs{% endblock %}
 
 {% block contenu %}
-  <div class="page-credits">
-    <p class="fil">
-      <a href="{% url 'tableau_de_bord' %}">Accueil</a> › Tarifs
+  <p class="fil"><a href="{% url 'tableau_de_bord' %}">Accueil</a> › Tarifs</p>
+
+  <header class="tarifs-hero">
+    <p class="tarifs-surtitre">Tarifs</p>
+    <h1>Payez seulement ce que vous analysez</h1>
+    <p class="tarifs-chapeau">
+      Pas d'abonnement : vous rechargez des crédits quand vous en avez besoin, et chaque
+      analyse en consomme quelques-uns. Les audits d'une page restent gratuits chaque mois.
     </p>
+    <ul class="tarifs-garanties">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Sans abonnement</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Crédits sans date d'expiration</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Remboursés si une analyse échoue</li>
+    </ul>
+  </header>
 
-    <header class="credit-entete">
-      <h1>Tarifs</h1>
-      <p class="chapeau">Les coûts ci-dessous servent à tester l’équilibre des analyses pendant la bêta.</p>
-    </header>
+  <p class="tarifs-beta" role="note">
+    <strong>Bêta</strong> Les paiements sont simulés : vous pouvez tester la recharge de bout en bout, aucun montant n'est débité.
+  </p>
 
-    <section class="carte credit-paiement-indisponible" aria-label="Crédits de test pendant la bêta">
-      <strong>Pas de paiement réel pendant la bêta</strong>
-      <p>Les crédits affichés sont des unités de test sans valeur monétaire. Les montants indiqués ne seront pas prélevés et les conditions pourront évoluer avant le lancement.</p>
-    </section>
-
-    <section class="carte" aria-labelledby="gratuit-tarifs-titre">
-      <h2 id="gratuit-tarifs-titre">Ce qui est gratuit</h2>
-      <p>
-        {{ quota_gratuit_mensuel }} audits d'une page par mois, plus {{ credits_bienvenue }} crédits offerts à l'inscription (une seule fois).
-      </p>
-    </section>
-
-    <section class="carte" aria-labelledby="couts-tarifs-titre">
-      <div class="entre-deux">
-        <h2 id="couts-tarifs-titre">Coût des analyses</h2>
-      </div>
-      <p class="discret">
-        Un crédit coûte {{ prix_credit_fcfa }} FCFA.
-      </p>
-      <div class="tableau-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Analyse</th>
-              <th>Coût</th>
-              <th>Équivalent en FCFA</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for cout in couts_tarifs %}
-              <tr>
-                <td>{{ cout.libelle }}</td>
-                <td>{{ cout.credits }} crédit{{ cout.credits|pluralize }}</td>
-                <td>{{ cout.fcfa|floatformat:0 }} FCFA</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="carte" aria-labelledby="montants-tarifs-titre">
-      <div class="entre-deux">
-        <h2 id="montants-tarifs-titre">Montant libre</h2>
-      </div>
-      <p>
-        Minimum : {{ achat_minimum_fcfa }} FCFA. Les montants augmentent par pas de
-        {{ achat_pas_fcfa }} FCFA (maximum : {{ achat_maximum_fcfa }} FCFA).
-      </p>
-      <div class="tableau-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Montant</th>
-              <th>Crédits obtenus</th>
-              <th>Audits site complet rapides</th>
-              <th>Audits site complet approfondis</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for exemple in montants_suggeres %}
-              <tr>
-                <td>{{ exemple.montant }} FCFA</td>
-                <td>{{ exemple.credits }}</td>
-                <td>{{ exemple.audits_rapides }}</td>
-                <td>{{ exemple.audits_approfondis }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="carte" aria-labelledby="calcul-tarifs-titre">
-      <h2 id="calcul-tarifs-titre">Combien voulez-vous ajouter ?</h2>
-      <form method="get" action="{% url 'tarifs' %}">
-        <label for="montant">Montant en FCFA</label>
-        <input
-          id="montant"
-          name="montant"
-          type="number"
-          min="{{ achat_minimum_fcfa }}"
-          max="{{ achat_maximum_fcfa }}"
-          step="{{ achat_pas_fcfa }}"
-          value="{{ montant_saisi }}"
-        >
-        <button type="submit" class="bouton">Calculer</button>
-      </form>
-      {% if erreur_calcul %}
-        <p role="alert">{{ erreur_calcul }}</p>
-      {% elif resultat_calcul %}
-        <p>{{ resultat_calcul.credits }} crédits, soit :</p>
-        <ul>
-          <li>{{ resultat_calcul.audits_rapides }} audits site complet rapides</li>
-          <li>{{ resultat_calcul.audits_approfondis }} audits site complet approfondis</li>
-        </ul>
-      {% endif %}
-    </section>
-
-    <section class="carte" aria-labelledby="tarifs-remarques-titre">
-      <h2 id="tarifs-remarques-titre">À retenir</h2>
-      <ul>
-        <li>Les crédits n'expirent jamais. Seul le quota gratuit se remet à zéro chaque mois.</li>
-        <li>Si une analyse échoue, vos crédits vous sont rendus automatiquement.</li>
+  <section class="tarifs-offres" aria-label="Offres">
+    <article class="offre">
+      <h2 class="offre-nom">Gratuit</h2>
+      <p class="offre-prix"><span>0</span> FCFA</p>
+      <p class="offre-accroche">Pour découvrir l'outil sur vos pages clés.</p>
+      <ul class="offre-inclus">
+        <li><strong>{{ quota_gratuit_mensuel }} audits d'une page</strong> chaque mois</li>
+        <li><strong>{{ credits_bienvenue }} crédits offerts</strong> à l'inscription</li>
+        <li>Rapport PDF et lien de partage</li>
       </ul>
-      <p>{{ texte_obtenir_credits }}</p>
-    </section>
+      {% if user.is_authenticated %}
+        <a class="bouton bouton-secondaire offre-action" href="{% url 'projet_creer' %}">Lancer une analyse</a>
+      {% else %}
+        <a class="bouton bouton-secondaire offre-action" href="{% url 'inscription' %}">Créer un compte gratuit</a>
+      {% endif %}
+    </article>
 
+    {% for pack in packs %}
+      <article class="offre{% if pack.populaire %} offre-populaire{% endif %}">
+        {% if pack.populaire %}<p class="offre-badge">Le plus choisi</p>{% endif %}
+        <h2 class="offre-nom">{{ pack.nom }}</h2>
+        <p class="offre-prix"><span>{{ pack.montant|milliers }}</span> FCFA</p>
+        <p class="offre-accroche">{{ pack.accroche }}</p>
+        <ul class="offre-inclus">
+          <li><strong>{{ pack.credits }} crédits</strong></li>
+          <li>{{ pack.audits_rapides }} audits de site complet rapides</li>
+          <li>ou {{ pack.audits_approfondis }} audits approfondis</li>
+          <li>ou {{ pack.audits_page }} audits d'une page hors quota</li>
+        </ul>
+        <a class="bouton {% if pack.populaire %}bouton-grand{% else %}bouton-secondaire{% endif %} offre-action"
+           href="{% url 'acheter_credits' %}?montant={{ pack.montant }}">Choisir {{ pack.nom }}</a>
+      </article>
+    {% endfor %}
+  </section>
+
+  <section class="tarifs-bloc" aria-labelledby="couts-titre">
+    <div class="tarifs-bloc-entete">
+      <h2 id="couts-titre">Combien coûte une analyse ?</h2>
+      <p>1 crédit = {{ prix_credit_fcfa }} FCFA. Le coût est affiché avant chaque lancement.</p>
+    </div>
+    <div class="tarifs-couts">
+      {% for cout in couts_tarifs %}
+        <div class="tarifs-cout">
+          <p class="tarifs-cout-nom">{{ cout.libelle }}</p>
+          <p class="tarifs-cout-detail">{{ cout.detail }}</p>
+          <p class="tarifs-cout-valeur"><strong>{{ cout.credits }} crédit{{ cout.credits|pluralize }}</strong> <span>soit {{ cout.fcfa|fcfa }}</span></p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="tarifs-bloc tarifs-calcul" aria-labelledby="calcul-titre"
+           data-calculateur data-prix="{{ prix_credit_fcfa }}" data-rapide="{{ cout_rapide }}" data-approfondi="{{ cout_approfondi }}">
+    <div class="tarifs-bloc-entete">
+      <h2 id="calcul-titre">Composez votre montant</h2>
+      <p>De {{ achat_minimum_fcfa|fcfa }} à {{ achat_maximum_fcfa|fcfa }}, par pas de {{ achat_pas_fcfa|fcfa }}.</p>
+    </div>
+    <form method="get" action="{% url 'tarifs' %}#calcul-titre" class="calcul-formulaire">
+      <label for="montant">Montant de la recharge</label>
+      <div class="calcul-saisie">
+        <input id="montant-curseur" type="range" min="{{ achat_minimum_fcfa }}" max="{{ achat_maximum_fcfa }}"
+               step="{{ achat_pas_fcfa }}" value="{{ montant_saisi }}" aria-label="Montant en FCFA" data-calcul-curseur hidden>
+        <div class="calcul-champ">
+          <input id="montant" name="montant" type="number" inputmode="numeric" min="{{ achat_minimum_fcfa }}"
+                 max="{{ achat_maximum_fcfa }}" step="{{ achat_pas_fcfa }}" value="{{ montant_saisi }}" data-calcul-montant>
+          <span>FCFA</span>
+        </div>
+        <button type="submit" class="bouton-secondaire" data-calcul-bouton>Calculer</button>
+      </div>
+    </form>
+    <div class="calcul-resultat" aria-live="polite">
+      {% if erreur_calcul %}
+        <p class="calcul-erreur" role="alert" data-calcul-erreur>{{ erreur_calcul }}</p>
+      {% else %}
+        <p class="calcul-erreur" role="alert" data-calcul-erreur hidden></p>
+      {% endif %}
+      <dl class="calcul-chiffres"{% if erreur_calcul %} hidden{% endif %} data-calcul-chiffres>
+        <div><dt>Crédits</dt><dd data-calcul-credits>{{ resultat_calcul.credits|default:"50" }}</dd></div>
+        <div><dt>Sites complets rapides</dt><dd data-calcul-rapides>{{ resultat_calcul.audits_rapides|default:"10" }}</dd></div>
+        <div><dt>Sites complets approfondis</dt><dd data-calcul-approfondis>{{ resultat_calcul.audits_approfondis|default:"5" }}</dd></div>
+      </dl>
+      <a class="bouton" href="{% url 'acheter_credits' %}?montant={{ montant_saisi }}" data-calcul-lien>Recharger ce montant</a>
+    </div>
+  </section>
+
+  <section class="tarifs-bloc" aria-labelledby="moyens-titre">
+    <div class="tarifs-bloc-entete">
+      <h2 id="moyens-titre">Moyens de paiement</h2>
+      <p>Mobile money ou carte, confirmation par code comme chez votre opérateur.</p>
+    </div>
+    <ul class="tarifs-moyens">
+      {% for moyen in moyens_paiement %}
+        <li>{% include "credits/_logo_moyen.html" with code=moyen.code %}{{ moyen.nom }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="tarifs-bloc" aria-labelledby="faq-titre">
+    <div class="tarifs-bloc-entete">
+      <h2 id="faq-titre">Questions fréquentes</h2>
+    </div>
+    <div class="tarifs-faq">
+      <details>
+        <summary>Les crédits expirent-ils ?</summary>
+        <p>Non. Seul le quota d'audits gratuits d'une page se remet à zéro chaque mois ; les crédits achetés restent sur votre solde.</p>
+      </details>
+      <details>
+        <summary>Que se passe-t-il si une analyse échoue ?</summary>
+        <p>Les crédits débités sont rendus automatiquement, et le remboursement apparaît dans l'historique de « Mes crédits ».</p>
+      </details>
+      <details>
+        <summary>Suis-je débité pendant la bêta ?</summary>
+        <p>Non. {{ texte_obtenir_credits }}</p>
+      </details>
+      <details>
+        <summary>Puis-je obtenir un reçu ?</summary>
+        <p>Oui : chaque recharge a une référence et un reçu, affiché après le paiement et envoyé par e-mail.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="tarifs-final">
+    <h2>Prêt à mesurer votre site ?</h2>
+    <p>Commencez gratuitement, rechargez seulement si vous en avez besoin.</p>
     <div class="actions">
       {% if user.is_authenticated %}
-        <a class="bouton bouton-secondaire" href="{% url 'acheter_credits' %}">Choisir un montant</a>
-        <a class="bouton bouton-grand" href="{% url 'tableau_de_bord' %}">Lancer une analyse</a>
+        <a class="bouton bouton-grand" href="{% url 'acheter_credits' %}">Recharger mes crédits</a>
+        <a class="bouton bouton-secondaire" href="{% url 'projet_creer' %}">Lancer une analyse</a>
       {% else %}
-        <a class="bouton bouton-grand" href="{% url 'inscription' %}">Créer un compte</a>
+        <a class="bouton bouton-grand" href="{% url 'inscription' %}">Créer un compte gratuit</a>
+        <a class="bouton bouton-secondaire" href="{% url 'connexion' %}">Se connecter</a>
       {% endif %}
     </div>
-  </div>
+  </section>
 {% endblock %}

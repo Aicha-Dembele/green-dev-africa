@@ -202,3 +202,103 @@ def attribuer_credits_bienvenue(utilisateur):
         JournalCredits.Type.BIENVENUE,
         "Crédits de bienvenue",
     )
+
+
+# ---------------------------------------------------------------------------
+#  Commandes de crédits (paiement simulé pendant la bêta)
+# ---------------------------------------------------------------------------
+
+
+def creer_commande(utilisateur, montant_fcfa):
+    """Étape 1 : enregistre le montant choisi. Lève ValueError si invalide."""
+    from credits.config import credits_pour_montant
+    from credits.models import CommandeCredits
+
+    credits = credits_pour_montant(int(montant_fcfa))
+    return CommandeCredits.objects.create(
+        utilisateur=utilisateur, montant_fcfa=montant_fcfa, credits=credits
+    )
+
+
+def expirer_si_necessaire(commande):
+    """Une commande ouverte depuis trop longtemps n'est plus payable."""
+    from credits.models import CommandeCredits
+
+    if commande.est_ouverte and timezone.now() > commande.date_expiration:
+        CommandeCredits.objects.filter(
+            pk=commande.pk, statut__in=CommandeCredits.STATUTS_OUVERTS
+        ).update(statut=CommandeCredits.Statut.EXPIREE)
+        commande.refresh_from_db()
+    return commande
+
+
+def demander_confirmation(commande, moyen_paiement, detail_moyen):
+    """Étape 2 : le moyen est choisi, un code de confirmation est « envoyé »."""
+    import secrets
+
+    from credits.models import CommandeCredits
+
+    commande.moyen_paiement = moyen_paiement
+    commande.detail_moyen = detail_moyen
+    commande.code_confirmation = f"{secrets.randbelow(10**6):06d}"
+    commande.tentatives_code = 0
+    commande.statut = CommandeCredits.Statut.EN_ATTENTE
+    commande.save(
+        update_fields=[
+            "moyen_paiement",
+            "detail_moyen",
+            "code_confirmation",
+            "tentatives_code",
+            "statut",
+        ]
+    )
+    return commande
+
+
+def marquer_echec(commande, motif):
+    from credits.models import CommandeCredits
+
+    CommandeCredits.objects.filter(
+        pk=commande.pk, statut__in=CommandeCredits.STATUTS_OUVERTS
+    ).update(statut=CommandeCredits.Statut.ECHOUEE, motif_echec=motif[:160])
+    commande.refresh_from_db()
+    return commande
+
+
+def annuler_commande(commande):
+    from credits.models import CommandeCredits
+
+    CommandeCredits.objects.filter(
+        pk=commande.pk, statut__in=CommandeCredits.STATUTS_OUVERTS
+    ).update(statut=CommandeCredits.Statut.ANNULEE)
+    commande.refresh_from_db()
+    return commande
+
+
+def payer_commande(commande):
+    """Étape 3 réussie : passe la commande en « payée » et ajoute les crédits.
+
+    Idempotent : la mise à jour conditionnelle garantit qu'une commande n'est
+    créditée qu'une fois, même si le formulaire est envoyé deux fois.
+    """
+    from credits.models import CommandeCredits
+
+    with transaction.atomic():
+        passee = CommandeCredits.objects.filter(
+            pk=commande.pk, statut=CommandeCredits.Statut.EN_ATTENTE
+        ).update(statut=CommandeCredits.Statut.PAYEE, date_paiement=timezone.now())
+        if not passee:
+            commande.refresh_from_db()
+            return False
+        ecriture = ajouter_credits(
+            commande.utilisateur,
+            commande.credits,
+            JournalCredits.Type.ACHAT_MANUEL,
+            (
+                f"Commande {commande.reference} : {commande.montant_fcfa} FCFA via "
+                f"{commande.nom_moyen} (paiement simulé, aucun débit)."
+            ),
+        )
+        CommandeCredits.objects.filter(pk=commande.pk).update(transaction=ecriture)
+    commande.refresh_from_db()
+    return True

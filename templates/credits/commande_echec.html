@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load credits_format %}
+
+{% block titre %}Paiement non abouti — Green Dev Africa{% endblock %}
+{% block classe_page %}page-achat{% endblock %}
+
+{% block contenu %}
+  <article class="recu recu-echec">
+    <header class="recu-entete">
+      <span class="recu-coche" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </span>
+      {% if commande.statut == "expiree" %}
+        <h1>Commande expirée</h1>
+        <p>Le délai de paiement est dépassé. Aucun montant n'a été débité.</p>
+      {% elif commande.statut == "annulee" %}
+        <h1>Commande annulée</h1>
+        <p>Aucun montant n'a été débité et aucun crédit n'a été ajouté.</p>
+      {% else %}
+        <h1>Paiement refusé</h1>
+        <p>{{ commande.motif_echec|default:"Le paiement n'a pas pu aboutir." }}</p>
+      {% endif %}
+    </header>
+
+    <dl class="recu-lignes">
+      <div><dt>Référence</dt><dd>{{ commande.reference }}</dd></div>
+      {% if commande.nom_moyen %}<div><dt>Moyen de paiement</dt><dd>{{ commande.nom_moyen }} · {{ commande.detail_moyen }}</dd></div>{% endif %}
+      <div class="recu-total"><dt>Montant</dt><dd>{{ commande.montant_fcfa|fcfa }}</dd></div>
+    </dl>
+
+    <div class="actions recu-actions">
+      <form method="post" action="{% url 'acheter_credits' %}">
+        {% csrf_token %}
+        <input type="hidden" name="montant" value="{{ commande.montant_fcfa }}">
+        <button type="submit" class="bouton-grand">Réessayer avec un autre moyen</button>
+      </form>
+      <a class="bouton bouton-secondaire" href="{% url 'mes_credits' %}">Retour à mes crédits</a>
+    </div>
+  </article>
+{% endblock %}

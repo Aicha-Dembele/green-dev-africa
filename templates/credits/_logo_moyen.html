@@ -1,0 +1,5 @@
+{# Pastille d'un moyen de paiement. Attend `code`. Pas de logo officiel : un repère coloré. #}
+{% if code == "orange_money" %}<span class="moyen-logo moyen-orange" aria-hidden="true">OM</span>
+{% elif code == "wave" %}<span class="moyen-logo moyen-wave" aria-hidden="true">W</span>
+{% elif code == "moov_money" %}<span class="moyen-logo moyen-moov" aria-hidden="true">M</span>
+{% else %}<span class="moyen-logo moyen-carte" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>{% endif %}

@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path
 
-from .models import JournalCredits, SoldeCredits
+from .models import CommandeCredits, JournalCredits, SoldeCredits
 from .services import ajouter_credits
 
 
@@ -76,4 +76,15 @@ class JournalCreditsAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(CommandeCredits)
+class CommandeCreditsAdmin(admin.ModelAdmin):
+    list_display = ("reference", "utilisateur", "montant_fcfa", "credits", "moyen_paiement", "statut", "date_creation")
+    list_filter = ("statut", "moyen_paiement")
+    search_fields = ("reference", "utilisateur__username", "utilisateur__email")
+    readonly_fields = [f.name for f in CommandeCredits._meta.fields]
+
+    def has_add_permission(self, request):
         return False

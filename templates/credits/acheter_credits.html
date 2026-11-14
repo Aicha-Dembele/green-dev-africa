@@ -1,120 +1,85 @@
 {% extends "base.html" %}
+{% load credits_format %}
 
-{% block titre %}Recharger mon solde — Green Dev Africa{% endblock %}
+{% block titre %}Recharger mes crédits — Green Dev Africa{% endblock %}
+{% block classe_page %}page-achat{% endblock %}
 
 {% block contenu %}
-  <div class="page-credits">
-    <p class="fil">
-      <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
-      <a href="{% url 'mes_credits' %}">Mes crédits</a> › Recharger
-    </p>
+  <p class="fil">
+    <a href="{% url 'tableau_de_bord' %}">Tableau de bord</a> ›
+    <a href="{% url 'mes_credits' %}">Mes crédits</a> › Recharger
+  </p>
 
-    <header class="credit-entete">
-      <h1>Recharger mon solde</h1>
-      <p class="chapeau">
-        Cette page sert à tester le fonctionnement des crédits pendant la bêta. Aucun paiement réel n’est disponible.
-      </p>
-    </header>
+  {% include "credits/_etapes.html" %}
 
-    <section class="carte credit-solde-achat" aria-label="Solde actuel">
-      <span>Ton solde actuel</span>
-      <strong>{{ solde }} crédits</strong>
-      <a href="{% url 'mes_credits' %}">Voir l’historique</a>
-    </section>
+  <header class="achat-entete">
+    <h1>Choisis ta recharge</h1>
+    <p>Solde actuel : <strong>{{ solde }} crédit{{ solde|pluralize }}</strong> · <a href="{% url 'tarifs' %}">Voir les tarifs</a></p>
+  </header>
 
-    <section class="carte" id="choisir-montant" aria-labelledby="choisir-montant-titre">
-      <div class="credit-etape">
-        <span class="credit-etape-numero" aria-hidden="true">1</span>
-        <div>
-          <h2 id="choisir-montant-titre">Choisis un montant</h2>
-          <p class="discret">Valeur indicative de test : {{ prix_credit_fcfa }} FCFA par crédit. Aucun prélèvement ne sera effectué.</p>
-        </div>
-      </div>
+  {% if not paiements_actifs %}
+    <div class="achat-alerte" role="status">
+      <strong>Recharge momentanément indisponible.</strong>
+      <p>Les paiements sont désactivés pour le moment. Réessaie plus tard.</p>
+    </div>
+  {% endif %}
 
-      {% if erreur_achat %}<p class="credit-erreur" role="alert">{{ erreur_achat }}</p>{% endif %}
+  <form method="post" class="achat-grille" data-achat-montant
+        data-prix="{{ prix_credit_fcfa }}" data-rapide="{{ cout_rapide }}" data-approfondi="{{ cout_approfondi }}"
+        data-min="{{ achat_minimum_fcfa }}" data-max="{{ achat_maximum_fcfa }}" data-pas="{{ achat_pas_fcfa }}">
+    {% csrf_token %}
+    <div class="achat-principal">
+      {% if formulaire.montant.errors %}
+        <p class="achat-erreur" role="alert" id="erreur-montant">{{ formulaire.montant.errors.0 }}</p>
+      {% endif %}
 
-      <div class="grille grille-3 credit-offres">
-        {% for offre in montants_suggeres %}
-          <article class="carte credit-offre{% if offre.selectionne %} credit-offre-selectionnee{% endif %}">
-            <p class="credit-offre-libelle">Offre</p>
-            <h3>{{ offre.montant }} FCFA</h3>
-            <p class="credit-offre-credits">{{ offre.credits }} crédits</p>
-            <form method="post">
-              {% csrf_token %}
-              <button type="submit" name="montant" value="{{ offre.montant }}">
-                {% if offre.selectionne %}Montant sélectionné{% else %}Choisir{% endif %}
-              </button>
-            </form>
-          </article>
+      <fieldset class="achat-packs">
+        <legend>Packs</legend>
+        {% for pack in packs %}
+          <label class="achat-pack{% if pack.populaire %} achat-pack-populaire{% endif %}">
+            <input type="radio" name="montant" value="{{ pack.montant }}" data-credits="{{ pack.credits }}"
+                   {% if montant_initial == pack.montant|stringformat:"d" %}checked{% endif %}>
+            <span class="achat-pack-corps">
+              <span class="achat-pack-nom">{{ pack.nom }}{% if pack.populaire %} <em>Le plus choisi</em>{% endif %}</span>
+              <span class="achat-pack-credits">{{ pack.credits }} crédits · ≈ {{ pack.audits_rapides }} sites complets</span>
+            </span>
+            <span class="achat-pack-prix">{{ pack.montant|fcfa }}</span>
+          </label>
         {% endfor %}
-      </div>
 
-      <form method="post" class="credit-montant-libre">
-        {% csrf_token %}
-        <div class="champ">
-          <label for="montant-personnalise">Ou saisis un autre montant en FCFA</label>
-          <input
-            id="montant-personnalise"
-            name="montant_personnalise"
-            type="number"
-            min="{{ achat_minimum_fcfa }}"
-            max="{{ achat_maximum_fcfa }}"
-            step="{{ achat_pas_fcfa }}"
-            value="{{ montant_saisi }}"
-            placeholder="{{ achat_minimum_fcfa }}"
-            {% if erreur_achat %}aria-describedby="aide-montant-personnalise erreur-achat" aria-invalid="true"{% else %}aria-describedby="aide-montant-personnalise"{% endif %}
-            required
-          >
-          <small id="aide-montant-personnalise">
-            De {{ achat_minimum_fcfa }} à {{ achat_maximum_fcfa }} FCFA, par pas de
-            {{ achat_pas_fcfa }} FCFA.
-          </small>
-          {% if erreur_achat %}<span id="erreur-achat" class="champ-erreur-inline" role="alert">{{ erreur_achat }}</span>{% endif %}
-        </div>
-        <button type="submit" name="action" value="verifier">Vérifier ce montant</button>
-      </form>
-    </section>
+        <label class="achat-pack achat-pack-libre">
+          <input type="radio" name="montant" value="{{ montant_libre }}" data-montant-libre-choix
+                 {% if montant_libre %}checked{% endif %}>
+          <span class="achat-pack-corps">
+            <span class="achat-pack-nom">Autre montant</span>
+            <span class="achat-pack-credits">De {{ achat_minimum_fcfa|fcfa }} à {{ achat_maximum_fcfa|fcfa }}, par pas de {{ achat_pas_fcfa|milliers }}</span>
+          </span>
+          <span class="achat-libre-champ">
+            <input type="number" inputmode="numeric" min="{{ achat_minimum_fcfa }}" max="{{ achat_maximum_fcfa }}"
+                   step="{{ achat_pas_fcfa }}" value="{{ montant_libre }}" placeholder="{{ achat_minimum_fcfa }}"
+                   name="montant_libre" aria-label="Autre montant en FCFA" data-montant-libre>
+            <span>FCFA</span>
+          </span>
+        </label>
+      </fieldset>
+    </div>
 
-    {% if commande %}
-      <section class="carte credit-recapitulatif" aria-labelledby="recapitulatif-titre" aria-live="polite">
-        <div class="credit-etape">
-          <span class="credit-etape-numero" aria-hidden="true">2</span>
-          <div>
-            <h2 id="recapitulatif-titre">Récapitulatif de ta commande</h2>
-            <p class="discret">Vérifie le montant et les crédits avant de confirmer.</p>
-          </div>
-        </div>
-
-        <dl class="credit-recapitulatif-liste">
-          <div><dt>Montant à payer</dt><dd>{{ commande.montant }} FCFA</dd></div>
-          <div><dt>Crédits prévus</dt><dd>{{ commande.credits }} crédits</dd></div>
-          <div><dt>Audits complets rapides possibles</dt><dd>{{ commande.audits_rapides }}</dd></div>
-          <div><dt>Audits complets approfondis possibles</dt><dd>{{ commande.audits_approfondis }}</dd></div>
-        </dl>
-
-        <div class="credit-paiement-indisponible" role="status">
-          <strong>Simulation de bêta — aucun paiement réel</strong>
-          <p>
-            En confirmant, tu ajoutes des crédits de test à ton solde. Ils n’ont pas de valeur monétaire et aucun argent ne sera débité.
-          </p>
-        </div>
-        <form method="post" data-confirm-title="Confirmer la simulation" data-confirm-message="Cette action ajoute {{ commande.credits }} crédits à ton solde. Aucun paiement réel ne sera effectué." data-confirm-label="Ajouter les crédits">
-          {% csrf_token %}
-          <input type="hidden" name="montant" value="{{ commande.montant }}">
-          <button class="credit-paiement-bouton" type="submit" name="action" value="simuler_paiement">
-            Confirmer la simulation et ajouter {{ commande.credits }} crédits
-          </button>
-        </form>
-      </section>
-    {% else %}
-      <section class="carte credit-paiement-indisponible" aria-label="Simulation du paiement">
-        <strong>Recharge simulée, sans paiement réel</strong>
-        <p>{{ texte_obtenir_credits }}</p>
-      </section>
-    {% endif %}
-
-    <p class="credit-lien-tarifs">
-      <a href="{% url 'tarifs' %}">Consulter le détail des tarifs</a>
-    </p>
-  </div>
+    <aside class="achat-resume" aria-label="Récapitulatif">
+      <h2>Récapitulatif</h2>
+      <dl>
+        <div><dt>Recharge</dt><dd data-resume-montant>—</dd></div>
+        <div><dt>Crédits ajoutés</dt><dd data-resume-credits>—</dd></div>
+        <div><dt>Frais</dt><dd>0 FCFA</dd></div>
+        <div class="achat-resume-total"><dt>Total</dt><dd data-resume-total>—</dd></div>
+      </dl>
+      <p class="achat-resume-note" data-resume-usage></p>
+      <button type="submit" class="bouton-grand achat-continuer"{% if not paiements_actifs %} disabled{% endif %}>
+        Continuer vers le paiement
+      </button>
+      <p class="achat-securite">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+        Paiement simulé pendant la bêta : aucun débit.
+      </p>
+    </aside>
+  </form>
 {% endblock %}

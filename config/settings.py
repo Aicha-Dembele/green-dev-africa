@@ -157,7 +157,10 @@ else:
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
-BETA_SIMULATED_PAYMENTS = DEBUG and os.environ.get("BETA_SIMULATED_PAYMENTS", "True") == "True"
+# Bêta : le parcours d'achat de crédits est simulé de bout en bout (aucun
+# opérateur appelé, aucun argent débité). Actif aussi en production pour
+# que les testeurs puissent recharger ; BETA_SIMULATED_PAYMENTS=False le coupe.
+BETA_SIMULATED_PAYMENTS = os.environ.get("BETA_SIMULATED_PAYMENTS", "True") == "True"
 
 
 AUTH_PASSWORD_VALIDATORS = [

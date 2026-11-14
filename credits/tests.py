@@ -66,93 +66,6 @@ class CreditsMetierTest(TestCase):
         self.assertEqual(transaction.type, JournalCredits.Type.ACHAT_MANUEL)
         self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, CREDITS_BIENVENUE + 25)
 
-    def test_vue_achat_prepare_le_recapitulatif_sans_crediter_avant_confirmation(self):
-        utilisateur = Utilisateur.objects.create_user(
-            username="bintou",
-            email="bintou@example.com",
-            password="test-password",
-            nom="Bintou",
-        )
-        self.client.force_login(utilisateur)
-
-        response = self.client.post(reverse("acheter_credits"), {"montant": 1000})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.context["commande"],
-            {
-                "montant": 1000,
-                "credits": 20,
-                "audits_rapides": 4,
-                "audits_approfondis": 2,
-            },
-        )
-        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, CREDITS_BIENVENUE)
-        self.assertFalse(
-            JournalCredits.objects.filter(
-                utilisateur=utilisateur,
-                type=JournalCredits.Type.ACHAT_MANUEL,
-            ).exists()
-        )
-        self.assertContains(response, "aucun paiement réel")
-        self.assertContains(response, "Confirmer la simulation et ajouter 20 crédits")
-
-    @override_settings(BETA_SIMULATED_PAYMENTS=True)
-    def test_confirmation_simulee_ajoute_les_credits_sans_paiement_reel(self):
-        utilisateur = Utilisateur.objects.create_user(
-            username="bintou_simulation",
-            email="bintou-simulation@example.com",
-            password="test-password",
-            nom="Bintou",
-        )
-        self.client.force_login(utilisateur)
-
-        response = self.client.post(
-            reverse("acheter_credits"),
-            {"montant": 1000, "action": "simuler_paiement"},
-        )
-
-        self.assertRedirects(
-            response,
-            reverse("mes_credits"),
-            fetch_redirect_response=False,
-        )
-        self.assertEqual(
-            SoldeCredits.objects.get(utilisateur=utilisateur).solde,
-            CREDITS_BIENVENUE + 20,
-        )
-        transaction = JournalCredits.objects.get(
-            utilisateur=utilisateur,
-            type=JournalCredits.Type.ACHAT_MANUEL,
-        )
-        self.assertEqual(transaction.montant, 20)
-        self.assertIn("Simulation gratuite", transaction.note)
-        self.assertIn("aucun débit", transaction.note)
-
-        solde_response = self.client.get(reverse("mes_credits"))
-        self.assertContains(solde_response, "Simulation réussie")
-        self.assertContains(solde_response, "Aucun paiement réel n’a été effectué")
-        self.assertContains(solde_response, "Recharge simulée gratuite")
-
-    def test_vue_achat_refuse_un_montant_invalide_sans_modifier_le_solde(self):
-        utilisateur = Utilisateur.objects.create_user(
-            username="bintou_montant_invalide",
-            email="bintou-montant-invalide@example.com",
-            password="test-password",
-            nom="Bintou",
-        )
-        self.client.force_login(utilisateur)
-
-        response = self.client.post(
-            reverse("acheter_credits"),
-            {"montant_personnalise": 1250, "action": "verifier"},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["commande"], None)
-        self.assertContains(response, "Le montant doit avancer par pas de 500 FCFA.")
-        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, CREDITS_BIENVENUE)
-
     def test_debit_normal(self):
         utilisateur = Utilisateur.objects.create_user(
             username="aicha_achat_2",
@@ -491,19 +404,6 @@ class CreditsMetierTest(TestCase):
                 self.assertTrue(str(contexte.exception))
                 self.assertIn("montant", str(contexte.exception).lower())
 
-    def test_calculateur_tarifs_affiche_les_credits_et_audits(self):
-        response = self.client.get(reverse("tarifs"), {"montant": 2500})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.context["resultat_calcul"],
-            {"credits": 50, "audits_rapides": 10, "audits_approfondis": 5},
-        )
-        self.assertContains(response, "Combien voulez-vous ajouter ?")
-        self.assertContains(response, "50 crédits")
-        self.assertContains(response, "10 audits site complet rapides")
-        self.assertContains(response, "5 audits site complet approfondis")
-
     def test_calculateur_tarifs_affiche_les_erreurs_en_francais(self):
         response = self.client.get(reverse("tarifs"), {"montant": 999})
 
@@ -511,74 +411,231 @@ class CreditsMetierTest(TestCase):
         self.assertContains(response, "Le montant minimum est de 1000 FCFA.")
         self.assertIsNone(response.context["resultat_calcul"])
 
+
+@override_settings(BETA_SIMULATED_PAYMENTS=True)
+class ParcoursAchatTest(TestCase):
+    """Le tunnel d'achat simulé : montant → paiement → code → reçu."""
+
+    def setUp(self):
+        self.utilisateur = Utilisateur.objects.create_user(
+            username="awa_achat",
+            email="awa-achat@example.com",
+            password="motdepasse-de-test",
+            nom="Awa",
+        )
+        self.client.force_login(self.utilisateur)
+
+    def solde(self):
+        return SoldeCredits.objects.get(utilisateur=self.utilisateur).solde
+
+    def commander(self, montant=2500):
+        from credits.models import CommandeCredits
+
+        reponse = self.client.post(reverse("acheter_credits"), {"montant": montant})
+        commande = CommandeCredits.objects.get(utilisateur=self.utilisateur)
+        self.assertRedirects(
+            reponse, reverse("commande_paiement", args=[commande.reference]),
+            fetch_redirect_response=False,
+        )
+        return commande
+
+    def payer_mobile(self, commande, telephone="70123456"):
+        return self.client.post(
+            reverse("commande_paiement", args=[commande.reference]),
+            {"moyen": "orange_money", "indicatif": "+223", "telephone": telephone},
+        )
+
+    def test_parcours_complet_mobile_money_ajoute_les_credits_une_fois(self):
+        from django.core import mail
+
+        commande = self.commander(2500)
+        self.assertEqual(self.solde(), CREDITS_BIENVENUE)
+
+        reponse = self.payer_mobile(commande, "70 12 34 56")
+        self.assertRedirects(
+            reponse, reverse("commande_confirmation", args=[commande.reference]),
+            fetch_redirect_response=False,
+        )
+        commande.refresh_from_db()
+        self.assertEqual(commande.statut, "en_attente")
+        self.assertEqual(commande.detail_moyen, "+223 •• •• 34 56")
+        self.assertEqual(self.solde(), CREDITS_BIENVENUE)  # rien avant le code
+
+        page = self.client.get(reverse("commande_confirmation", args=[commande.reference]))
+        self.assertContains(page, commande.code_confirmation)
+
+        url_code = reverse("commande_confirmation", args=[commande.reference])
+        reponse = self.client.post(url_code, {"code": commande.code_confirmation})
+        self.assertRedirects(
+            reponse, reverse("commande_recu", args=[commande.reference]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.solde(), CREDITS_BIENVENUE + 50)
+
+        recu = self.client.get(reverse("commande_recu", args=[commande.reference]))
+        self.assertContains(recu, "Paiement réussi")
+        self.assertContains(recu, commande.reference)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(commande.reference, mail.outbox[0].subject)
+
+        # Renvoyer le code (double clic, retour arrière) ne crédite pas deux fois.
+        self.client.post(url_code, {"code": commande.code_confirmation})
+        self.assertEqual(self.solde(), CREDITS_BIENVENUE + 50)
+
+        historique = self.client.get(reverse("mes_credits"))
+        self.assertContains(historique, "Recharge Orange Money (simulée)")
+
+    def test_carte_de_test_passe_par_3d_secure(self):
+        commande = self.commander(1000)
+        reponse = self.client.post(
+            reverse("commande_paiement", args=[commande.reference]),
+            {
+                "moyen": "carte",
+                "titulaire": "Awa Diallo",
+                "numero_carte": "4242 4242 4242 4242",
+                "expiration": "12/39",
+                "cvc": "123",
+            },
+        )
+        commande.refresh_from_db()
+        self.assertEqual(commande.detail_moyen, "Visa •••• 4242")
+        page = self.client.get(reponse.url)
+        self.assertContains(page, "3-D Secure")
+        self.client.post(reponse.url, {"code": commande.code_confirmation})
+        self.assertEqual(self.solde(), CREDITS_BIENVENUE + 20)
+
+    def test_une_vraie_carte_est_refusee_en_mode_test(self):
+        commande = self.commander(1000)
+        reponse = self.client.post(
+            reverse("commande_paiement", args=[commande.reference]),
+            {
+                "moyen": "carte",
+                "titulaire": "Awa",
+                "numero_carte": "5555 5555 5555 4444",
+                "expiration": "12/39",
+                "cvc": "123",
+            },
+        )
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Ne saisis jamais une vraie carte")
+        # Le numéro refusé n'est jamais renvoyé dans la page.
+        self.assertNotContains(reponse, "5555 5555 5555 4444")
+        commande.refresh_from_db()
+        self.assertEqual(commande.statut, "creee")
+
+    def test_solde_mobile_insuffisant_echoue_apres_le_code(self):
+        commande = self.commander()
+        self.payer_mobile(commande, "70120000")
+        commande.refresh_from_db()
+        reponse = self.client.post(
+            reverse("commande_confirmation", args=[commande.reference]),
+            {"code": commande.code_confirmation},
+        )
+        self.assertRedirects(
+            reponse, reverse("commande_echec", args=[commande.reference]),
+            fetch_redirect_response=False,
+        )
+        page = self.client.get(reponse.url)
+        self.assertContains(page, "Solde mobile money insuffisant")
+        self.assertEqual(self.solde(), CREDITS_BIENVENUE)
+
+    def test_trois_codes_faux_bloquent_le_paiement(self):
+        commande = self.commander()
+        self.payer_mobile(commande)
+        commande.refresh_from_db()
+        faux = "111111" if commande.code_confirmation != "111111" else "222222"
+        url = reverse("commande_confirmation", args=[commande.reference])
+        reponse = self.client.post(url, {"code": faux})
+        self.assertContains(reponse, "Il te reste 2 essais")
+        self.client.post(url, {"code": faux})
+        reponse = self.client.post(url, {"code": faux})
+        self.assertRedirects(
+            reponse, reverse("commande_echec", args=[commande.reference]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.solde(), CREDITS_BIENVENUE)
+
+    def test_montant_invalide_ne_cree_pas_de_commande(self):
+        from credits.models import CommandeCredits
+
+        reponse = self.client.post(reverse("acheter_credits"), {"montant": "", "montant_libre": "1250"})
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Le montant doit avancer par pas de 500 FCFA.")
+        self.assertFalse(CommandeCredits.objects.exists())
+
+    def test_montant_libre_sans_javascript(self):
+        reponse = self.client.post(reverse("acheter_credits"), {"montant": "", "montant_libre": "7500"})
+        from credits.models import CommandeCredits
+
+        commande = CommandeCredits.objects.get(utilisateur=self.utilisateur)
+        self.assertEqual((commande.montant_fcfa, commande.credits), (7500, 150))
+        self.assertEqual(reponse.status_code, 302)
+
+    def test_annulation_et_commande_d_un_autre_utilisateur(self):
+        commande = self.commander()
+        autre = Utilisateur.objects.create_user(
+            username="intrus", email="intrus@example.com", password="motdepasse-de-test"
+        )
+        self.client.force_login(autre)
+        self.assertEqual(
+            self.client.get(reverse("commande_paiement", args=[commande.reference])).status_code,
+            404,
+        )
+        self.client.force_login(self.utilisateur)
+        self.client.post(reverse("commande_annuler", args=[commande.reference]))
+        commande.refresh_from_db()
+        self.assertEqual(commande.statut, "annulee")
+        # Une commande annulée ne peut plus être payée.
+        reponse = self.payer_mobile(commande)
+        self.assertRedirects(
+            reponse, reverse("commande_echec", args=[commande.reference]),
+            fetch_redirect_response=False,
+        )
+
+    def test_commande_expiree(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from credits.models import CommandeCredits
+
+        commande = self.commander()
+        CommandeCredits.objects.filter(pk=commande.pk).update(
+            date_creation=timezone.now() - timedelta(hours=1)
+        )
+        reponse = self.payer_mobile(commande)
+        commande.refresh_from_db()
+        self.assertEqual(commande.statut, "expiree")
+        self.assertEqual(reponse.status_code, 302)
+
+    @override_settings(BETA_SIMULATED_PAYMENTS=False)
+    def test_paiements_desactives(self):
+        from credits.models import CommandeCredits
+
+        reponse = self.client.post(reverse("acheter_credits"), {"montant": 1000})
+        self.assertContains(reponse, "Recharge momentanément indisponible")
+        self.assertFalse(CommandeCredits.objects.exists())
+
+
+class PageTarifsTest(TestCase):
+    def test_packs_et_calculateur(self):
+        reponse = self.client.get(reverse("tarifs"), {"montant": 2500})
+        self.assertEqual(reponse.status_code, 200)
+        self.assertEqual(
+            [(p["nom"], p["montant"], p["credits"]) for p in reponse.context["packs"]],
+            [("Découverte", 1000, 20), ("Essentiel", 2500, 50), ("Pro", 5000, 100)],
+        )
+        self.assertEqual(reponse.context["resultat_calcul"]["audits_rapides"], 10)
+        self.assertContains(reponse, "Le plus choisi")
+        self.assertContains(reponse, f"{reverse('acheter_credits')}?montant=2500")
+
+    def test_calculateur_erreur_en_francais(self):
+        reponse = self.client.get(reverse("tarifs"), {"montant": 999})
+        self.assertContains(reponse, "Le montant minimum est de 1000 FCFA.")
+        self.assertIsNone(reponse.context["resultat_calcul"])
+
     def test_tarifs_suivent_le_prix_configure(self):
         with patch.object(credits_config, "PRIX_CREDIT_FCFA", 100):
-            response = self.client.get(reverse("tarifs"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response,
-            f"Un crédit coûte {response.context['prix_credit_fcfa']} FCFA.",
-        )
-        self.assertEqual(response.context["prix_credit_fcfa"], 100)
-        self.assertEqual(response.context["montants_suggeres"][0]["credits"], 10)
-
-    def test_tarifs_affichent_les_montants_suggeres_et_audits(self):
-        response = self.client.get(reverse("tarifs"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.context["montants_suggeres"],
-            [
-                {
-                    "montant": 1000,
-                    "credits": 20,
-                    "audits_rapides": 4,
-                    "audits_approfondis": 2,
-                },
-                {
-                    "montant": 2500,
-                    "credits": 50,
-                    "audits_rapides": 10,
-                    "audits_approfondis": 5,
-                },
-                {
-                    "montant": 5000,
-                    "credits": 100,
-                    "audits_rapides": 20,
-                    "audits_approfondis": 10,
-                },
-            ],
-        )
-        self.assertEqual(response.context["prix_credit_fcfa"], PRIX_CREDIT_FCFA)
-        self.assertEqual(
-            [exemple["montant"] for exemple in response.context["montants_suggeres"]],
-            MONTANTS_SUGGERES,
-        )
-
-    def test_section_obtenir_des_credits_apparait_sur_mes_credits(self):
-        utilisateur = Utilisateur.objects.create_user(
-            username="nina",
-            email="nina@example.com",
-            password="Motdepasse123",
-            nom="Nina",
-        )
-        self.client.force_login(utilisateur)
-
-        response = self.client.get(reverse("mes_credits"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Obtenir des crédits")
-        self.assertEqual(response.context["texte_obtenir_credits"], TEXTE_OBTENIR_CREDITS)
-        self.assertContains(response, "Le paiement est simulé")
-        self.assertContains(response, f"{PRIX_CREDIT_FCFA} FCFA par crédit")
-        self.assertContains(response, "Choisir un montant")
-        self.assertContains(response, reverse("acheter_credits"))
-        self.assertContains(response, reverse("tarifs"))
-
-        achat_response = self.client.get(reverse("acheter_credits"))
-
-        self.assertEqual(achat_response.status_code, 200)
-        self.assertContains(achat_response, "1000 FCFA")
-        self.assertContains(achat_response, "2500 FCFA")
-        self.assertContains(achat_response, "5000 FCFA")
+            reponse = self.client.get(reverse("tarifs"))
+        self.assertContains(reponse, "1 crédit = 100 FCFA")
+        self.assertEqual(reponse.context["packs"][0]["credits"], 10)

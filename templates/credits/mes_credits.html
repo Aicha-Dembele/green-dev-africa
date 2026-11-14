@@ -12,7 +12,8 @@
       <h1>Mes crédits</h1>
       <p class="chapeau">Voici ton solde actuel et l’historique de tes mouvements.</p>
       <div class="actions">
-        <a class="bouton" href="{% url 'tarifs' %}">Voir les tarifs</a>
+        <a class="bouton" href="{% url 'acheter_credits' %}">Recharger mes crédits</a>
+        <a class="bouton bouton-secondaire" href="{% url 'tarifs' %}">Voir les tarifs</a>
       </div>
     </header>
 
@@ -60,7 +61,7 @@
       <p>{{ prix_credit_fcfa }} FCFA par crédit.</p>
       <p>{{ texte_obtenir_credits }}</p>
       <div class="actions">
-        <a class="bouton" href="{% url 'acheter_credits' %}">Choisir un montant</a>
+        <a class="bouton" href="{% url 'acheter_credits' %}">Recharger mes crédits</a>
         <a class="bouton bouton-secondaire" href="{% url 'tarifs' %}">Voir le détail des tarifs</a>
       </div>
     </section>
@@ -87,7 +88,8 @@
                   <td>{{ mouvement.date|date:"d/m/Y" }}</td>
                   <td>
                     {{ mouvement.libelle }}
-                    {% if mouvement.note %}<br><small>{{ mouvement.note }}</small>{% endif %}
+                    {% if mouvement.recu_url %}<br><small><a href="{{ mouvement.recu_url }}">Voir le reçu</a></small>
+                    {% elif mouvement.note %}<br><small>{{ mouvement.note }}</small>{% endif %}
                   </td>
                   <td class="nombre">
                     {% if mouvement.montant > 0 %}+{% endif %}{{ mouvement.montant }}

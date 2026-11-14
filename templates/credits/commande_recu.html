@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load credits_format %}
+
+{% block titre %}Reçu {{ commande.reference }} — Green Dev Africa{% endblock %}
+{% block classe_page %}page-achat{% endblock %}
+
+{% block contenu %}
+  <div class="non-imprime">{% include "credits/_etapes.html" %}</div>
+
+  <article class="recu">
+    <header class="recu-entete">
+      <span class="recu-coche" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+      </span>
+      <h1>Paiement réussi</h1>
+      <p><strong>{{ commande.credits }} crédits</strong> ont été ajoutés à ton solde.</p>
+    </header>
+
+    <dl class="recu-lignes">
+      <div><dt>Référence</dt><dd>{{ commande.reference }}</dd></div>
+      <div><dt>Date</dt><dd>{{ commande.date_paiement|date:"d/m/Y à H:i" }}</dd></div>
+      <div><dt>Moyen de paiement</dt><dd>{{ commande.nom_moyen }} · {{ commande.detail_moyen }}</dd></div>
+      <div><dt>Crédits ajoutés</dt><dd>+{{ commande.credits }}</dd></div>
+      <div><dt>Nouveau solde</dt><dd>{{ solde }} crédits</dd></div>
+      <div class="recu-total"><dt>Montant</dt><dd>{{ commande.montant_fcfa|fcfa }}</dd></div>
+    </dl>
+
+    <p class="recu-mention">
+      Paiement simulé pendant la bêta : aucun montant n'a été débité.
+      {% if user.email %}Une copie de ce reçu a été envoyée à {{ user.email }}.{% endif %}
+    </p>
+
+    <p class="recu-usage">De quoi lancer environ <strong>{{ audits_rapides }} audits de site complet</strong>.</p>
+
+    <div class="actions recu-actions non-imprime">
+      <a class="bouton bouton-grand" href="{% url 'tableau_de_bord' %}">Lancer une analyse</a>
+      <a class="bouton bouton-secondaire" href="{% url 'mes_credits' %}">Voir mes crédits</a>
+      <button type="button" class="bouton-discret" data-imprimer>Imprimer le reçu</button>
+    </div>
+  </article>
+{% endblock %}

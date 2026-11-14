@@ -1,0 +1,16 @@
+{% load credits_format %}{% autoescape off %}Bonjour {{ utilisateur.nom|default:utilisateur.get_username }},
+
+Ta recharge de crédits Green Dev Africa est confirmée.
+
+Référence          : {{ commande.reference }}
+Date               : {{ commande.date_paiement|date:"d/m/Y à H:i" }}
+Moyen de paiement  : {{ commande.nom_moyen }} ({{ commande.detail_moyen }})
+Crédits ajoutés    : {{ commande.credits }}
+Montant            : {{ commande.montant_fcfa|fcfa }}
+
+Paiement simulé pendant la bêta : aucun montant n'a été débité.
+
+Retrouver ce reçu : {{ lien }}
+
+L'équipe Green Dev Africa
+{% endautoescape %}

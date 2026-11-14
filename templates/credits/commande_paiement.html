@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load credits_format %}
+
+{% block titre %}Paiement — Green Dev Africa{% endblock %}
+{% block classe_page %}page-achat{% endblock %}
+
+{% block contenu %}
+  {% include "credits/_etapes.html" %}
+
+  <header class="achat-entete">
+    <h1>Paiement</h1>
+    <p>Commande <strong>{{ commande.reference }}</strong> · valable jusqu'à {{ commande.date_expiration|time:"H:i" }}</p>
+  </header>
+
+  <div class="achat-grille">
+    <form method="post" class="achat-principal" data-paiement novalidate>
+      {% csrf_token %}
+      {% if formulaire.non_field_errors %}<p class="achat-erreur" role="alert">{{ formulaire.non_field_errors.0 }}</p>{% endif %}
+
+      <fieldset class="paiement-moyens">
+        <legend>Moyen de paiement</legend>
+        {% if formulaire.moyen.errors %}<p class="achat-erreur" role="alert">{{ formulaire.moyen.errors.0 }}</p>{% endif %}
+        {% for moyen in moyens_paiement %}
+          <label class="paiement-moyen">
+            <input type="radio" name="moyen" value="{{ moyen.code }}" data-famille="{{ moyen.famille }}"
+                   {% if moyen_choisi == moyen.code %}checked{% endif %}>
+            {% include "credits/_logo_moyen.html" with code=moyen.code %}
+            <span>{{ moyen.nom }}</span>
+          </label>
+        {% endfor %}
+      </fieldset>
+
+      <div class="paiement-details" data-details="mobile">
+        <h2>Compte mobile money</h2>
+        <div class="champ">
+          <label for="telephone">Numéro de téléphone</label>
+          <div class="paiement-telephone">
+            <select name="indicatif" aria-label="Indicatif du pays">
+              {% for code, nom in indicatifs %}
+                <option value="{{ code }}"{% if formulaire.indicatif.value == code %} selected{% endif %}>{{ nom }}</option>
+              {% endfor %}
+            </select>
+            <input id="telephone" name="telephone" type="tel" inputmode="tel" autocomplete="tel-national"
+                   placeholder="70 12 34 56" value="{{ formulaire.telephone.value|default:'' }}"
+                   {% if formulaire.telephone.errors %}aria-invalid="true" aria-describedby="erreur-telephone"{% endif %}>
+          </div>
+          {% if formulaire.telephone.errors %}<span class="erreur" id="erreur-telephone">{{ formulaire.telephone.errors.0 }}</span>{% endif %}
+          <span class="aide">Tu recevras une demande de confirmation sur ce numéro.</span>
+        </div>
+      </div>
+
+      <div class="paiement-details" data-details="carte">
+        <h2>Carte bancaire</h2>
+        <div class="champ">
+          <label for="titulaire">Nom du titulaire</label>
+          <input id="titulaire" name="titulaire" type="text" autocomplete="off" placeholder="AÏCHA DEMBÉLÉ"
+                 value="{{ formulaire.titulaire.value|default:'' }}"
+                 {% if formulaire.titulaire.errors %}aria-invalid="true" aria-describedby="erreur-titulaire"{% endif %}>
+          {% if formulaire.titulaire.errors %}<span class="erreur" id="erreur-titulaire">{{ formulaire.titulaire.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="champ">
+          <label for="numero_carte">Numéro de carte</label>
+          {# autocomplete="off" : le navigateur ne doit jamais proposer une vraie carte ici. #}
+          <input id="numero_carte" name="numero_carte" type="text" inputmode="numeric" autocomplete="off"
+                 placeholder="{{ carte_test }}" maxlength="23" data-numero-carte
+                 value="{% if not formulaire.numero_carte.errors %}{{ formulaire.numero_carte.value|default:'' }}{% endif %}"
+                 {% if formulaire.numero_carte.errors %}aria-invalid="true" aria-describedby="erreur-carte"{% endif %}>
+          {% if formulaire.numero_carte.errors %}<span class="erreur" id="erreur-carte">{{ formulaire.numero_carte.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="paiement-ligne">
+          <div class="champ">
+            <label for="expiration">Expiration</label>
+            <input id="expiration" name="expiration" type="text" inputmode="numeric" autocomplete="off"
+                   placeholder="MM/AA" maxlength="5" data-expiration value="{{ formulaire.expiration.value|default:'' }}"
+                   {% if formulaire.expiration.errors %}aria-invalid="true" aria-describedby="erreur-expiration"{% endif %}>
+            {% if formulaire.expiration.errors %}<span class="erreur" id="erreur-expiration">{{ formulaire.expiration.errors.0 }}</span>{% endif %}
+          </div>
+          <div class="champ">
+            <label for="cvc">Code de sécurité</label>
+            <input id="cvc" name="cvc" type="text" inputmode="numeric" autocomplete="off" placeholder="123" maxlength="4"
+                   value=""
+                   {% if formulaire.cvc.errors %}aria-invalid="true" aria-describedby="erreur-cvc"{% endif %}>
+            {% if formulaire.cvc.errors %}<span class="erreur" id="erreur-cvc">{{ formulaire.cvc.errors.0 }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="achat-test" role="note">
+        <strong>Mode test</strong>
+        <ul>
+          <li>Mobile money : n'importe quel numéro. Un numéro qui finit par <code>{{ suffixe_refuse }}</code> simule un solde insuffisant.</li>
+          <li>Carte : <code>{{ carte_test }}</code>, une date future, n'importe quel code. <code>{{ carte_test_refusee }}</code> simule un refus.</li>
+        </ul>
+      </div>
+
+      <button type="submit" class="bouton-grand achat-continuer">Payer {{ commande.montant_fcfa|fcfa }}</button>
+    </form>
+
+    <aside class="achat-resume" aria-label="Récapitulatif">
+      <h2>Récapitulatif</h2>
+      <dl>
+        <div><dt>Recharge</dt><dd>{{ commande.montant_fcfa|fcfa }}</dd></div>
+        <div><dt>Crédits ajoutés</dt><dd>{{ commande.credits }}</dd></div>
+        <div><dt>Frais</dt><dd>0 FCFA</dd></div>
+        <div class="achat-resume-total"><dt>Total</dt><dd>{{ commande.montant_fcfa|fcfa }}</dd></div>
+      </dl>
+      <a class="achat-modifier" href="{% url 'acheter_credits' %}?montant={{ commande.montant_fcfa }}">Modifier le montant</a>
+      <form method="post" action="{% url 'commande_annuler' commande.reference %}">
+        {% csrf_token %}
+        <button type="submit" class="lien">Annuler la commande</button>
+      </form>
+    </aside>
+  </div>
+{% endblock %}

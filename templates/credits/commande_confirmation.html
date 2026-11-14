@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load credits_format %}
+
+{% block titre %}Confirmation du paiement — Green Dev Africa{% endblock %}
+{% block classe_page %}page-achat{% endblock %}
+
+{% block contenu %}
+  {% include "credits/_etapes.html" %}
+
+  <div class="confirmation-carte">
+    <div class="confirmation-entete">
+      {% include "credits/_logo_moyen.html" with code=commande.moyen_paiement %}
+      <div>
+        <p class="confirmation-moyen">{{ commande.nom_moyen }} · {{ commande.detail_moyen }}</p>
+        <p class="confirmation-montant">{{ commande.montant_fcfa|fcfa }}</p>
+      </div>
+    </div>
+
+    {% if commande.famille_moyen == "carte" %}
+      <h1>Vérification 3-D Secure</h1>
+      <p>Ta banque t'a envoyé un code à 6 chiffres pour confirmer ce paiement à <strong>Green Dev Africa</strong>.</p>
+    {% else %}
+      <h1>Confirme sur ton téléphone</h1>
+      <p>
+        Une demande de paiement de <strong>{{ commande.montant_fcfa|fcfa }}</strong> a été envoyée au
+        <strong>{{ commande.detail_moyen }}</strong>. Saisis le code de confirmation reçu par SMS.
+      </p>
+    {% endif %}
+
+    <div class="achat-test achat-test-code" role="note">
+      <strong>Mode test</strong>
+      <p>Aucun SMS n'est réellement envoyé. Ton code : <code class="code-test">{{ commande.code_confirmation }}</code></p>
+    </div>
+
+    <form method="post" class="confirmation-formulaire" data-traitement
+          data-traitement-texte="{% if commande.famille_moyen == 'carte' %}Autorisation auprès de ta banque…{% else %}Validation auprès de {{ commande.nom_moyen }}…{% endif %}">
+      {% csrf_token %}
+      <div class="champ">
+        <label for="code">Code de confirmation</label>
+        <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+               maxlength="6" pattern="[0-9]{6}" placeholder="••••••" class="champ-code" autofocus
+               {% if formulaire.code.errors %}aria-invalid="true" aria-describedby="erreur-code"{% endif %}>
+        {% if formulaire.code.errors %}<span class="erreur" id="erreur-code" role="alert">{{ formulaire.code.errors.0 }}</span>{% endif %}
+      </div>
+      <button type="submit" class="bouton-grand achat-continuer">Valider le paiement</button>
+    </form>
+
+    <p class="confirmation-delai" data-compte-a-rebours="{{ commande.date_expiration|date:'c' }}">
+      Cette demande expire à {{ commande.date_expiration|time:"H:i" }}.
+    </p>
+
+    <form method="post" action="{% url 'commande_annuler' commande.reference %}" class="confirmation-annuler">
+      {% csrf_token %}
+      <button type="submit" class="lien">Annuler le paiement</button>
+    </form>
+  </div>
+
+  <div class="traitement" data-traitement-voile hidden>
+    <div class="traitement-boite" role="status" aria-live="assertive">
+      <span class="traitement-roue" aria-hidden="true"></span>
+      <p data-traitement-message>Traitement du paiement…</p>
+      <small>Ne ferme pas cette page.</small>
+    </div>
+  </div>
+{% endblock %}
