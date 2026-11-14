@@ -56,6 +56,20 @@ def on_starting(server):
     server.log.info("[demarrage] Chargement du référentiel d'analyse…")
     call_command("charger_referentiel", verbosity=0)
 
+    from django.conf import settings
+
+    server.log.info(
+        "[demarrage] E-mails : %s, expéditeur %s",
+        settings.EMAIL_BACKEND.rsplit(".", 2)[-2],
+        settings.DEFAULT_FROM_EMAIL,
+    )
+    if settings.EMAIL_BACKEND.endswith("console.EmailBackend") and not settings.DEBUG:
+        server.log.warning(
+            "[demarrage] ATTENTION : aucun service d'envoi configuré, les e-mails "
+            "(mot de passe oublié) sont écrits dans les logs et n'arrivent pas. "
+            "Définir BREVO_API_KEY et DJANGO_DEFAULT_FROM_EMAIL."
+        )
+
     # Les workers sont créés par fork : ils ne doivent pas hériter de la
     # connexion ouverte ici.
     connections.close_all()

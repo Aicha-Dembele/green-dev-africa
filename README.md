@@ -119,6 +119,23 @@ Au démarrage, les logs doivent montrer les lignes `[demarrage] …`. Le même
 fichier règle le délai (180 s, une analyse peut être longue) et les threads ;
 voir `GUNICORN_WORKERS`, `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`.
 
+### E-mails (mot de passe oublié)
+
+En production, les e-mails partent par l'**API HTTPS de Brevo**
+([`comptes/email_brevo.py`](./comptes/email_brevo.py)) : pas de port SMTP,
+souvent bloqué par les hébergeurs. Dans l'environnement Systalink :
+
+```text
+BREVO_API_KEY=<clé d'API Brevo>
+DJANGO_DEFAULT_FROM_EMAIL=Green Dev Africa <adresse-validee@exemple.com>
+```
+
+L'adresse d'expédition doit être validée dans Brevo (« Expéditeurs, domaines
+et IP dédiées »). Sans `BREVO_API_KEY` ni `DJANGO_EMAIL_HOST`, les e-mails
+sont seulement écrits dans les logs : le démarrage l'annonce par une ligne
+`[demarrage] ATTENTION`. Pour tester l'envoi :
+`python manage.py tester_email moi@exemple.com`.
+
 **Enfin, prépare la base et lance le serveur :**
 
 ```bash

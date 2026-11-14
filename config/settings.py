@@ -211,7 +211,21 @@ EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.environ.get("DJANGO_EMAIL_USE_TLS", "True") == "True"
 DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", "noreply@green-dev-africa.local")
 
+# Au-delà, on abandonne l'envoi plutôt que de bloquer la page.
+EMAIL_TIMEOUT = int(os.environ.get("DJANGO_EMAIL_TIMEOUT", "10"))
+EMAIL_USE_SSL = os.environ.get("DJANGO_EMAIL_USE_SSL", "False") == "True"
+if EMAIL_USE_SSL:
+    EMAIL_USE_TLS = False
+
+# Brevo (production) : une clé d'API suffit, l'envoi passe par HTTPS et ne
+# dépend donc pas des ports SMTP, souvent bloqués chez les hébergeurs.
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+if BREVO_API_KEY and "DJANGO_EMAIL_BACKEND" not in os.environ:
+    EMAIL_BACKEND = "comptes.email_brevo.BrevoEmailBackend"
+
 if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend" and not EMAIL_HOST:
+    # Sans serveur configuré, l'e-mail est écrit dans les logs au lieu d'être
+    # envoyé : pratique en local, à corriger en production (voir README).
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Mot de passe oublié : le lien envoyé par e-mail reste valable 24 heures

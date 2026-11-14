@@ -274,3 +274,74 @@ class PagesErreurTest(TestCase):
 
         html = loader.get_template("500.html").render()
         self.assertIn("Une erreur est survenue", html)
+
+
+@override_settings(
+    EMAIL_BACKEND="comptes.email_brevo.BrevoEmailBackend",
+    BREVO_API_KEY="cle-de-test",
+    DEFAULT_FROM_EMAIL="Green Dev Africa <contact@greendev.test>",
+)
+class EnvoiBrevoTest(TestCase):
+    """Les e-mails partent par l'API HTTPS de Brevo, sans vrai appel réseau."""
+
+    def _reponse(self, code=201, texte='{"messageId": "x"}'):
+        from unittest.mock import Mock
+
+        return Mock(status_code=code, text=texte)
+
+    def test_message_converti_au_format_brevo(self):
+        from unittest.mock import patch
+
+        from django.core.mail import send_mail
+
+        with patch("comptes.email_brevo.requests.post", return_value=self._reponse()) as post:
+            envoyes = send_mail("Sujet", "Corps du message", None, ["Awa <awa@exemple.com>"])
+
+        self.assertEqual(envoyes, 1)
+        appel = post.call_args
+        self.assertEqual(appel.args[0], "https://api.brevo.com/v3/smtp/email")
+        self.assertEqual(appel.kwargs["headers"]["api-key"], "cle-de-test")
+        self.assertEqual(
+            appel.kwargs["json"],
+            {
+                "sender": {"email": "contact@greendev.test", "name": "Green Dev Africa"},
+                "to": [{"email": "awa@exemple.com", "name": "Awa"}],
+                "subject": "Sujet",
+                "textContent": "Corps du message",
+            },
+        )
+        self.assertEqual(appel.kwargs["timeout"], 10)
+
+    def test_refus_de_brevo_remonte_une_erreur(self):
+        from unittest.mock import patch
+
+        from django.core.mail import send_mail
+
+        from comptes.email_brevo import ErreurBrevo
+
+        refus = self._reponse(400, '{"message": "sender not valid"}')
+        with patch("comptes.email_brevo.requests.post", return_value=refus):
+            with self.assertRaisesMessage(ErreurBrevo, "sender not valid"):
+                send_mail("Sujet", "Corps", None, ["awa@exemple.com"])
+            # fail_silently : pas d'exception, zéro envoi.
+            self.assertEqual(
+                send_mail("Sujet", "Corps", None, ["awa@exemple.com"], fail_silently=True),
+                0,
+            )
+
+    def test_mot_de_passe_oublie_envoie_le_lien_par_brevo(self):
+        from unittest.mock import patch
+
+        get_user_model().objects.create_user(
+            username="awa", email="awa@exemple.com", password="motdepasse-de-test", nom="Awa"
+        )
+        with patch("comptes.email_brevo.requests.post", return_value=self._reponse()) as post:
+            reponse = self.client.post(
+                reverse("mot_de_passe_oublie"), {"email": "awa@exemple.com"}
+            )
+
+        self.assertRedirects(reponse, reverse("mot_de_passe_envoye"))
+        corps = post.call_args.kwargs["json"]
+        self.assertEqual(corps["to"], [{"email": "awa@exemple.com"}])
+        self.assertIn("/comptes/nouveau-mot-de-passe/", corps["textContent"])
+        self.assertIn("Bonjour Awa", corps["textContent"])
