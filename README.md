@@ -105,21 +105,19 @@ Ne mets jamais la vraie clé secrète ou le mot de passe PostgreSQL dans Git.
 `DATABASE_URL` est prioritaire sur SQLite ; `SQLITE_PATH` ne sert qu'au
 développement local.
 
-Le conteneur démarre avec [`demarrer.sh`](./demarrer.sh), qui s'arrête à la
-première erreur et écrit chaque étape dans les logs :
+La base est préparée par [`gunicorn.conf.py`](./gunicorn.conf.py), que
+gunicorn lit **automatiquement** depuis la racine du projet, quelle que soit
+la commande qui le lance (Systalink lance gunicorn lui-même et ignore la
+commande du `Dockerfile`). Avant de créer ses workers, gunicorn :
 
 1. affiche la base utilisée (moteur, hôte, port, nom — jamais le mot de passe) ;
 2. applique les migrations, puis vérifie qu'aucune ne reste en attente ;
-3. charge le référentiel d'analyse et collecte les fichiers statiques ;
-4. lance Gunicorn (2 workers × 4 threads, délai de 180 s, réglables avec
-   `GUNICORN_WORKERS`, `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`).
+3. charge le référentiel d'analyse.
 
-**Dans Systalink, laisse la commande de démarrage vide** (ou mets
-`./demarrer.sh`) : une commande personnalisée comme `gunicorn …` remplace
-celle du `Dockerfile` et saute les migrations — le site s'affiche alors, mais
-toute page qui lit la base renvoie une erreur 500
-(`relation "comptes_utilisateur" does not exist`). Au démarrage, les logs
-doivent montrer les lignes `[demarrage] …`.
+Si une étape échoue, gunicorn ne démarre pas et l'erreur est dans les logs.
+Au démarrage, les logs doivent montrer les lignes `[demarrage] …`. Le même
+fichier règle le délai (180 s, une analyse peut être longue) et les threads ;
+voir `GUNICORN_WORKERS`, `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`.
 
 **Enfin, prépare la base et lance le serveur :**
 
