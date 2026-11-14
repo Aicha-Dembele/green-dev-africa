@@ -189,6 +189,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# WhiteNoise sert aussi les fichiers directement depuis `static/` et les
+# applications : le site garde son style même si `collectstatic` n'a pas pu
+# écrire dans STATIC_ROOT (conteneur en lecture seule, utilisateur limité).
+WHITENOISE_USE_FINDERS = True
 
 # Redirections de la connexion (app comptes, etape suivante)
 LOGIN_URL = 'connexion'
