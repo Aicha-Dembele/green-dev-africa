@@ -105,15 +105,21 @@ Ne mets jamais la vraie clé secrète ou le mot de passe PostgreSQL dans Git.
 `DATABASE_URL` est prioritaire sur SQLite ; `SQLITE_PATH` ne sert qu'au
 développement local.
 
-Dans Systalink, définis la commande de pré-déploiement suivante :
+Le conteneur démarre avec [`demarrer.sh`](./demarrer.sh), qui s'arrête à la
+première erreur et écrit chaque étape dans les logs :
 
-```bash
-python manage.py migrate --noinput
-```
+1. affiche la base utilisée (moteur, hôte, port, nom — jamais le mot de passe) ;
+2. applique les migrations, puis vérifie qu'aucune ne reste en attente ;
+3. charge le référentiel d'analyse et collecte les fichiers statiques ;
+4. lance Gunicorn (2 workers × 4 threads, délai de 180 s, réglables avec
+   `GUNICORN_WORKERS`, `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`).
 
-Le démarrage du conteneur applique aussi les migrations de manière idempotente
-en secours, charge le référentiel d'analyse, collecte les fichiers statiques,
-puis démarre Gunicorn.
+**Dans Systalink, laisse la commande de démarrage vide** (ou mets
+`./demarrer.sh`) : une commande personnalisée comme `gunicorn …` remplace
+celle du `Dockerfile` et saute les migrations — le site s'affiche alors, mais
+toute page qui lit la base renvoie une erreur 500
+(`relation "comptes_utilisateur" does not exist`). Au démarrage, les logs
+doivent montrer les lignes `[demarrage] …`.
 
 **Enfin, prépare la base et lance le serveur :**
 

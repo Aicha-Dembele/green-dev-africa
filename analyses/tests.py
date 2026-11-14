@@ -7,7 +7,7 @@ Pour les lancer :  python manage.py test analyses
 """
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
 from analyses.management.commands.charger_referentiel import Command as Referentiel
@@ -645,3 +645,66 @@ class RegleEtConseilTest(TestCase):
 
         self.assertEqual(RegleAnalyse.objects.count(), total_regles)
         self.assertEqual(ConseilOptimisation.objects.count(), total_conseils)
+
+
+class ConnexionEpingleeReelleTest(SimpleTestCase):
+    """La vraie pile requests/urllib3, sans session factice ni Internet.
+
+    Un petit serveur écoute sur 127.0.0.1 ; on demande un nom de domaine qui
+    n'existe pas (`.invalid`) en l'épinglant sur cette IP. Si la requête
+    aboutit, c'est que l'IP vérifiée a bien été utilisée sans résolution DNS.
+    """
+
+    def setUp(self):
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        self.hotes_recus = []
+        test = self
+
+        class Gestionnaire(BaseHTTPRequestHandler):
+            def do_GET(self):
+                test.hotes_recus.append(self.headers.get("Host"))
+                self.send_response(200)
+                self.send_header("Content-Length", "2")
+                self.end_headers()
+                self.wfile.write(b"ok")
+
+            def log_message(self, *args):
+                pass
+
+        self.serveur = HTTPServer(("127.0.0.1", 0), Gestionnaire)
+        threading.Thread(target=self.serveur.serve_forever, daemon=True).start()
+
+    def tearDown(self):
+        self.serveur.shutdown()
+        self.serveur.server_close()
+
+    def test_requete_epinglee_sur_ip_verifiee(self):
+        import requests
+
+        from analyses.collecteur import _requete_ip_verrouillee
+
+        port = self.serveur.server_address[1]
+        reponse = _requete_ip_verrouillee(
+            requests.Session(), f"http://site-test.invalid:{port}/", "127.0.0.1"
+        )
+        self.assertEqual(reponse.status_code, 200)
+        self.assertEqual(reponse.content, b"ok")
+        # Le nom d'hôte d'origine est conservé dans l'en-tête Host.
+        self.assertEqual(self.hotes_recus, [f"site-test.invalid:{port}"])
+
+    def test_erreur_de_connexion_reste_une_erreur_requests(self):
+        import requests
+
+        from analyses.collecteur import _requete_ip_verrouillee
+
+        port = self.serveur.server_address[1]
+        self.serveur.shutdown()
+        self.serveur.server_close()
+        with self.assertRaises(requests.ConnectionError):
+            _requete_ip_verrouillee(
+                requests.Session(), f"http://site-test.invalid:{port}/", "127.0.0.1"
+            )
+        # Le serveur est déjà fermé : tearDown ne doit pas recommencer.
+        self.serveur = type("Ferme", (), {"shutdown": lambda s: None, "server_close": lambda s: None})()

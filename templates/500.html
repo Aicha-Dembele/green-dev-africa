@@ -1,0 +1,26 @@
+{% load static %}<!DOCTYPE html>
+{% comment %}
+  Page autonome : Django l'affiche sans contexte (ni utilisateur ni
+  notifications), souvent quand la base de données est indisponible.
+  Elle ne doit donc dépendre ni de base.html ni d'aucune requête.
+{% endcomment %}
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Erreur du serveur — Green Dev Africa</title>
+  <link rel="stylesheet" href="{% static 'css/greendev.css' %}">
+</head>
+<body>
+  <main id="contenu-principal">
+    <h1>Une erreur est survenue</h1>
+    <div class="carte">
+      <p class="vide">
+        Le serveur n’a pas pu traiter ta demande. L’équipe a été prévenue par les journaux.<br>
+        Réessaie dans quelques minutes.
+      </p>
+      <p><a class="bouton bouton-secondaire" href="/">Retour à l’accueil</a></p>
+    </div>
+  </main>
+</body>
+</html>

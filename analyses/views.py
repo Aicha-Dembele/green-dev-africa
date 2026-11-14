@@ -36,7 +36,10 @@ from credits.services import (
 from projets.models import Projet
 
 from analyses.collecteur import ErreurCollecte, verifier_adresse
-from analyses.management.commands.traiter_analyses import traiter_une_analyse_en_attente
+from analyses.management.commands.traiter_analyses import (
+    liberer_analyses_bloquees,
+    traiter_une_analyse_en_attente,
+)
 
 from .forms import ComparaisonForm, LancerAnalyseForm
 from .models import (
@@ -85,6 +88,7 @@ def lancer_analyse(request, pk):
         )
         return redirect("projet_detail", pk=projet.pk)
 
+    liberer_analyses_bloquees(request.user)
     analyse_en_cours = projet.analyses.filter(
         statut__in=[Analyse.Statut.EN_ATTENTE, Analyse.Statut.EN_COURS]
     ).exists()

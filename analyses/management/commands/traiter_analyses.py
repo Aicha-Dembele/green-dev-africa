@@ -6,14 +6,52 @@ Lancer un seul processus de cette commande à côté du serveur Django :
 
 import logging
 import time
+from datetime import timedelta
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import close_old_connections
+from django.utils import timezone
 
 from analyses.collecteur import ErreurCollecte
 from analyses.models import Analyse
 
 journal = logging.getLogger(__name__)
+
+
+# Une analyse ne peut pas durer plus longtemps que le délai de gunicorn
+# (quelques minutes). Au-delà, son processus a été tué (redémarrage,
+# dépassement de délai) : sans ce filet, elle resterait « En cours » pour
+# toujours et bloquerait le projet.
+DUREE_MAX_ANALYSE = timedelta(minutes=15)
+
+
+def liberer_analyses_bloquees(utilisateur=None):
+    """Passe en « Échouée » (et rembourse) les analyses abandonnées en cours."""
+    from credits.services import rembourser_analyse
+
+    limite = timezone.now() - DUREE_MAX_ANALYSE
+    bloquees = Analyse.objects.filter(
+        statut__in=[Analyse.Statut.EN_COURS, Analyse.Statut.EN_ATTENTE],
+        date_analyse__lt=limite,
+    )
+    if utilisateur is not None:
+        bloquees = bloquees.filter(projet__utilisateur=utilisateur)
+
+    liberees = 0
+    for analyse in bloquees.select_related("projet__utilisateur"):
+        mises_a_jour = Analyse.objects.filter(
+            pk=analyse.pk, statut=analyse.statut
+        ).update(
+            statut=Analyse.Statut.ECHOUEE,
+            message_erreur=(
+                "L'analyse a été interrompue avant la fin. Tu peux la relancer."
+            ),
+        )
+        if mises_a_jour:
+            rembourser_analyse(analyse)
+            journal.warning("Analyse %s interrompue : marquée échouée.", analyse.pk)
+            liberees += 1
+    return liberees
 
 
 def traiter_une_analyse_en_attente(utilisateur=None):

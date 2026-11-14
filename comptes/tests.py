@@ -256,3 +256,21 @@ class AdministrationTest(TestCase):
                 self.assertEqual(liste.status_code, 200)
                 formulaire = self.client.get(reverse(f"admin:{app}_{modele}_add"))
                 self.assertEqual(formulaire.status_code, 200)
+
+
+class PagesErreurTest(TestCase):
+    """Les visiteurs voient des pages d'erreur en français, au style du site."""
+
+    def test_page_404_en_francais(self):
+        from django.test import override_settings
+
+        with override_settings(DEBUG=False):
+            reponse = self.client.get("/adresse-qui-n-existe-pas/")
+        self.assertEqual(reponse.status_code, 404)
+        self.assertContains(reponse, "Page introuvable", status_code=404)
+
+    def test_page_500_rendue_sans_contexte(self):
+        from django.template import loader
+
+        html = loader.get_template("500.html").render()
+        self.assertIn("Une erreur est survenue", html)

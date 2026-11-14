@@ -425,6 +425,42 @@ class CreditsMetierTest(TestCase):
         self.assertEqual(remboursement.montant, 5)
         self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, 30)
 
+    def test_analyse_bloquee_en_cours_est_liberee_et_remboursee(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from analyses.management.commands.traiter_analyses import (
+            liberer_analyses_bloquees,
+        )
+
+        utilisateur = Utilisateur.objects.create_user(
+            username="bloquee",
+            email="bloquee@example.com",
+            password="motdepasse-de-test",
+            nom="Bloquée",
+        )
+        ajouter_credits(utilisateur, 20, JournalCredits.Type.AJUSTEMENT_ADMIN, "test")
+        ancienne = self.creer_analyse(utilisateur)
+        self.assertTrue(debiter_pour_analyse(utilisateur, ancienne, 5))
+        Analyse.objects.filter(pk=ancienne.pk).update(
+            statut=Analyse.Statut.EN_COURS,
+            date_analyse=timezone.now() - timedelta(hours=1),
+        )
+        recente = self.creer_analyse(utilisateur)
+        Analyse.objects.filter(pk=recente.pk).update(statut=Analyse.Statut.EN_COURS)
+
+        self.assertEqual(liberer_analyses_bloquees(utilisateur), 1)
+
+        ancienne.refresh_from_db()
+        recente.refresh_from_db()
+        self.assertEqual(ancienne.statut, Analyse.Statut.ECHOUEE)
+        self.assertEqual(recente.statut, Analyse.Statut.EN_COURS)
+        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, 30)
+        # Un second passage ne rembourse pas deux fois.
+        self.assertEqual(liberer_analyses_bloquees(utilisateur), 0)
+        self.assertEqual(SoldeCredits.objects.get(utilisateur=utilisateur).solde, 30)
+
     def test_tarifs_public_sont_accessibles_sans_compte(self):
         response = self.client.get(reverse("tarifs"))
 

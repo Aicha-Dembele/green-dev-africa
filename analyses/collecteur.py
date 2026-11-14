@@ -31,6 +31,8 @@ from urllib.parse import urldefrag, urljoin, urlparse
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection, HTTPSConnection
+from urllib3.exceptions import ConnectTimeoutError, NewConnectionError
+from urllib3.util import connection as connexion_urllib3
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 from urllib3.poolmanager import PoolManager
 
@@ -237,30 +239,43 @@ def verifier_adresse(url):
     return adresses_publiques
 
 
-class _ConnexionHTTPVerrouillee(HTTPConnection):
-    """Connexion TCP vers l'IP déjà vérifiée, sans nouvelle résolution DNS."""
+class _ConnexionEpingleeMixin:
+    """Ouvre le socket vers l'IP déjà vérifiée, sans nouvelle résolution DNS.
+
+    `self.host` reste le nom de domaine : c'est lui qui sert à l'en-tête Host,
+    au SNI et à la vérification du certificat TLS. Seule l'adresse TCP change.
+    Les erreurs réseau sont converties comme le fait urllib3, pour que
+    requests les remonte en `Timeout` / `ConnectionError` habituels.
+    """
+
     def __init__(self, *args, ip_verifiee, **kwargs):
         self.ip_verifiee = ip_verifiee
         super().__init__(*args, **kwargs)
 
     def _new_conn(self):
-        return socket.create_connection(
-            (self.ip_verifiee, self.port), self.timeout,
-            source_address=self.source_address,
-        )
+        try:
+            return connexion_urllib3.create_connection(
+                (self.ip_verifiee, self.port),
+                self.timeout,
+                source_address=self.source_address,
+                socket_options=self.socket_options,
+            )
+        except socket.timeout as erreur:
+            raise ConnectTimeoutError(
+                self, f"Connexion à {self.host} trop lente (délai={self.timeout})"
+            ) from erreur
+        except OSError as erreur:
+            raise NewConnectionError(
+                self, f"Connexion impossible : {erreur}"
+            ) from erreur
 
 
-class _ConnexionHTTPSVerrouillee(HTTPSConnection):
-    """Épingle l'IP tout en conservant le nom d'hôte pour TLS/SNI."""
-    def __init__(self, *args, ip_verifiee, **kwargs):
-        self.ip_verifiee = ip_verifiee
-        super().__init__(*args, **kwargs)
+class _ConnexionHTTPVerrouillee(_ConnexionEpingleeMixin, HTTPConnection):
+    """Connexion HTTP épinglée sur l'IP vérifiée."""
 
-    def _new_conn(self):
-        return socket.create_connection(
-            (self.ip_verifiee, self.port), self.timeout,
-            source_address=self.source_address,
-        )
+
+class _ConnexionHTTPSVerrouillee(_ConnexionEpingleeMixin, HTTPSConnection):
+    """Connexion HTTPS épinglée sur l'IP vérifiée, TLS/SNI sur le nom d'hôte."""
 
 
 class _PoolHTTPVerrouille(HTTPConnectionPool):
@@ -272,10 +287,15 @@ class _PoolHTTPSVerrouille(HTTPSConnectionPool):
 
 
 class _GestionnaireVerrouille(PoolManager):
-    pool_classes_by_scheme = {"http": _PoolHTTPVerrouille, "https": _PoolHTTPSVerrouille}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # urllib3 recopie ses propres classes de pool dans l'instance pendant
+        # son __init__ : un attribut de classe serait ignoré. On les impose ici.
+        self.pool_classes_by_scheme = {
+            "http": _PoolHTTPVerrouille,
+            "https": _PoolHTTPSVerrouille,
+        }
         for schema, normalisateur in self.key_fn_by_scheme.items():
             self.key_fn_by_scheme[schema] = (
                 lambda contexte, normalisateur=normalisateur: normalisateur(

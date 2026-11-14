@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block titre %}Page introuvable — Green Dev Africa{% endblock %}
+
+{% block contenu %}
+  <h1>Page introuvable</h1>
+  <div class="carte">
+    <p class="vide">
+      Cette adresse ne correspond à aucune page, ou la page a été supprimée.<br>
+      Vérifie le lien, ou repars du tableau de bord.
+    </p>
+    <p><a class="bouton bouton-secondaire" href="{% url 'tableau_de_bord' %}">Retour à l’accueil</a></p>
+  </div>
+{% endblock %}
