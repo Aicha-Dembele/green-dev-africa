@@ -127,10 +127,12 @@ souvent bloqué par les hébergeurs. Dans l'environnement Systalink :
 
 ```text
 BREVO_API_KEY=<clé d'API Brevo>
-DJANGO_DEFAULT_FROM_EMAIL=Green Dev Africa <adresse-validee@exemple.com>
+DJANGO_DEFAULT_FROM_EMAIL=adresse-validee@exemple.com
 ```
 
-L'adresse d'expédition doit être validée dans Brevo (« Expéditeurs, domaines
+Mets **l'adresse seule** (sans nom, sans `<` `>`, sans espace) : le nom
+« Green Dev Africa » est ajouté par le code, et ces caractères empêchent le
+conteneur de démarrer sur Systalink. L'adresse d'expédition doit être validée dans Brevo (« Expéditeurs, domaines
 et IP dédiées »). Sans `BREVO_API_KEY` ni `DJANGO_EMAIL_HOST`, les e-mails
 sont seulement écrits dans les logs : le démarrage l'annonce par une ligne
 `[demarrage] ATTENTION`. Pour tester l'envoi :

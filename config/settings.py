@@ -216,7 +216,16 @@ EMAIL_PORT = int(os.environ.get("DJANGO_EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("DJANGO_EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.environ.get("DJANGO_EMAIL_USE_TLS", "True") == "True"
-DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", "noreply@green-dev-africa.local")
+# Mettre seulement l'adresse dans DJANGO_DEFAULT_FROM_EMAIL : le nom affiché
+# est ajouté ici. Les caractères < > et les espaces d'une valeur comme
+# « Nom <adresse> » cassent les hébergeurs qui passent l'environnement par
+# un shell sans guillemets (le conteneur ne démarre plus).
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DJANGO_DEFAULT_FROM_EMAIL", "noreply@green-dev-africa.local"
+).strip()
+EMAIL_NOM_EXPEDITEUR = os.environ.get("DJANGO_DEFAULT_FROM_NAME", "Green Dev Africa")
+if "<" not in DEFAULT_FROM_EMAIL and EMAIL_NOM_EXPEDITEUR:
+    DEFAULT_FROM_EMAIL = f"{EMAIL_NOM_EXPEDITEUR} <{DEFAULT_FROM_EMAIL}>"
 
 # Au-delà, on abandonne l'envoi plutôt que de bloquer la page.
 EMAIL_TIMEOUT = int(os.environ.get("DJANGO_EMAIL_TIMEOUT", "10"))
