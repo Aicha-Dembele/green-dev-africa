@@ -1,290 +1,182 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block titre %}Green Dev Africa — Analyse de performance et sobriété numérique{% endblock %}
-{% block description %}Analysez votre site, identifiez ce qui ralentit son chargement et découvrez comment l'optimiser avec Green Dev Africa.{% endblock %}
+{% block titre %}Green Dev Africa — Rendez votre site rapide, même en 3G{% endblock %}
+{% block description %}Green Dev Africa analyse votre site en une minute, montre ce qui l'alourdit et vous dit quoi corriger en premier pour qu'il charge vite, même sur mobile et avec peu de data.{% endblock %}
 {% block classe_page %}page-accueil{% endblock %}
 
 {% block contenu %}
 
-<section class="accueil-navigation-produit" aria-label="Sommaire de la page">
-  <details class="sommaire-accueil">
-    <summary>Explorer la plateforme <span aria-hidden="true">⌄</span></summary>
-    <nav class="accueil-navigation-produit__liens" aria-label="Sections de la page">
-      <a href="#plateforme">Présentation</a>
-      <a href="#rapport">Rapports</a>
-      <a href="#benefices">Bénéfices</a>
-      <a href="#etapes">Étapes</a>
-      <a href="#fonctionnalites">Fonctionnalités</a>
-      <a href="#indicateurs">Indicateurs</a>
-      <a href="#tarifs">Tarifs</a>
-    </nav>
-  </details>
-  <a class="accueil-navigation-cta" href="#etapes">Voir comment ça marche <span aria-hidden="true">↓</span></a>
-</section>
-
-<section class="accueil-hero-v2" id="plateforme" aria-labelledby="titre-accueil">
-  <div class="accueil-hero-v2__contenu">
-    <p class="accueil-hero-v2__label">Plateforme SaaS d'audit web</p>
-
-    <h1 id="titre-accueil">Votre site web est-il vraiment léger ?</h1>
-
-    <p class="accueil-hero-v2__intro">
-      Analysez votre site, identifiez ce qui ralentit son chargement et découvrez
-      comment l'optimiser.
+<section class="acc-hero" aria-labelledby="titre-accueil">
+  <div class="acc-hero__texte">
+    <p class="acc-surtitre">Audit de sobriété web, en français</p>
+    <h1 id="titre-accueil">Votre site est trop lourd pour vos visiteurs ? <span>Rendez-le rapide, même en 3G.</span></h1>
+    <p class="acc-hero__intro">
+      Donnez l'adresse de votre site : Green Dev Africa mesure ce qu'il pèse, repère ce qui
+      le ralentit et vous dit <strong>quoi corriger en premier</strong>.
     </p>
-
-    <p class="accueil-hero-v2__precision">
-      Green Dev Africa aide les équipes produit, développeurs et agences à repérer
-      les ressources trop lourdes et à prioriser des améliorations utiles, y compris
-      pour les personnes qui naviguent avec une connexion limitée.
-    </p>
-
-    <div class="accueil-hero-v2__actions">
-      <a class="bouton bouton-grand" href="{% url 'inscription' %}">
-        Créer mon compte
-      </a>
-      <a class="lien-decouvrir" href="#rapport">Découvrir la plateforme</a>
+    <div class="acc-hero__actions">
+      <a class="bouton bouton-grand" href="{% url 'inscription' %}">Analyser mon site gratuitement</a>
+      <a class="acc-lien" href="#comment">Comment ça marche <span aria-hidden="true">↓</span></a>
     </div>
-    <p class="accueil-hero-v2__note-action">Vous ajouterez l’adresse de votre site juste après votre inscription.</p>
-
-    <ul class="accueil-hero-v2__points">
-      <li>Création d'un compte et d'un projet avant l'analyse</li>
-      <li>Mesures, problèmes détectés et recommandations selon les règles actives</li>
-      <li>Historique et comparaison des analyses d'un projet</li>
+    <ul class="acc-hero__rassurance">
+      <li>Gratuit pour commencer</li>
+      <li>Rien à installer</li>
+      <li>Résultat en une minute</li>
     </ul>
   </div>
 
-  <aside class="accueil-hero-v2__apercu" aria-label="Structure du rapport de sobriété numérique">
-    <header>
-      <strong>Rapport de sobriété numérique</strong>
-      <span>Aperçu du rapport</span>
-    </header>
-
-    <dl class="accueil-hero-v2__resume">
-      <div>
-        <dt>Green Score</dt>
-        <dd>— / 100</dd>
+  <figure class="acc-exemple" aria-labelledby="exemple-legende">
+    <div class="acc-exemple__barre">
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+      <p>monsite-exemple.ml</p>
+    </div>
+    <div class="acc-exemple__corps">
+      <div class="acc-exemple__score">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15.9"/><circle cx="18" cy="18" r="15.9" class="acc-exemple__jauge"/></svg>
+        <p><strong>58</strong><span>/100</span></p>
       </div>
-      <div>
-        <dt>Poids de la page</dt>
-        <dd>— Ko</dd>
-      </div>
-      <div>
-        <dt>Nombre de requêtes</dt>
-        <dd>—</dd>
-      </div>
-      <div>
-        <dt>Temps de chargement</dt>
-        <dd>— s</dd>
-      </div>
-    </dl>
-
-    <p>Les valeurs apparaissent après l’analyse de votre site. Cet aperçu ne présente pas de données réelles.</p>
-  </aside>
+      <dl class="acc-exemple__mesures">
+        <div><dt>Poids de la page</dt><dd>3,2 Mo</dd></div>
+        <div><dt>Requêtes</dt><dd>96</dd></div>
+        <div><dt>Images</dt><dd>2,1 Mo</dd></div>
+      </dl>
+    </div>
+    <p class="acc-exemple__titre">À corriger en priorité</p>
+    <ol class="acc-exemple__priorites">
+      <li><span class="acc-tag acc-tag--haute">Élevée</span>8 images trop lourdes : passez-les en WebP</li>
+      <li><span class="acc-tag acc-tag--haute">Élevée</span>JavaScript de 820 Ko : retirez le superflu</li>
+      <li><span class="acc-tag">Moyenne</span>96 requêtes : regroupez les fichiers</li>
+    </ol>
+    <figcaption id="exemple-legende">Exemple illustratif de rapport, pas un vrai site.</figcaption>
+  </figure>
 </section>
 
-<section class="section-accueil-v2" id="rapport" aria-labelledby="titre-rapport">
-  <div class="section-accueil-v2__entete">
-    <p class="section-accueil-v2__surtitre">Aperçu d'un rapport d'audit</p>
-    <h2 id="titre-rapport">Des résultats lisibles, orientés vers l'action</h2>
-    <p>
-      Après une analyse terminée, retrouvez les mesures, les problèmes détectés
-      et, lorsqu'elles sont disponibles, les recommandations associées.
-    </p>
+<section class="acc-section" aria-labelledby="titre-pourquoi">
+  <div class="acc-entete">
+    <p class="acc-surtitre">Pourquoi c'est important</p>
+    <h2 id="titre-pourquoi">Un site lourd vous coûte des visiteurs</h2>
   </div>
-
-  <div class="rapport-apercu" role="region" aria-label="Structure du rapport d'audit">
-    <div class="rapport-apercu__ligne rapport-apercu__ligne--meta">
-      <strong>Rapport de sobriété numérique</strong>
-      <span>Projet et adresse du site analysé</span>
-    </div>
-
-    <div class="rapport-apercu__ligne rapport-apercu__ligne--scores">
-      <article>
-        <h3>Green Score</h3>
-        <p>Score établi à partir des problèmes détectés par les règles actives.</p>
-      </article>
-      <article>
-        <h3>Ce que coûte une visite</h3>
-        <p>Poids de la page, nombre de requêtes, temps de chargement et données transférées.</p>
-      </article>
-    </div>
-
-    <div class="rapport-apercu__ligne">
-      <h3>Problèmes et recommandations</h3>
-      <p>Les résultats dépendent des mesures recueillies et des règles actives lors de l'analyse.</p>
-    </div>
-
-    <p class="rapport-apercu__note">
-      Présentation simplifiée de la structure du rapport, sans données d'audit.
-    </p>
-  </div>
-</section>
-
-<section class="section-accueil-v2" id="benefices" aria-labelledby="titre-benefices">
-  <div class="section-accueil-v2__entete">
-    <p class="section-accueil-v2__surtitre">Bénéfices clés</p>
-    <h2 id="titre-benefices">Des mesures pour alléger vos pages</h2>
-  </div>
-
-  <div class="grille-benefices">
-    <article class="carte-benefice">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M3 12h7l3-8 4 16 2-8h2"/>
-      </svg>
-      <h3>Performance</h3>
-      <p>Repérez le poids des images et des fichiers, ainsi que la durée de collecte, pour orienter vos optimisations.</p>
+  <div class="acc-grille-3">
+    <article class="acc-carte">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+      <h3>Ils n'attendent pas</h3>
+      <p>Une page qui tarde à s'afficher est souvent quittée avant d'être lue. Chaque seconde gagnée garde des visiteurs.</p>
     </article>
-
-    <article class="carte-benefice">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M12 3v18"/>
-        <path d="M7 8h8a4 4 0 0 1 0 8H7"/>
-      </svg>
-      <h3>Accessibilité</h3>
-      <p>Repérez les images sans texte alternatif. Ce contrôle ne constitue pas un audit complet d'accessibilité.</p>
+    <article class="acc-carte">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg>
+      <h3>Leur data coûte cher</h3>
+      <p>Beaucoup naviguent sur mobile avec un forfait limité. Une page de 3 Mo grignote leur forfait à chaque visite.</p>
     </article>
-
-    <article class="carte-benefice">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M12 2v20"/>
-        <path d="M2 12h20"/>
-        <path d="m4.9 4.9 14.2 14.2"/>
-      </svg>
-      <h3>Sobriété numérique</h3>
-      <p>Utilisez les mesures et recommandations pour alléger vos pages, notamment pour les visiteurs en connexion limitée.</p>
+    <article class="acc-carte">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 20A7 7 0 0 1 4 13c0-5 4-9 16-10-1 12-5 16-10 16"/><path d="M4 20c3-4 6-7 10-9"/></svg>
+      <h3>Le poids gaspille de l'énergie</h3>
+      <p>Chaque fichier inutile sollicite serveurs et réseaux. Un site plus léger est aussi un site plus sobre.</p>
     </article>
   </div>
 </section>
 
-<section class="section-accueil-v2" id="etapes" aria-labelledby="titre-etapes">
-  <div class="section-accueil-v2__entete">
-    <p class="section-accueil-v2__surtitre">Fonctionnement</p>
-    <h2 id="titre-etapes">Un parcours simple en trois étapes</h2>
+<section class="acc-section" id="comment" aria-labelledby="titre-comment">
+  <div class="acc-entete">
+    <p class="acc-surtitre">Comment ça marche</p>
+    <h2 id="titre-comment">Trois étapes, aucune compétence technique requise</h2>
   </div>
-
-  <ol class="etapes-v2">
+  <ol class="acc-etapes">
     <li>
-      <span>1</span>
-      <div>
-        <h3>Créez votre projet</h3>
-        <p>Créez un compte, puis ajoutez un projet avec l'URL à analyser.</p>
-      </div>
+      <span aria-hidden="true">1</span>
+      <h3>Ajoutez votre site</h3>
+      <p>Créez un compte gratuit et indiquez l'adresse de la page à analyser.</p>
     </li>
     <li>
-      <span>2</span>
-      <div>
-        <h3>Lancez l'audit</h3>
-        <p>Choisissez le type et le mode d'analyse. Une fois terminée, elle produit un rapport avec les mesures recueillies.</p>
-      </div>
+      <span aria-hidden="true">2</span>
+      <h3>Nous le mesurons</h3>
+      <p>Poids, nombre de fichiers, images, JavaScript, CSS : tout ce que charge un visiteur.</p>
     </li>
     <li>
-      <span>3</span>
-      <div>
-        <h3>Corrigez et comparez</h3>
-        <p>Appliquez les recommandations disponibles, puis comparez deux analyses terminées du même projet.</p>
-      </div>
+      <span aria-hidden="true">3</span>
+      <h3>Vous corrigez l'essentiel</h3>
+      <p>Un score sur 100 et une liste d'actions classées de la plus utile à la moins urgente.</p>
     </li>
   </ol>
 </section>
 
-<section class="section-accueil-v2" id="fonctionnalites" aria-labelledby="titre-fonctionnalites">
-  <div class="section-accueil-v2__entete">
-    <p class="section-accueil-v2__surtitre">Fonctionnalités réelles</p>
-    <h2 id="titre-fonctionnalites">Tout le nécessaire pour piloter vos optimisations</h2>
+<section class="acc-section" aria-labelledby="titre-obtenez">
+  <div class="acc-entete">
+    <p class="acc-surtitre">Ce que vous obtenez</p>
+    <h2 id="titre-obtenez">Un diagnostic clair, puis un plan d'action</h2>
   </div>
+  <ul class="acc-benefices">
+    <li><strong>Un score simple</strong><span>Le Green Score sur 100 résume la santé de votre page en un coup d'œil.</span></li>
+    <li><strong>Des priorités</strong><span>Les problèmes sont classés par gravité : vous savez par où commencer.</span></li>
+    <li><strong>Des conseils concrets</strong><span>Chaque problème vient avec l'action à mener, expliquée sans jargon.</span></li>
+    <li><strong>Un suivi avant / après</strong><span>Relancez l'analyse après vos corrections et comparez les résultats.</span></li>
+    <li><strong>Un rapport à partager</strong><span>PDF ou lien public pour votre client, votre équipe ou votre direction.</span></li>
+    <li><strong>Pensé pour l'Afrique</strong><span>Par défaut, l'analyse se place dans la peau d'un visiteur en 3G, sur un téléphone d'entrée de gamme.</span></li>
+  </ul>
+</section>
 
-  <div class="grille-fonctionnalites">
-    <article class="fonctionnalite">
-      <h3>Historique des analyses</h3>
-      <p>Retrouvez chaque audit par projet pour suivre l'évolution des résultats après correction.</p>
-    </article>
-    <article class="fonctionnalite">
-      <h3>Comparaison avant / après</h3>
-      <p>Comparez deux analyses d'un même projet pour suivre l'évolution des mesures et des problèmes.</p>
-    </article>
-    <article class="fonctionnalite">
-      <h3>Rapports partageables</h3>
-      <p>Exportez un rapport en PDF ou JSON, ou créez un lien public qui expire et peut être révoqué.</p>
-    </article>
-    <article class="fonctionnalite">
-      <h3>Suivi des problèmes prioritaires</h3>
-      <p>Consultez les problèmes par gravité et mettez à jour leur statut après vos corrections.</p>
-    </article>
+<section class="acc-section acc-pour-qui" aria-labelledby="titre-pour-qui">
+  <div class="acc-entete">
+    <p class="acc-surtitre">Pour qui</p>
+    <h2 id="titre-pour-qui">Pour tous ceux qui font vivre un site</h2>
+  </div>
+  <ul class="acc-publics">
+    <li><strong>Développeurs</strong> qui veulent livrer des pages légères</li>
+    <li><strong>Agences web</strong> qui rendent des comptes à leurs clients</li>
+    <li><strong>PME et associations</strong> qui veulent un site qui charge partout</li>
+    <li><strong>Administrations et médias</strong> qui doivent toucher tout le monde</li>
+  </ul>
+</section>
+
+<section class="acc-section acc-transparence" aria-labelledby="titre-transparence">
+  <div class="acc-entete">
+    <p class="acc-surtitre">En toute transparence</p>
+    <h2 id="titre-transparence">Ce que nous mesurons, et ce que nous ne mesurons pas</h2>
+  </div>
+  <div class="acc-grille-2">
+    <div>
+      <h3>Mesuré</h3>
+      <p>Le poids réel de la page et de ses fichiers, le nombre de requêtes, les images trop lourdes ou sans texte alternatif, le volume de JavaScript et de CSS, le nombre d'éléments de la page.</p>
+    </div>
+    <div>
+      <h3>Pas mesuré</h3>
+      <p>Green Dev Africa ne calcule pas l'empreinte carbone et ne remplace pas un audit complet d'accessibilité. Le temps indiqué est celui de notre collecte, pas l'affichage dans votre navigateur.</p>
+    </div>
   </div>
 </section>
 
-<section class="section-accueil-v2 section-transparence-v2" id="indicateurs" aria-labelledby="titre-indicateurs">
-  <div class="section-accueil-v2__entete">
-    <p class="section-accueil-v2__surtitre">Transparence des indicateurs</p>
-    <h2 id="titre-indicateurs">Des métriques utiles, définies sans ambiguïté</h2>
+<section class="acc-section" aria-labelledby="titre-faq">
+  <div class="acc-entete">
+    <p class="acc-surtitre">Questions fréquentes</p>
+    <h2 id="titre-faq">En bref</h2>
   </div>
-
-  <dl class="definitions-indicateurs">
-    <div>
-      <dt>Green Score</dt>
-      <dd>Score sur 100 : des points sont retirés selon la gravité des problèmes détectés par les règles actives.</dd>
-    </div>
-    <div>
-      <dt>Poids de page</dt>
-      <dd>Taille du HTML et des ressources que le collecteur a pu télécharger, dans les limites de l'analyse.</dd>
-    </div>
-    <div>
-      <dt>Temps de chargement</dt>
-      <dd>Durée de collecte du HTML et des ressources par l'outil ; ce n'est pas une mesure de l'affichage dans un navigateur.</dd>
-    </div>
-  </dl>
-
-  <p class="mention-mesure">
-    Green Dev Africa ne calcule pas l'empreinte carbone totale et ne remplace pas un audit complet d'accessibilité.
-    Les analyses de plusieurs pages portent sur un nombre limité de pages et présentent des moyennes par page.
-  </p>
-</section>
-
-<section class="section-accueil-v2" id="tarifs" aria-labelledby="titre-tarifs">
-  <div class="section-accueil-v2__entete">
-    <p class="section-accueil-v2__surtitre">Accès bêta et crédits de test</p>
-    <h2 id="titre-tarifs">Essayez l’outil avant le lancement</h2>
-    <p>
-      Les analyses gratuites et les crédits de test vous permettent d’essayer les parcours. Les montants affichés sont indicatifs : aucun paiement réel n’est encore activé.
-    </p>
-  </div>
-
-  <div class="bloc-tarifs-v2">
-    <div>
-      <h3>La bêta est ouverte</h3>
-      <p>Créez votre compte, testez une analyse sur un site que vous connaissez et dites-nous si les résultats vous aident à décider quoi améliorer.</p>
-      <p>Les recharges sont simulées et les crédits n’ont aucune valeur monétaire pendant cette phase.</p>
-    </div>
-    <a class="bouton bouton-secondaire" href="{% url 'tarifs' %}">Consulter les tarifs détaillés</a>
+  <div class="acc-faq">
+    <details>
+      <summary>Faut-il installer quelque chose sur mon site ?</summary>
+      <p>Non. Il suffit de l'adresse publique de la page : l'analyse se fait de l'extérieur, comme un visiteur.</p>
+    </details>
+    <details>
+      <summary>Est-ce vraiment gratuit ?</summary>
+      <p>Oui pour commencer : chaque compte peut analyser des pages gratuitement tous les mois. Les analyses de sites complets sont détaillées sur la page <a href="{% url 'tarifs' %}">Tarifs</a>.</p>
+    </details>
+    <details>
+      <summary>Je ne suis pas développeur, vais-je comprendre ?</summary>
+      <p>Oui. Le rapport dit en français ce qui pose problème et quoi faire. Vous pouvez aussi le transmettre tel quel à la personne qui gère votre site.</p>
+    </details>
+    <details>
+      <summary>Que faites-vous de mes données ?</summary>
+      <p>Le minimum nécessaire pour faire fonctionner votre compte et vos analyses. Tout est expliqué dans la <a href="{% url 'politique_confidentialite' %}">politique de confidentialité</a>.</p>
+    </details>
   </div>
 </section>
 
-<section class="accueil-cta-final-v2" aria-labelledby="titre-final">
-  <p class="section-accueil-v2__surtitre">Passez à l'action</p>
-  <h2 id="titre-final">Lancez votre premier audit et identifiez vos priorités</h2>
-  <p>
-    Vous obtenez un diagnostic clair, des explications compréhensibles
-    et des actions concrètes à appliquer immédiatement.
-  </p>
-  <div>
-    <a class="bouton bouton-grand" href="{% url 'inscription' %}">Analyser mon site</a>
-    <a class="bouton bouton-secondaire" href="{% url 'connexion' %}">J'ai déjà un compte</a>
+<section class="acc-final" aria-labelledby="titre-final">
+  <h2 id="titre-final">Combien pèse votre site ? Découvrez-le maintenant.</h2>
+  <p>Une minute pour l'analyse, quelques corrections pour un site plus rapide.</p>
+  <div class="acc-final__actions">
+    <a class="bouton bouton-grand" href="{% url 'inscription' %}">Analyser mon site gratuitement</a>
+    <a class="bouton bouton-secondaire" href="{% url 'a_propos' %}">En savoir plus sur le projet</a>
   </div>
 </section>
-
-<footer class="pied-accueil-v2" aria-label="Pied de page Green Dev Africa">
-  <div>
-  <a class="marque" href="{% url 'tableau_de_bord' %}"><img src="{% static 'img/green-dev-africa.svg' %}" alt="" width="36" height="36"><span class="marque-nom">Green<span>Dev</span> Africa</span></a>
-    <p>Plateforme d'audit web pour un numérique plus sobre et plus accessible en Afrique.</p>
-  </div>
-  <nav aria-label="Liens utiles">
-    <a href="{% url 'tarifs' %}">Tarifs</a>
-    <a href="{% url 'politique_confidentialite' %}">Confidentialité</a>
-    <a href="{% url 'connexion' %}">Connexion</a>
-    <a href="{% url 'inscription' %}">Inscription</a>
-  </nav>
-</footer>
 
 {% endblock %}

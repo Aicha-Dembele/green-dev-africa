@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block titre %}À propos — Green Dev Africa{% endblock %}
+{% block description %}Pourquoi Green Dev Africa existe : rendre les sites web plus rapides, plus légers et accessibles à tous, même en 3G et avec un forfait data limité.{% endblock %}
+{% block classe_page %}page-apropos{% endblock %}
+
+{% block contenu %}
+<article class="apropos">
+  <header class="apropos-hero">
+    <p class="acc-surtitre">À propos</p>
+    <h1>Un web plus léger, pensé pour l'Afrique</h1>
+    <p class="apropos-chapeau">
+      Green Dev Africa aide celles et ceux qui créent des sites à les rendre rapides et
+      économes en données, pour qu'ils restent utilisables par tout le monde, sur n'importe
+      quel téléphone et n'importe quelle connexion.
+    </p>
+  </header>
+
+  <section class="apropos-bloc" aria-labelledby="constat">
+    <h2 id="constat">Le constat</h2>
+    <p>
+      La plupart des sites sont conçus et testés sur des ordinateurs puissants, avec une
+      connexion rapide. Mais une grande partie des internautes africains découvre le web
+      sur un téléphone, en 3G ou en 4G instable, avec un forfait data payé au mégaoctet.
+    </p>
+    <p>
+      Pour eux, une page trop lourde n'est pas seulement lente : elle consomme leur forfait, elle
+      vide la batterie, et parfois elle ne s'affiche pas du tout. Un service public, une
+      boutique en ligne ou un média devient alors inaccessible à ceux qui en ont besoin.
+    </p>
+  </section>
+
+  <section class="apropos-bloc" aria-labelledby="idee">
+    <h2 id="idee">L'idée</h2>
+    <p>
+      Les outils d'audit existants sont puissants, mais souvent techniques, en anglais, et
+      pensés pour des réseaux rapides. Nous avons voulu un outil simple : on donne l'adresse
+      d'une page, il mesure ce qu'elle coûte vraiment à charger, puis il traduit ces mesures
+      en <strong>actions concrètes, classées par priorité, expliquées en français</strong>.
+    </p>
+  </section>
+
+  <div class="apropos-duo">
+    <section class="apropos-carte" aria-labelledby="mission">
+      <h2 id="mission">Notre mission</h2>
+      <p>
+        Donner à chaque équipe qui fait vivre un site, du développeur indépendant à
+        l'administration, les moyens de le rendre plus rapide, plus léger et plus accessible,
+        sans être expert de la performance web.
+      </p>
+    </section>
+    <section class="apropos-carte" aria-labelledby="vision">
+      <h2 id="vision">Notre vision</h2>
+      <p>
+        Un web africain <strong>sobre par défaut</strong>, où consulter un service en ligne
+        ne coûte pas une part de son forfait, et où la légèreté devient un réflexe de
+        conception plutôt qu'une correction de dernière minute.
+      </p>
+    </section>
+  </div>
+
+  <section class="apropos-bloc" aria-labelledby="principes">
+    <h2 id="principes">Nos principes</h2>
+    <ul class="apropos-principes">
+      <li>
+        <strong>Utile avant tout.</strong>
+        Chaque problème détecté vient avec l'action à mener. Un chiffre sans conseil ne sert à rien.
+      </li>
+      <li>
+        <strong>Transparent.</strong>
+        Nous expliquons comment chaque indicateur est calculé, et nous disons clairement ce que l'outil ne mesure pas.
+      </li>
+      <li>
+        <strong>Accessible.</strong>
+        En français, sans installation, gratuit pour commencer, et compréhensible sans formation technique.
+      </li>
+      <li>
+        <strong>Sobre nous-mêmes.</strong>
+        Ce site n'utilise ni framework lourd ni police téléchargée : nous appliquons ce que nous recommandons.
+      </li>
+      <li>
+        <strong>Respectueux des données.</strong>
+        Nous ne collectons que le nécessaire. Le détail est dans notre <a href="{% url 'politique_confidentialite' %}">politique de confidentialité</a>.
+      </li>
+    </ul>
+  </section>
+
+  <section class="apropos-bloc" aria-labelledby="mesure">
+    <h2 id="mesure">Ce que fait l'outil, et ce qu'il ne fait pas</h2>
+    <div class="apropos-duo">
+      <div class="apropos-carte apropos-carte--simple">
+        <h3>Il mesure</h3>
+        <ul>
+          <li>Le poids réel de la page et de chacun de ses fichiers</li>
+          <li>Le nombre de requêtes nécessaires pour l'afficher</li>
+          <li>Les images trop lourdes, mal compressées ou sans texte alternatif</li>
+          <li>Le volume de JavaScript et de CSS, et le nombre d'éléments de la page</li>
+          <li>Ce que la page représente pour un visiteur en 3G avec un forfait limité</li>
+        </ul>
+      </div>
+      <div class="apropos-carte apropos-carte--simple">
+        <h3>Il ne prétend pas</h3>
+        <ul>
+          <li>Calculer l'empreinte carbone de votre site</li>
+          <li>Remplacer un audit complet d'accessibilité</li>
+          <li>Mesurer l'affichage dans un navigateur : le temps indiqué est celui de notre collecte</li>
+          <li>Analyser un site entier sans limite : un audit de site couvre jusqu'à 10 pages</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="apropos-bloc" aria-labelledby="ou-en-est">
+    <h2 id="ou-en-est">Où en est le projet</h2>
+    <p>
+      Green Dev Africa est né dans le cadre du projet CADEV 2026. L'outil est aujourd'hui en
+      <strong>bêta ouverte</strong> : nous le confrontons à de vrais sites pour affiner les
+      mesures, les seuils et les conseils. Ce sont vos retours qui décident des prochaines
+      priorités.
+    </p>
+  </section>
+
+  <section class="apropos-contact" aria-labelledby="contact">
+    <h2 id="contact">Parlons-en</h2>
+    <p>
+      Une question, une idée, un résultat qui vous surprend ? L'équipe Green Dev Africa lit
+      chaque message.
+    </p>
+    <div class="apropos-contact__actions">
+      {% if user.is_authenticated %}
+        <a class="bouton bouton-grand" href="{% url 'projet_creer' %}">Analyser un site</a>
+      {% else %}
+        <a class="bouton bouton-grand" href="{% url 'inscription' %}">Analyser mon site gratuitement</a>
+      {% endif %}
+      <a class="bouton bouton-secondaire" href="mailto:greendevafrica20@gmail.com">greendevafrica20@gmail.com</a>
+    </div>
+  </section>
+</article>
+{% endblock %}

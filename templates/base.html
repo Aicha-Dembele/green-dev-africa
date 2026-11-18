@@ -7,7 +7,7 @@
   <meta name="description" content="{% block description %}Green Dev Africa aide à mesurer la sobriété numérique d’un site et à prioriser des améliorations concrètes.{% endblock %}">
   <title>{% block titre %}Green Dev Africa{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'img/green-dev-africa.svg' %}">
-  <link rel="stylesheet" href="{% static 'css/greendev.css' %}?v=20261115-tarifs1">
+  <link rel="stylesheet" href="{% static 'css/greendev.css' %}?v=20261118-accueil3">
   {# defer : le script attend la page, il ne retarde pas son affichage. #}
   <script src="{% static 'js/greendev.js' %}?v=20261115-tarifs1" defer></script>
 </head>
@@ -43,6 +43,7 @@
         <span class="sr-only">Mon compte</span>
       </a>
     {% else %}
+      <a href="{% url 'a_propos' %}"{% if request.resolver_match.url_name == 'a_propos' %} aria-current="page"{% endif %}>À propos</a>
       <a href="{% url 'tarifs' %}"{% if request.resolver_match.url_name == 'tarifs' %} aria-current="page"{% endif %}>Tarifs</a>
       <a class="nav-connexion" href="{% url 'connexion' %}">Se connecter</a>
       <a class="nav-inscription" href="{% url 'inscription' %}">Créer un compte</a>
@@ -61,6 +62,7 @@
         <a href="{% url 'notifications' %}">Notifications{% if notifications_non_lues %} ({{ notifications_non_lues }}){% endif %}</a>
         <a href="{% url 'profil' %}">Mon compte</a>
       {% else %}
+        <a href="{% url 'a_propos' %}">À propos</a>
         <a href="{% url 'tarifs' %}">Tarifs</a>
         <a href="{% url 'connexion' %}">Se connecter</a>
         <a href="{% url 'inscription' %}">Créer un compte</a>
@@ -70,7 +72,7 @@
 </header>
 
 <aside class="bandeau-beta" aria-label="Information sur la version bêta">
-  <p><strong>Green Dev Africa est en bêta.</strong> Les mesures peuvent évoluer. Les crédits sont des unités de test : aucune recharge ne débite d’argent.</p>
+  <p><strong>Version bêta</strong> L’outil s’améliore chaque semaine grâce à vos retours.</p>
   <a href="mailto:greendevafrica20@gmail.com?subject=Retour%20sur%20Green%20Dev%20Africa%20(b%C3%AAta)">Donner mon avis <span aria-hidden="true">→</span></a>
 </aside>
 
@@ -87,9 +89,13 @@
 </main>
 
 <footer class="pied-page">
-  <a href="{% url 'politique_confidentialite' %}">Confidentialité</a>
-  <span aria-hidden="true">·</span>
-  <a href="mailto:greendevafrica20@gmail.com">Nous contacter</a>
+  <p class="pied-page__marque">Green Dev Africa · un web plus léger, pensé pour l’Afrique</p>
+  <nav aria-label="Liens de pied de page">
+    <a href="{% url 'a_propos' %}">À propos</a>
+    <a href="{% url 'tarifs' %}">Tarifs</a>
+    <a href="{% url 'politique_confidentialite' %}">Confidentialité</a>
+    <a href="mailto:greendevafrica20@gmail.com">Nous contacter</a>
+  </nav>
 </footer>
 
 <dialog class="confirmation-modale" data-confirm-dialog aria-labelledby="confirmation-titre" aria-describedby="confirmation-message">

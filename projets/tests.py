@@ -61,42 +61,49 @@ class AccesSansCompteTest(BaseProjetTest):
                     reponse, f"{reverse('connexion')}?next={adresse}"
                 )
 
-    def test_accueil_public_presente_le_service_et_linscription(self):
+    def test_accueil_public_presente_la_valeur_et_linscription(self):
         reponse = self.client.get(reverse("tableau_de_bord"))
 
         self.assertEqual(reponse.status_code, 200)
-        self.assertContains(reponse, "Votre site web est-il vraiment léger")
-        self.assertContains(reponse, "Analyser mon site")
+        self.assertContains(reponse, "Rendez-le rapide, même en 3G")
+        self.assertContains(reponse, "Analyser mon site gratuitement")
         self.assertContains(reponse, reverse("inscription"))
         # Garde-fou de transparence : la page d'accueil doit toujours dire que
         # l'outil ne mesure pas l'empreinte carbone. On vérifie la mention,
         # pas sa formulation exacte, pour qu'une réécriture du texte ne casse
         # pas le test — mais sa disparition, elle, doit le casser.
         self.assertContains(reponse, "empreinte carbone")
+        self.assertContains(reponse, "ne remplace pas un audit complet d'accessibilité")
 
-    def test_accueil_public_affiche_les_liens_cles_de_navigation_et_cta(self):
+    def test_accueil_ne_parle_pas_de_credits(self):
+        """L'accueil vend la valeur de l'outil, pas son modèle de facturation."""
         reponse = self.client.get(reverse("tableau_de_bord"))
 
-        self.assertEqual(reponse.status_code, 200)
-        self.assertContains(reponse, 'href="#plateforme"')
-        self.assertContains(reponse, 'href="#rapport"')
-        self.assertContains(reponse, 'href="#tarifs"')
+        self.assertNotContains(reponse, "crédit")
+        self.assertNotContains(reponse, "Crédit")
+
+    def test_accueil_public_affiche_les_liens_cles(self):
+        reponse = self.client.get(reverse("tableau_de_bord"))
+
+        self.assertContains(reponse, 'href="#comment"')
         self.assertContains(reponse, reverse("connexion"))
         self.assertContains(reponse, reverse("tarifs"))
-        self.assertContains(reponse, "Découvrir la plateforme")
+        self.assertContains(reponse, reverse("a_propos"))
 
-    def test_accueil_presente_les_limites_et_un_rapport_sans_faux_resultats(self):
+    def test_exemple_de_rapport_presente_comme_tel(self):
+        """Le rapport affiché en haut de page est illustratif, et le dit."""
         reponse = self.client.get(reverse("tableau_de_bord"))
 
-        self.assertContains(reponse, "Aperçu d'un rapport d'audit")
-        self.assertContains(reponse, "Ce que coûte une visite")
-        self.assertContains(reponse, "images sans texte alternatif")
-        self.assertContains(reponse, "ne remplace pas un audit complet d'accessibilité")
-        self.assertContains(reponse, "ce n'est pas une mesure de l'affichage dans un navigateur")
-        self.assertContains(reponse, "aucun paiement réel n’est encore activé")
-        self.assertNotContains(reponse, "Contrastes et structure des titres vérifiés")
-        self.assertNotContains(reponse, "Script tiers bloquant")
-        self.assertNotContains(reponse, "78 / 100")
+        self.assertContains(reponse, "Exemple illustratif de rapport, pas un vrai site.")
+
+    def test_page_a_propos_accessible_sans_compte(self):
+        reponse = self.client.get(reverse("a_propos"))
+
+        self.assertEqual(reponse.status_code, 200)
+        self.assertContains(reponse, "Notre mission")
+        self.assertContains(reponse, "Notre vision")
+        self.assertContains(reponse, "empreinte carbone")
+        self.assertContains(reponse, "mailto:greendevafrica20@gmail.com")
 
     def test_politique_de_confidentialite_accessible_sans_compte(self):
         reponse = self.client.get(reverse("politique_confidentialite"))

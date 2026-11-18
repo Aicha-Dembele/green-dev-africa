@@ -22,6 +22,11 @@ from .models import Projet
 journal = logging.getLogger(__name__)
 
 
+def a_propos(request):
+    """Page « À propos » : l'idée, la mission et la vision du projet."""
+    return render(request, "projets/a_propos.html")
+
+
 def politique_confidentialite(request):
     """Affiche la politique de confidentialité, accessible sans compte."""
     return render(request, "projets/politique_confidentialite.html")

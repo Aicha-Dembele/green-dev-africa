@@ -5,6 +5,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("a-propos/", views.a_propos, name="a_propos"),
     path(
         "confidentialite/",
         views.politique_confidentialite,
