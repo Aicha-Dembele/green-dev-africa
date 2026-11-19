@@ -91,6 +91,11 @@ INSTALLED_APPS = [
 # Notre propre classe Utilisateur remplace celle de Django (diagramme de classes).
 AUTH_USER_MODEL = 'comptes.Utilisateur'
 
+# Les migrations utilisent BigAutoField (valeur par défaut de Django 6).
+# Django 5.2, installé en production, prend AutoField par défaut : sans ce
+# réglage explicite, il croit que tous les modèles ont changé.
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
