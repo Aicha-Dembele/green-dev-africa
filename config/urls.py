@@ -5,11 +5,19 @@ propres adresses dans son fichier `urls.py`.
 """
 
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import include, path
 
 from credits.views import tarifs
 
+
+def sante(request):
+    """Vérification de santé de l'hébergeur : rapide, sans base ni gabarit."""
+    return HttpResponse("ok", content_type="text/plain")
+
+
 urlpatterns = [
+    path("sante/", sante, name="sante"),
     path("admin/", admin.site.urls),
     path("tarifs/", tarifs, name="tarifs"),
     path("comptes/", include("comptes.urls")),

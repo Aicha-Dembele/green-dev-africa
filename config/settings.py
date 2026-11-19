@@ -47,6 +47,25 @@ ALLOWED_HOSTS = [
 ]
 
 if not DEBUG:
+    # La vérification de santé de l'hébergeur (Kubernetes) appelle le
+    # conteneur par son adresse IP interne, pas par le nom du site. Sans ces
+    # adresses, Django répond 400, le nouveau conteneur n'est jamais déclaré
+    # prêt et le déploiement échoue au bout de 60 s en gardant l'ancien.
+    import socket
+
+    try:
+        _ips_conteneur = socket.gethostbyname_ex(socket.gethostname())[2]
+    except OSError:
+        _ips_conteneur = []
+    for _ip in [*_ips_conteneur, "127.0.0.1", "localhost"]:
+        if _ip not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_ip)
+
+    # /sante/ répond aussi en HTTP simple : la sonde ne suit pas la
+    # redirection vers HTTPS.
+    SECURE_REDIRECT_EXEMPT = [r"^sante/$"]
+
+if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
